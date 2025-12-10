@@ -25,16 +25,35 @@ interface CreateUserForm {
   password: string
 }
 
+interface EditUserForm {
+  name: string
+  email: string
+  role: "admin" | "cashier" | "chef"
+  password: string
+  isActive: boolean
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
+  const [updateLoading, setUpdateLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [formData, setFormData] = useState<CreateUserForm>({
     name: "",
     email: "",
     role: "cashier",
     password: "",
+  })
+  const [editFormData, setEditFormData] = useState<EditUserForm>({
+    name: "",
+    email: "",
+    role: "cashier",
+    password: "",
+    isActive: true,
   })
   const { token, user } = useAuth()
 
@@ -128,6 +147,128 @@ export default function AdminUsersPage() {
     setFormData({ ...formData, password })
   }
 
+  const generateEditPassword = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    let password = ""
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setEditFormData({ ...editFormData, password })
+  }
+
+  const handleEditUser = (userToEdit: User) => {
+    setEditingUser(userToEdit)
+    setEditFormData({
+      name: userToEdit.name,
+      email: userToEdit.email,
+      role: userToEdit.role,
+      password: "",
+      isActive: userToEdit.isActive,
+    })
+    setShowEditForm(true)
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingUser || !editFormData.name || !editFormData.email) {
+      alert("Please fill in required fields")
+      return
+    }
+
+    setUpdateLoading(true)
+    try {
+      console.log("🔄 Updating user:", editingUser._id, editFormData)
+      console.log("🔍 User ID length:", editingUser._id.length)
+      console.log("🔍 User ID format:", editingUser._id)
+      
+      const url = `/api/users/${editingUser._id}`
+      console.log("🔗 Request URL:", url)
+      console.log("📦 Request body:", JSON.stringify(editFormData))
+      
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editFormData),
+      })
+      
+      console.log("📡 Response object:", response)
+      console.log("🌐 Response URL:", response.url)
+      console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()))
+
+      console.log("📥 Response status:", response.status)
+      
+      let responseData
+      try {
+        const responseText = await response.text()
+        console.log("📄 Raw response:", responseText)
+        responseData = responseText ? JSON.parse(responseText) : {}
+      } catch (parseError) {
+        console.error("❌ Failed to parse response:", parseError)
+        responseData = { message: "Invalid response format" }
+      }
+      
+      console.log("📄 Parsed response data:", responseData)
+
+      if (response.ok) {
+        alert("✅ User updated successfully!")
+        
+        // Reset form and close modal
+        setEditFormData({ name: "", email: "", role: "cashier", password: "", isActive: true })
+        setShowEditForm(false)
+        setEditingUser(null)
+        
+        // Refresh users list
+        fetchUsers()
+      } else {
+        console.error("❌ Update failed:", response.status, responseData)
+        alert(`❌ Failed to update user: ${responseData.message || 'Unknown error'}\n\nStatus: ${response.status}\nUser ID: ${editingUser._id}`)
+      }
+    } catch (error) {
+      console.error("❌ Update user error:", error)
+      alert(`❌ Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setUpdateLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (userToDelete: User) => {
+    if (!confirm(`Are you sure you want to delete user "${userToDelete.name}"?\n\nThis action cannot be undone.`)) {
+      return
+    }
+
+    setDeleteLoading(userToDelete._id)
+    try {
+      console.log("🗑️ Deleting user:", userToDelete._id)
+      
+      const response = await fetch(`/api/users/${userToDelete._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const responseData = await response.json()
+
+      if (response.ok) {
+        alert("✅ User deleted successfully!")
+        
+        // Refresh users list
+        fetchUsers()
+      } else {
+        alert(`❌ Failed to delete user: ${responseData.message}`)
+      }
+    } catch (error) {
+      console.error("❌ Delete user error:", error)
+      alert(`❌ Error deleting user: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setDeleteLoading(null)
+    }
+  }
+
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
       <div className="flex flex-col md:flex-row">
@@ -149,6 +290,48 @@ export default function AdminUsersPage() {
                   disabled={loading}
                 >
                   🔄 Refresh
+                </AnimatedButton>
+                <AnimatedButton
+                  onClick={async () => {
+                    try {
+                      const response = await fetch("/api/debug/users", {
+                        headers: { Authorization: `Bearer ${token}` },
+                      })
+                      const data = await response.json()
+                      console.log("🔍 Debug user data:", data)
+                      alert(`Debug Info:\n${JSON.stringify(data, null, 2)}`)
+                    } catch (error) {
+                      console.error("Debug error:", error)
+                    }
+                  }}
+                  variant="secondary"
+                >
+                  🔍 Debug
+                </AnimatedButton>
+                <AnimatedButton
+                  onClick={async () => {
+                    try {
+                      console.log("🧪 Testing API endpoint...")
+                      const response = await fetch("/api/test-user-update", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ test: "data", userId: "test123" }),
+                      })
+                      console.log("📥 Test response status:", response.status)
+                      const data = await response.json()
+                      console.log("📄 Test response data:", data)
+                      alert(`Test Result:\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`)
+                    } catch (error) {
+                      console.error("Test error:", error)
+                      alert(`Test Error: ${error}`)
+                    }
+                  }}
+                  variant="secondary"
+                >
+                  🧪 Test API
                 </AnimatedButton>
                 <AnimatedButton
                   onClick={() => setShowCreateForm(true)}
@@ -192,33 +375,53 @@ export default function AdminUsersPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {users.map((user) => (
-                  <div key={user._id} className="card-base hover-lift">
+                {users.map((userItem) => (
+                  <div key={userItem._id} className="card-base hover-lift">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
                           <span className="text-xl">
-                            {user.role === "admin" ? "👑" : user.role === "cashier" ? "💳" : "👨‍🍳"}
+                            {userItem.role === "admin" ? "👑" : userItem.role === "cashier" ? "💳" : "👨‍🍳"}
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-foreground">{user.name}</h3>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <h3 className="font-semibold text-foreground">{userItem.name}</h3>
+                          <p className="text-sm text-muted-foreground">{userItem.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                          user.role === "admin" ? "bg-accent/20 text-accent" :
-                          user.role === "cashier" ? "bg-info/20 text-info" :
+                          userItem.role === "admin" ? "bg-accent/20 text-accent" :
+                          userItem.role === "cashier" ? "bg-info/20 text-info" :
                           "bg-success/20 text-success"
                         }`}>
-                          {user.role}
+                          {userItem.role}
                         </span>
                         <span className={`px-2 py-1 rounded text-xs ${
-                          user.isActive ? "bg-success/20 text-success" : "bg-danger/20 text-danger"
+                          userItem.isActive ? "bg-success/20 text-success" : "bg-danger/20 text-danger"
                         }`}>
-                          {user.isActive ? "Active" : "Inactive"}
+                          {userItem.isActive ? "Active" : "Inactive"}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <AnimatedButton
+                            onClick={() => handleEditUser(userItem)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            ✏️ Edit
+                          </AnimatedButton>
+                          {userItem.email !== user?.email && (
+                            <AnimatedButton
+                              onClick={() => handleDeleteUser(userItem)}
+                              variant="secondary"
+                              size="sm"
+                              disabled={deleteLoading === userItem._id}
+                              className="text-danger hover:bg-danger/20"
+                            >
+                              {deleteLoading === userItem._id ? "..." : "🗑️ Delete"}
+                            </AnimatedButton>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -234,6 +437,108 @@ export default function AdminUsersPage() {
               </div>
             )}
           </div>
+
+          {/* Edit User Modal */}
+          {showEditForm && editingUser && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
+                <h3 className="text-xl font-bold text-foreground mb-4">Edit User</h3>
+                
+                <form onSubmit={handleUpdateUser} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="input-base"
+                      placeholder="Enter full name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={editFormData.email}
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                      className="input-base"
+                      placeholder="Enter email address"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Role</label>
+                    <select
+                      value={editFormData.role}
+                      onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as "admin" | "cashier" | "chef" })}
+                      className="input-base"
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="cashier">Cashier</option>
+                      <option value="chef">Chef</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">New Password (optional)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={editFormData.password}
+                        onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                        className="input-base flex-1"
+                        placeholder="Leave empty to keep current password"
+                      />
+                      <button
+                        type="button"
+                        onClick={generateEditPassword}
+                        className="px-3 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 text-sm"
+                      >
+                        Generate
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="editIsActive"
+                      checked={editFormData.isActive}
+                      onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
+                      className="w-4 h-4 text-accent"
+                    />
+                    <label htmlFor="editIsActive" className="text-sm font-medium text-foreground">
+                      User is active
+                    </label>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <AnimatedButton
+                      type="submit"
+                      disabled={updateLoading}
+                      variant="glow"
+                      className="flex-1"
+                    >
+                      {updateLoading ? "Updating..." : "Update User"}
+                    </AnimatedButton>
+                    <AnimatedButton
+                      type="button"
+                      onClick={() => {
+                        setShowEditForm(false)
+                        setEditingUser(null)
+                      }}
+                      variant="secondary"
+                    >
+                      Cancel
+                    </AnimatedButton>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Create User Modal */}
           {showCreateForm && (
