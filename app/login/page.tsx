@@ -130,7 +130,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-white/20">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-white/20" style={{ color: '#1f2937' }}>
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
               <p className="text-sm sm:text-base text-gray-600">Sign in to access your dashboard</p>
@@ -156,7 +156,13 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  style={{ 
+                    color: '#111827', 
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    outline: 'none'
+                  }}
                   placeholder="your@email.com"
                   required
                 />
@@ -168,7 +174,13 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  style={{ 
+                    color: '#111827', 
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    outline: 'none'
+                  }}
                   placeholder="••••••••"
                   required
                 />
