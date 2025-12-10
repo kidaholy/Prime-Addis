@@ -1,114 +1,119 @@
-# 🚀 Render Deployment Guide for Prime Addis Coffee
+# 🚀 Prime Addis Coffee - Deployment Guide
 
-## Prerequisites
+## ✅ Pre-Deployment Checklist
 
-1. **MongoDB Atlas Account** (Free tier available)
-   - Create a cluster at https://cloud.mongodb.com
-   - Get your connection string
-   - Whitelist all IPs (0.0.0.0/0) for Render
+### 1. MongoDB Atlas Setup
+- [ ] **Whitelist Deployment IPs**: Add `0.0.0.0/0` in Network Access (or specific deployment platform IPs)
+- [ ] **Database User**: Verify `kidayos2014` has "Read and write to any database" permissions
+- [ ] **Cluster Status**: Ensure cluster is running (not paused)
+- [ ] **Connection String**: Verified working with your credentials
 
-2. **Render Account** (Free tier available)
-   - Sign up at https://render.com
-   - Connect your GitHub repository
+### 2. Environment Variables
+Update these in your deployment platform:
 
-## Step-by-Step Deployment
+```env
+# MongoDB Atlas
+MONGODB_URI=mongodb+srv://kidayos2014:holyunion@cluster0.tcqv1p5.mongodb.net/restaurant-management?retryWrites=true&w=majority&appName=prime-addis-coffee
 
-### 1. Prepare MongoDB Atlas
+# JWT Secret (CHANGE THIS!)
+JWT_SECRET=your-super-secure-jwt-secret-key-here
 
-1. Create a MongoDB Atlas cluster
-2. Create a database user
-3. Get connection string (replace `<password>` with actual password)
-4. Whitelist all IPs: `0.0.0.0/0`
+# Server Configuration
+PORT=3000
+NODE_ENV=production
 
-### 2. Deploy to Render
-
-1. **Connect Repository**
-   - Go to Render Dashboard
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-
-2. **Configure Service**
-   - **Name**: `prime-addis-coffee`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-   - **Plan**: Free (or paid for better performance)
-
-3. **Set Environment Variables**
-   ```
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/restaurant-management
-   JWT_SECRET=your-super-secure-jwt-secret-key
-   NEXTAUTH_URL=https://your-app-name.onrender.com
-   NODE_ENV=production
-   ```
-
-### 3. Initial Database Setup
-
-After deployment, seed your database:
-
-1. Use the admin panel to create initial users
-2. Or run the seed script manually through Render shell
-
-### 4. Test Your Deployment
-
-1. Visit your Render URL
-2. Test login functionality
-3. Create test orders
-4. Verify notifications work
-
-## Important Notes
-
-- **Free tier limitations**: Apps sleep after 15 minutes of inactivity
-- **Database**: Use MongoDB Atlas (free tier: 512MB)
-- **Environment Variables**: Set in Render dashboard, not in code
-- **HTTPS**: Render provides free SSL certificates
-
-## Troubleshooting
-
-### Common Issues:
-
-1. **Build Fails**
-   - Check Node.js version compatibility
-   - Verify all dependencies are in package.json
-
-2. **Database Connection Fails**
-   - Verify MongoDB URI format
-   - Check IP whitelist in MongoDB Atlas
-   - Ensure database user has correct permissions
-
-3. **App Crashes**
-   - Check Render logs
-   - Verify environment variables are set
-   - Check for missing dependencies
-
-### Useful Commands:
-
-```bash
-# Check logs
-render logs --service-id your-service-id
-
-# Manual deployment
-git push origin main
+# Frontend URL (Update with your domain)
+FRONTEND_URL=https://your-deployed-domain.com
 ```
 
-## Performance Tips
+### 3. Database Seeding
+After deployment, seed your database:
 
-1. **Upgrade to paid plan** for better performance
-2. **Use MongoDB Atlas M2+** for production workloads
-3. **Enable caching** for static assets
-4. **Monitor performance** through Render dashboard
+```bash
+# Seed menu items (59 items across 16 categories)
+npx tsx scripts/seed-menu-only.ts
 
-## Security Checklist
+# Or seed with users + menu
+npx tsx scripts/seed.ts
+```
 
-- ✅ Strong JWT secret (32+ characters)
-- ✅ MongoDB Atlas with authentication
-- ✅ Environment variables (not hardcoded)
-- ✅ HTTPS enabled (automatic on Render)
-- ✅ Input validation on all forms
-- ✅ Rate limiting (consider adding)
+### 4. Admin Login
+- **Email**: `kidayos2014@gmail.com`
+- **Password**: `123456`
 
-## Support
+## 🌐 Deployment Platforms
 
-- **Render Docs**: https://render.com/docs
-- **MongoDB Atlas**: https://docs.atlas.mongodb.com
-- **Next.js Deployment**: https://nextjs.org/docs/deployment
+### Vercel
+1. Connect your GitHub repo
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically
+
+### Railway
+1. Connect GitHub repo
+2. Add environment variables
+3. Deploy with one click
+
+### Render
+1. Connect GitHub repo
+2. Set environment variables
+3. Deploy web service
+
+### Heroku
+1. Create Heroku app
+2. Set config vars (environment variables)
+3. Deploy from GitHub
+
+## 🔧 Post-Deployment
+
+### 1. Test System Health
+Visit: `https://your-domain.com/api/system-check`
+
+Should return:
+```json
+{
+  "overall": "✅ Healthy",
+  "checks": {
+    "database": {"status": "✅ Connected"},
+    "collections": {"status": "✅ Available"},
+    "environment": {"status": "✅ Loaded"}
+  }
+}
+```
+
+### 2. Test Admin Login
+1. Go to `https://your-domain.com`
+2. Login with admin credentials
+3. Access admin dashboard
+4. Verify menu items are loaded
+
+### 3. Security Updates
+- [ ] Change JWT_SECRET to a strong random key
+- [ ] Update FRONTEND_URL to your actual domain
+- [ ] Consider restricting MongoDB Atlas IP whitelist to deployment IPs only
+
+## 📱 Features Available
+- ✅ Menu Management (59 items, 16 categories)
+- ✅ User Management (Admin, Cashier, Chef roles)
+- ✅ Order Management
+- ✅ POS System
+- ✅ Kitchen Display
+- ✅ Reports & Analytics
+- ❌ Inventory Management (Removed as requested)
+
+## 🆘 Troubleshooting
+
+### MongoDB Connection Issues
+1. Check Atlas Network Access whitelist
+2. Verify database user permissions
+3. Ensure cluster is not paused
+4. Test connection string format
+
+### Environment Variable Issues
+1. Verify all required env vars are set
+2. Check JWT_SECRET is properly configured
+3. Ensure FRONTEND_URL matches your domain
+
+### Build Issues
+1. Run `npm run build` locally first
+2. Check for TypeScript errors
+3. Verify all dependencies are installed

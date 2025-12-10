@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import { useAuth } from "@/context/auth-context"
 import Link from "next/link"
+import Image from "next/image"
 import type React from "react"
 
 export default function LoginPage() {
@@ -44,79 +45,99 @@ export default function LoginPage() {
   )
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen flex relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1920&h=1080&fit=crop&crop=center')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-amber-900/60"></div>
+      </div>
+
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-primary relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-accent rounded-full mix-blend-multiply filter blur-3xl"></div>
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 relative z-10">
+        <div className="flex flex-col items-center justify-center w-full p-12 text-white">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">P</span>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold brand-font">Prime Addis</h1>
+              <p className="text-amber-300 text-lg">Coffee Management System</p>
+            </div>
+          </div>
 
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-foreground">
-          <div className="text-9xl mb-8 animate-bounce-gentle">☕</div>
-          <h1 className="text-6xl font-bold mb-4 brand-font text-center">Prime Addis Coffee</h1>
-          <p className="text-xl text-muted-foreground text-center max-w-md">
-            Your complete coffee shop management solution
-          </p>
+          <div className="max-w-md text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Welcome Back</h2>
+            <p className="text-gray-300 text-lg">
+              Sign in to access your coffee shop management dashboard
+            </p>
+          </div>
 
-          <div className="mt-16 space-y-6 w-full max-w-md">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1">Real-time Management</h3>
-                <p className="text-muted-foreground text-sm">Track orders, inventory, and sales in real-time</p>
+          <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
+            <div className="relative overflow-hidden rounded-2xl">
+              <Image
+                src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=faces"
+                alt="Ethiopian Coffee Service"
+                width={400}
+                height={300}
+                className="w-full h-32 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-3 left-3">
+                <p className="text-white text-sm font-semibold">Modern POS</p>
               </div>
             </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1">Easy to Use</h3>
-                <p className="text-muted-foreground text-sm">Intuitive interface for all team members</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1">Secure & Reliable</h3>
-                <p className="text-muted-foreground text-sm">Enterprise-grade security for your business</p>
+            <div className="relative overflow-hidden rounded-2xl">
+              <Image
+                src="https://i.pinimg.com/736x/aa/0d/fc/aa0dfc30734c2833c12974ab8cab3347.jpg"
+                alt="Ethiopian Chef Dashboard"
+                width={400}
+                height={300}
+                className="w-full h-32 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-3 left-3">
+                <p className="text-white text-sm font-semibold">Chef Dashboard</p>
               </div>
             </div>
+          </div>
+
+          <div className="mt-12 space-y-4 w-full max-w-md">
+            <FeatureItem text="Real-time Order Management" />
+            <FeatureItem text="Menu & Pricing Control" />
+            <FeatureItem text="Staff Role Management" />
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="text-5xl">☕</div>
-              <span className="text-3xl font-bold text-foreground brand-font">Prime Addis</span>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">P</span>
+              </div>
+              <span className="text-3xl font-bold text-white brand-font">Prime Addis</span>
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl shadow-2xl p-8 md:p-10 border border-border">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-10 border border-white/20">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-2">Welcome</h2>
-              <p className="text-muted-foreground">Sign in to your account to continue</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+              <p className="text-gray-600">Sign in to access your dashboard</p>
             </div>
 
             {error && (
-              <div className="bg-danger/10 border border-danger text-danger px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -130,24 +151,24 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5 mb-6">
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Email Address</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-base"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white"
                   placeholder="your@email.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Password</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-base"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white"
                   placeholder="••••••••"
                   required
                 />
@@ -156,7 +177,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-accent text-accent-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
@@ -164,10 +185,10 @@ export default function LoginPage() {
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+                <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-card text-muted-foreground font-medium">Or continue with</span>
+                <span className="px-4 bg-white text-gray-500 font-medium">Quick Access</span>
               </div>
             </div>
 
@@ -176,41 +197,56 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleDemoLogin("kidayos2014@gmail.com", "123456")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-primary/70 to-primary text-foreground rounded-xl hover:from-primary hover:to-primary/70 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 border border-border"
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
               >
-                <span className="text-xl">👤</span>
-                {loading ? "..." : "Admin Account"}
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold">A</span>
+                </div>
+                {loading ? "..." : "Admin Dashboard"}
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDemoLogin("cashier@cafeteria.com", "password")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-success/10 text-success rounded-xl hover:bg-success/20 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 border-2 border-success/30"
+                className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
               >
-                <span className="text-xl">💳</span>
-                {loading ? "..." : "Cashier Account"}
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold">C</span>
+                </div>
+                {loading ? "..." : "Cashier POS"}
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDemoLogin("chef@cafeteria.com", "password")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 border-2 border-warning/30"
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
               >
-                <span className="text-xl">👨‍🍳</span>
-                {loading ? "..." : "Chef Account"}
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold">K</span>
+                </div>
+                {loading ? "..." : "Kitchen Display"}
               </button>
             </div>
 
             <div className="mt-8 text-center">
-              <Link href="/" className="text-accent hover:opacity-80 font-medium text-sm">
+              <Link href="/" className="text-amber-600 hover:text-amber-700 font-medium text-sm transition-colors">
                 ← Back to Home
               </Link>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function FeatureItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+      <span className="text-gray-200">{text}</span>
     </div>
   )
 }
