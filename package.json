@@ -11,6 +11,8 @@
     "seed:minimal": "tsx scripts/seed-minimal.ts",
     "clear:demo": "tsx scripts/clear-demo-data.ts",
     "check:db": "tsx scripts/check-db.ts",
+    "test:atlas": "tsx scripts/test-atlas-connection.ts",
+    "test:users": "tsx scripts/test-users-api.ts",
     "server": "tsx server/server.ts",
     "server:dev": "tsx watch server/server.ts"
   },

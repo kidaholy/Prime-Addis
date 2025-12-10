@@ -8,11 +8,20 @@ export async function connectDB() {
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/restaurant-management")
+    const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/restaurant-management"
+    
+    await mongoose.connect(mongoUri, {
+      // Production optimizations
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    })
+    
     isConnected = true
-    console.log("MongoDB connected")
+    console.log("MongoDB connected successfully")
   } catch (error) {
     console.error("MongoDB connection error:", error)
+    isConnected = false
     throw error
   }
 }

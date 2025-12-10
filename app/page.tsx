@@ -142,13 +142,13 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Features Section */}
       <section className="py-20 bg-primary border-y border-border">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-12 text-center">
-            <StatCard number="100+" label="Coffee Shops" />
-            <StatCard number="50K+" label="Orders Daily" />
-            <StatCard number="99.9%" label="Uptime" />
+            <StatCard number="🚀" label="Fast & Reliable" />
+            <StatCard number="📊" label="Real-time Analytics" />
+            <StatCard number="🔒" label="Secure & Private" />
           </div>
         </div>
       </section>
@@ -158,7 +158,7 @@ export default function WelcomePage() {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-5xl font-bold text-foreground mb-6 brand-font">Ready to Transform Your Coffee Shop?</h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join hundreds of coffee shops using Prime Addis management system
+            Experience the future of coffee shop management with Prime Addis
           </p>
           <Link
             href="/login"

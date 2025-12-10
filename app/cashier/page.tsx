@@ -11,6 +11,7 @@ import { ParticleSystem } from "@/components/particle-system"
 import { AnimatedLoading } from "@/components/animated-loading"
 import { AnimatedButton } from "@/components/animated-button"
 import { TestOrderButton } from "@/components/test-order-button"
+import { DebugPanel } from "@/components/debug-panel"
 import { useAuth } from "@/context/auth-context"
 
 interface MenuItem {
@@ -244,6 +245,9 @@ export default function CashierPOSPage() {
 
         {/* Order Animation */}
         <OrderAnimation orderNumber={orderNumber} totalItems={cartItems.length} isVisible={showOrderAnimation} />
+        
+        {/* Debug Panel */}
+        <DebugPanel />
       </div>
     </ProtectedRoute>
   )

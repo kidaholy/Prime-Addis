@@ -7,7 +7,7 @@ interface Notification {
   id: string
   type: "info" | "success" | "warning" | "error"
   message: string
-  timestamp: Date
+  timestamp: Date | string
   read: boolean
 }
 
@@ -33,7 +33,10 @@ export function NotificationCenter() {
           
           // Filter for notifications newer than last check
           const recentNotifications = newNotifications.filter(
-            (notif: Notification) => new Date(notif.timestamp) > lastCheck
+            (notif: Notification) => {
+              const notifTime = new Date(notif.timestamp)
+              return notifTime > lastCheck
+            }
           )
 
           if (recentNotifications.length > 0) {
@@ -85,7 +88,7 @@ export function NotificationCenter() {
           onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
         >
           <p className="font-semibold">{notif.message}</p>
-          <p className="text-xs opacity-75 mt-1">{notif.timestamp.toLocaleTimeString()}</p>
+          <p className="text-xs opacity-75 mt-1">{new Date(notif.timestamp).toLocaleTimeString()}</p>
         </div>
       ))}
     </div>
