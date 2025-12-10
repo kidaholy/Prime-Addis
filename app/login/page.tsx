@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useAuth } from "@/context/auth-context"
+import { HeaderThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
 import Image from "next/image"
 import type React from "react"
@@ -46,6 +47,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex relative overflow-hidden">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <HeaderThemeToggle />
+      </div>
+
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <div 

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { HeaderThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
 
 export default function WelcomePage() {
@@ -39,12 +40,15 @@ export default function WelcomePage() {
             </div>
             <span className="text-2xl font-bold text-white brand-font">Prime Addis</span>
           </div>
-          <Link
-            href="/login"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-3 rounded-full font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg"
-          >
-            Login
-          </Link>
+          <div className="flex items-center gap-4">
+            <HeaderThemeToggle />
+            <Link
+              href="/login"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-3 rounded-full font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg"
+            >
+              Login
+            </Link>
+          </div>
         </div>
       </nav>
 

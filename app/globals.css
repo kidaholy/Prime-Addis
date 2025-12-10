@@ -4,84 +4,99 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color scheme: dark charcoal background with gold/amber accents for premium coffee shop aesthetic */
-  --primary: oklch(0.08 0.01 0);
-  --primary-foreground: oklch(0.98 0.02 60);
-  --primary-light: oklch(0.15 0.02 0);
-  --primary-dark: oklch(0.04 0.01 0);
+  /* Prime Addis Coffee - Light Theme (Yellow & White) */
+  /* Bright yellow and white coffee shop atmosphere with high contrast text */
+  
+  --primary: #1A1A1A;           /* Very dark text for maximum readability */
+  --primary-foreground: #FFFFFF; /* Pure white text */
+  --primary-light: #333333;     /* Dark gray */
+  --primary-dark: #000000;      /* Pure black */
 
-  --secondary: oklch(0.75 0.22 60);
-  --secondary-foreground: oklch(0.1 0.01 0);
-  --secondary-light: oklch(0.85 0.18 65);
+  --secondary: #FFD700;         /* Bright golden yellow */
+  --secondary-foreground: #1A1A1A; /* Dark text on yellow */
+  --secondary-light: #FFEB3B;   /* Light yellow */
 
-  --background: oklch(0.08 0.01 0);
-  --foreground: oklch(0.95 0.02 60);
-  --card: oklch(0.14 0.01 0);
-  --card-foreground: oklch(0.95 0.02 60);
-  --muted: oklch(0.22 0.01 0);
-  --muted-foreground: oklch(0.65 0.02 60);
-  --border: oklch(0.2 0.01 0);
-  --input: oklch(0.12 0.01 0);
+  --background: #FFFEF7;        /* Warm white background */
+  --foreground: #1A1A1A;        /* Very dark text for contrast */
+  --card: #FFFFFF;              /* Pure white cards */
+  --card-foreground: #1A1A1A;   /* Dark text on white cards */
+  --muted: #FFF9C4;             /* Very light yellow */
+  --muted-foreground: #424242;  /* Medium dark gray for muted text */
+  --border: #FFE082;            /* Light yellow border */
+  --input: #FFFFFF;             /* White input backgrounds */
 
-  --accent: oklch(0.72 0.2 55);
-  --accent-foreground: oklch(0.1 0.01 0);
+  --accent: #FFC107;            /* Amber/yellow accent */
+  --accent-foreground: #1A1A1A; /* Dark text on yellow accent */
 
-  --success: oklch(0.55 0.12 150);
-  --warning: oklch(0.7 0.15 55);
-  --danger: oklch(0.55 0.15 30);
-  --info: oklch(0.55 0.12 240);
+  --success: #4CAF50;           /* Green success */
+  --warning: #FF9800;           /* Orange warning */
+  --danger: #F44336;            /* Red danger */
+  --info: #2196F3;              /* Blue info */
 
-  --destructive: oklch(0.55 0.15 30);
-  --destructive-foreground: oklch(0.98 0.02 0);
-  --ring: oklch(0.72 0.2 55);
-  --sidebar: oklch(0.1 0.01 0);
-  --sidebar-foreground: oklch(0.95 0.02 60);
-  --sidebar-primary: oklch(0.72 0.2 55);
-  --sidebar-primary-foreground: oklch(0.1 0.01 0);
-  --sidebar-accent: oklch(0.18 0.01 0);
-  --sidebar-accent-foreground: oklch(0.95 0.02 60);
-  --sidebar-border: oklch(0.2 0.01 0);
-  --sidebar-ring: oklch(0.72 0.2 55);
+  --destructive: #F44336;
+  --destructive-foreground: #FFFFFF;
+  --ring: #FFC107;              /* Yellow focus ring */
+  
+  /* Sidebar colors */
+  --sidebar: #FFFDE7;           /* Very light yellow sidebar */
+  --sidebar-foreground: #1A1A1A; /* Dark text */
+  --sidebar-primary: #FFC107;   /* Yellow accent */
+  --sidebar-primary-foreground: #1A1A1A; /* Dark text on yellow */
+  --sidebar-accent: #FFF9C4;    /* Light yellow accent */
+  --sidebar-accent-foreground: #1A1A1A; /* Dark text */
+  --sidebar-border: #FFE082;    /* Light yellow border */
+  --sidebar-ring: #FFC107;      /* Yellow ring */
+
+  /* High resolution optimizations */
+  --shadow-sm: 0 1px 2px 0 rgba(45, 27, 20, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(45, 27, 20, 0.1), 0 2px 4px -1px rgba(45, 27, 20, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(45, 27, 20, 0.1), 0 4px 6px -2px rgba(45, 27, 20, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(45, 27, 20, 0.1), 0 10px 10px -5px rgba(45, 27, 20, 0.04);
 }
 
 .dark {
-  --primary: oklch(0.3 0.08 40);
-  --primary-foreground: oklch(0.98 0.01 0);
-  --primary-light: oklch(0.4 0.1 42);
-  --primary-dark: oklch(0.2 0.08 38);
+  /* Prime Addis Coffee - Dark Theme */
+  /* Evening coffee shop ambiance with deep coffee tones */
+  
+  --primary: #1A0F0A;           /* Deep espresso */
+  --primary-foreground: #F7F3F0; /* Warm cream */
+  --primary-light: #2D1B14;     /* Coffee brown */
+  --primary-dark: #0D0704;      /* Almost black */
 
-  --secondary: oklch(0.65 0.1 55);
-  --secondary-foreground: oklch(0.2 0.03 40);
-  --secondary-light: oklch(0.75 0.08 60);
+  --secondary: #B8956A;         /* Muted gold */
+  --secondary-foreground: #1A0F0A;
+  --secondary-light: #D4A574;   /* Lighter gold */
 
-  --background: oklch(0.12 0.01 0);
-  --foreground: oklch(0.95 0.01 0);
-  --card: oklch(0.18 0.01 0);
-  --card-foreground: oklch(0.95 0.01 0);
-  --muted: oklch(0.28 0.02 0);
-  --muted-foreground: oklch(0.65 0.02 0);
-  --border: oklch(0.28 0.02 0);
-  --input: oklch(0.22 0.02 0);
+  --background: #0D0704;        /* Deep coffee black */
+  --foreground: #F7F3F0;        /* Cream text */
+  --card: #1A0F0A;              /* Dark coffee cards */
+  --card-foreground: #F7F3F0;   /* Cream text on cards */
+  --muted: #2D1B14;             /* Coffee brown muted */
+  --muted-foreground: #B8956A;  /* Gold muted text */
+  --border: #3D2B1E;            /* Coffee border */
+  --input: #2D1B14;             /* Dark coffee inputs */
 
-  --accent: oklch(0.65 0.12 55);
-  --accent-foreground: oklch(0.2 0.03 40);
+  --accent: #E6B800;            /* Bright Ethiopian gold */
+  --accent-foreground: #0D0704; /* Dark text on gold */
 
-  --success: oklch(0.55 0.12 150);
-  --warning: oklch(0.7 0.15 60);
-  --danger: oklch(0.6 0.15 30);
-  --info: oklch(0.55 0.12 240);
+  --success: #16A34A;           /* Dark green */
+  --warning: #D97706;           /* Dark amber */
+  --danger: #DC2626;            /* Dark red */
+  --info: #2563EB;              /* Dark blue */
 
-  --destructive: oklch(0.6 0.15 30);
-  --destructive-foreground: oklch(0.95 0.01 0);
-  --ring: oklch(0.3 0.08 40);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.35 0.08 40);
-  --sidebar-primary-foreground: oklch(0.98 0.01 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.35 0.08 40);
+  --destructive: #DC2626;
+  --destructive-foreground: #F7F3F0;
+  --ring: #E6B800;              /* Gold focus ring */
+  
+  /* Dark sidebar */
+  --sidebar: #0D0704;           /* Deep black sidebar */
+  --sidebar-foreground: #F7F3F0; /* Cream text */
+  --sidebar-primary: #E6B800;   /* Bright gold */
+  --sidebar-primary-foreground: #0D0704;
+  --sidebar-accent: #1A0F0A;    /* Dark coffee */
+  --sidebar-accent-foreground: #F7F3F0;
+  --sidebar-border: #2D1B14;    /* Coffee border */
+  --sidebar-ring: #E6B800;      /* Gold ring */
 }
 
 @theme inline {
@@ -126,34 +141,230 @@
 }
 
 @layer base {
+  /* High-resolution optimizations */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    box-sizing: border-box;
   }
+  
+  *:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    font-weight: 500;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* High-DPI display optimizations */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  }
+
+  /* Improved heading hierarchy with better contrast */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 { @apply text-4xl font-bold; }
+  h2 { @apply text-3xl font-semibold; }
+  h3 { @apply text-2xl font-semibold; }
+  h4 { @apply text-xl font-medium; }
+  h5 { @apply text-lg font-medium; }
+  h6 { @apply text-base font-medium; }
+
+  /* Enhanced link styling */
+  a {
+    @apply text-accent hover:opacity-80 transition-all duration-200;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* Better button reset */
+  button {
+    @apply cursor-pointer transition-all duration-200;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-weight: 500;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  /* Enhanced input styling */
+  input, textarea, select {
+    @apply transition-all duration-200;
+    font-family: inherit;
+    font-weight: 500;
+  }
+
+  /* Improved scrollbar styling for yellow theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+    opacity: 0.8;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  ::-moz-selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
   }
 }
 
 @layer components {
+  /* Enhanced buttons with better contrast for yellow/white theme */
   .btn-primary {
-    @apply bg-accent text-accent-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-all transform hover:scale-105;
+    @apply bg-accent text-accent-foreground px-6 py-3 rounded-xl font-semibold;
+    @apply hover:opacity-90 transition-all duration-200 transform hover:scale-105;
+    @apply shadow-md hover:shadow-lg border-2 border-accent;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
   }
+  
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary-light transition-colors;
+    @apply bg-secondary text-secondary-foreground px-6 py-3 rounded-xl font-semibold;
+    @apply hover:bg-secondary-light transition-all duration-200;
+    @apply shadow-sm hover:shadow-md border-2 border-secondary;
+    @apply focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
   }
+  
   .btn-danger {
-    @apply bg-danger text-white px-4 py-2 rounded-lg hover:opacity-90 transition-colors;
+    @apply bg-danger text-white px-6 py-3 rounded-xl font-semibold;
+    @apply hover:opacity-90 transition-all duration-200;
+    @apply shadow-md hover:shadow-lg border-2 border-danger;
+    @apply focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2;
   }
+
+  /* Enhanced card styling with better contrast */
   .card-base {
-    @apply bg-card text-card-foreground rounded-xl shadow-lg border border-border p-4;
+    @apply bg-card text-card-foreground rounded-2xl border-2 border-border p-6;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+    backdrop-filter: blur(10px);
   }
+
+  /* Improved input styling with better visibility */
   .input-base {
-    @apply w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-input text-foreground;
+    @apply w-full px-4 py-3 border-2 border-border rounded-xl;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent;
+    @apply bg-input text-foreground placeholder-muted-foreground;
+    @apply transition-all duration-200 font-medium;
+    @apply shadow-sm focus:shadow-md;
   }
+
+  /* Premium brand font with better readability */
   .brand-font {
-    font-family: "Cooper Black", "Arial Black", sans-serif;
-    font-weight: 900;
-    letter-spacing: -0.02em;
+    font-family: "Playfair Display", "Georgia", serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* High contrast text for better readability */
+  .text-high-contrast {
+    color: var(--foreground);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+  }
+
+  /* Enhanced shadows for yellow/white theme */
+  .shadow-coffee {
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-coffee-lg {
+    box-shadow: 0 10px 40px rgba(255, 193, 7, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Yellow gradient backgrounds */
+  .bg-coffee-gradient {
+    background: linear-gradient(135deg, #FFC107 0%, #FFD54F 50%, #FFEB3B 100%);
+  }
+
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #FFD700 0%, #FFC107 50%, #FFEB3B 100%);
+  }
+
+  /* Sidebar color utilities */
+  .bg-sidebar { 
+    background-color: var(--sidebar);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .text-sidebar-foreground { 
+    color: var(--sidebar-foreground);
+    font-weight: 500;
+  }
+  .bg-sidebar-primary { 
+    background-color: var(--sidebar-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .text-sidebar-primary-foreground { 
+    color: var(--sidebar-primary-foreground);
+    font-weight: 600;
+  }
+  .bg-sidebar-accent { 
+    background-color: var(--sidebar-accent);
+    transition: all 0.2s ease;
+  }
+  .text-sidebar-accent-foreground { 
+    color: var(--sidebar-accent-foreground);
+  }
+  .border-sidebar-border { 
+    border-color: var(--sidebar-border);
+  }
+
+  /* Enhanced sidebar styling */
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200;
+    @apply text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-sidebar-primary focus:ring-offset-2;
+  }
+
+  .sidebar-nav-item.active {
+    @apply bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold;
+    @apply border border-sidebar-primary/20;
   }
   /* INSANE ANIMATIONS FOR CUSTOMER ATTRACTION */
   
