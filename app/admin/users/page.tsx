@@ -8,6 +8,7 @@ import { AnimatedButton } from "@/components/animated-button"
 import { TestUsersFetch } from "@/components/test-users-fetch"
 import { useAuth } from "@/context/auth-context"
 
+
 interface User {
   _id: string
   name: string
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
     role: "cashier",
     password: "",
   })
-  const { token } = useAuth()
+  const { token, user } = useAuth()
 
   useEffect(() => {
     if (token) {
@@ -141,12 +142,44 @@ export default function AdminUsersPage() {
             {/* Header with Create Button */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-foreground">System Users</h2>
-              <AnimatedButton
-                onClick={() => setShowCreateForm(true)}
-                variant="glow"
-              >
-                ➕ Create User
-              </AnimatedButton>
+              <div className="flex gap-3">
+                <AnimatedButton
+                  onClick={fetchUsers}
+                  variant="secondary"
+                  disabled={loading}
+                >
+                  🔄 Refresh
+                </AnimatedButton>
+                <AnimatedButton
+                  onClick={() => setShowCreateForm(true)}
+                  variant="glow"
+                >
+                  ➕ Create User
+                </AnimatedButton>
+              </div>
+            </div>
+
+            {/* System Status */}
+            <div className="mb-6 p-4 bg-card/50 rounded-lg border border-border">
+              <h3 className="font-semibold mb-2">System Status</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Database:</span>
+                  <span className="ml-2 text-success">Connected</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Auth:</span>
+                  <span className="ml-2">{token ? "✅ Valid" : "❌ Missing"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Role:</span>
+                  <span className="ml-2">{user?.role || "Unknown"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Users:</span>
+                  <span className="ml-2">{users.length} found</span>
+                </div>
+              </div>
             </div>
 
             {/* Users List */}

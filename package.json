@@ -13,6 +13,7 @@
     "check:db": "tsx scripts/check-db.ts",
     "test:atlas": "tsx scripts/test-atlas-connection.ts",
     "test:users": "tsx scripts/test-users-api.ts",
+    "test:menu": "tsx scripts/test-admin-menu.ts",
     "server": "tsx server/server.ts",
     "server:dev": "tsx watch server/server.ts"
   },

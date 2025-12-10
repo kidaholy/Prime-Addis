@@ -9,6 +9,7 @@ interface AnimatedButtonProps {
   size?: "sm" | "md" | "lg"
   disabled?: boolean
   className?: string
+  type?: "button" | "submit" | "reset"
 }
 
 export function AnimatedButton({ 
@@ -17,7 +18,8 @@ export function AnimatedButton({
   variant = "primary", 
   size = "md", 
   disabled = false,
-  className = ""
+  className = "",
+  type = "button"
 }: AnimatedButtonProps) {
   const [isClicked, setIsClicked] = useState(false)
 
@@ -56,6 +58,7 @@ export function AnimatedButton({
 
   return (
     <button
+      type={type}
       onClick={handleClick}
       disabled={disabled}
       className={`
