@@ -25,98 +25,115 @@ async function seedMenuOnly() {
     await MenuItem.deleteMany({})
     console.log("Cleared existing menu items")
 
-    // Create comprehensive menu
+    // Create Prime Addis Coffee authentic menu
     const menuItems = await MenuItem.insertMany([
       // Hot Coffee
-      { name: "Espresso", category: "Hot Coffee", price: 25, description: "Rich and bold espresso shot", preparationTime: 3 },
-      { name: "Americano", category: "Hot Coffee", price: 30, description: "Espresso with hot water", preparationTime: 4 },
-      { name: "Cappuccino", category: "Hot Coffee", price: 35, description: "Espresso with steamed milk and foam", preparationTime: 5 },
-      { name: "Latte", category: "Hot Coffee", price: 40, description: "Espresso with steamed milk", preparationTime: 5 },
-      { name: "Macchiato", category: "Hot Coffee", price: 38, description: "Espresso with a dollop of foam", preparationTime: 4 },
-      { name: "Mocha", category: "Hot Coffee", price: 45, description: "Espresso with chocolate and steamed milk", preparationTime: 6 },
-
-      // Iced & Cold Coffee
-      { name: "Iced Americano", category: "Iced & Cold Coffee", price: 32, description: "Chilled espresso with cold water", preparationTime: 4 },
-      { name: "Iced Latte", category: "Iced & Cold Coffee", price: 42, description: "Espresso with cold milk over ice", preparationTime: 5 },
-      { name: "Cold Brew", category: "Iced & Cold Coffee", price: 38, description: "Smooth cold-brewed coffee", preparationTime: 2 },
-      { name: "Frappuccino", category: "Iced & Cold Coffee", price: 50, description: "Blended coffee with ice and cream", preparationTime: 7 },
-      { name: "Affogato", category: "Iced & Cold Coffee", price: 55, description: "Espresso poured over vanilla ice cream", preparationTime: 5 },
+      { name: "Siphon Coffee", category: "Hot Coffee", price: 50, description: "Premium siphon brewed coffee", preparationTime: 8 },
+      { name: "Cappuccino", category: "Hot Coffee", price: 110, description: "Espresso with steamed milk and foam", preparationTime: 5 },
+      { name: "Flat White", category: "Hot Coffee", price: 80, description: "Double shot espresso with microfoam", preparationTime: 4 },
+      { name: "Café Latte", category: "Hot Coffee", price: 100, description: "Espresso with steamed milk", preparationTime: 5 },
+      { name: "Espresso", category: "Hot Coffee", price: 50, description: "Rich and bold espresso shot", preparationTime: 3 },
+      { name: "Double Macchiato", category: "Hot Coffee", price: 150, description: "Double espresso with foam", preparationTime: 4 },
+      { name: "Macchiato", category: "Hot Coffee", price: 80, description: "Espresso with a dollop of foam", preparationTime: 4 },
+      { name: "Fasting Macchiato", category: "Hot Coffee", price: 100, description: "Special macchiato for fasting", preparationTime: 4 },
+      { name: "Espress", category: "Hot Coffee", price: 80, description: "Single espresso shot", preparationTime: 3 },
 
       // Tea & Infusions
-      { name: "Ethiopian Tea", category: "Tea & Infusions", price: 20, description: "Traditional Ethiopian black tea", preparationTime: 5 },
-      { name: "Green Tea", category: "Tea & Infusions", price: 22, description: "Fresh green tea leaves", preparationTime: 4 },
-      { name: "Chamomile Tea", category: "Tea & Infusions", price: 25, description: "Calming herbal tea", preparationTime: 5 },
-      { name: "Ginger Tea", category: "Tea & Infusions", price: 28, description: "Spicy fresh ginger tea", preparationTime: 6 },
-      { name: "Mint Tea", category: "Tea & Infusions", price: 24, description: "Refreshing mint leaves tea", preparationTime: 5 },
-
-      // Hot Specialties
-      { name: "Hot Chocolate", category: "Hot Specialties", price: 35, description: "Rich chocolate drink with whipped cream", preparationTime: 6 },
-      { name: "Chai Latte", category: "Hot Specialties", price: 38, description: "Spiced tea with steamed milk", preparationTime: 6 },
-      { name: "Golden Milk", category: "Hot Specialties", price: 40, description: "Turmeric latte with spices", preparationTime: 7 },
+      { name: "Tea", category: "Tea & Infusions", price: 40, description: "Traditional black tea", preparationTime: 5 },
+      { name: "Flavored Tea", category: "Tea & Infusions", price: 45, description: "Assorted flavored teas", preparationTime: 5 },
+      { name: "Ginger Tea", category: "Tea & Infusions", price: 50, description: "Spicy fresh ginger tea", preparationTime: 6 },
+      { name: "Special Tea", category: "Tea & Infusions", price: 100, description: "Premium blend tea", preparationTime: 7 },
+      { name: "Peanuts Tea", category: "Tea & Infusions", price: 80, description: "Tea with roasted peanuts", preparationTime: 6 },
+      { name: "Iced Tea", category: "Tea & Infusions", price: 110, description: "Refreshing iced tea", preparationTime: 4 },
+      { name: "Chai Latte (Hot or Iced)", category: "Tea & Infusions", price: 100, description: "Spiced tea latte", preparationTime: 6 },
 
       // Drinks
-      { name: "Ambo Water", category: "Drinks", price: 15, description: "Ethiopian mineral water", preparationTime: 1 },
-      { name: "Soft Drinks", category: "Drinks", price: 20, description: "Coca-Cola, Pepsi, Sprite", preparationTime: 1 },
-      { name: "Sparkling Water", category: "Drinks", price: 18, description: "Refreshing sparkling water", preparationTime: 1 },
+      { name: "Soft Drinks", category: "Drinks", price: 50, description: "Coca-Cola, Pepsi, Sprite", preparationTime: 1 },
+      { name: "Ambo Water", category: "Drinks", price: 50, description: "Ethiopian mineral water", preparationTime: 1 },
+      { name: "½ Water", category: "Drinks", price: 30, description: "Half liter water bottle", preparationTime: 1 },
+      { name: "1 Ltr Water", category: "Drinks", price: 40, description: "One liter water bottle", preparationTime: 1 },
 
       // Juice
-      { name: "Fresh Orange Juice", category: "Juice", price: 35, description: "Freshly squeezed orange juice", preparationTime: 5 },
-      { name: "Avocado Juice", category: "Juice", price: 40, description: "Creamy avocado smoothie", preparationTime: 6 },
-      { name: "Papaya Juice", category: "Juice", price: 38, description: "Sweet papaya juice", preparationTime: 5 },
-      { name: "Watermelon Juice", category: "Juice", price: 32, description: "Refreshing watermelon juice", preparationTime: 4 },
-      { name: "Mixed Fruit Juice", category: "Juice", price: 45, description: "Blend of seasonal fruits", preparationTime: 7 },
+      { name: "Avocado", category: "Juice", price: 180, description: "Fresh avocado juice", preparationTime: 6 },
+      { name: "Papaya", category: "Juice", price: 180, description: "Sweet papaya juice", preparationTime: 5 },
+      { name: "Strawberry", category: "Juice", price: 220, description: "Fresh strawberry juice", preparationTime: 5 },
+      { name: "Watermelon", category: "Juice", price: 180, description: "Refreshing watermelon juice", preparationTime: 4 },
+      { name: "Mixed", category: "Juice", price: 250, description: "Mixed fruit juice", preparationTime: 7 },
+      { name: "Prime Shake", category: "Juice", price: 300, description: "Special Prime Addis shake", preparationTime: 8 },
+
+      // Iced & Cold Coffee
+      { name: "Iced Americano", category: "Iced & Cold Coffee", price: 180, description: "Chilled americano", preparationTime: 4 },
+      { name: "Iced Latte", category: "Iced & Cold Coffee", price: 200, description: "Iced coffee with milk", preparationTime: 5 },
+      { name: "Caramel / Vanilla Frappé", category: "Iced & Cold Coffee", price: 250, description: "Blended frappé with flavor", preparationTime: 7 },
+      { name: "Cold Brew", category: "Iced & Cold Coffee", price: 150, description: "Smooth cold brew coffee", preparationTime: 2 },
+      { name: "Chocolate Iced Latte", category: "Iced & Cold Coffee", price: 250, description: "Iced latte with chocolate", preparationTime: 6 },
+
+      // Hot Specialties
+      { name: "Hot Chocolate", category: "Hot Specialties", price: 180, description: "Rich hot chocolate", preparationTime: 6 },
+      { name: "Steamed Milk", category: "Hot Specialties", price: 120, description: "Warm steamed milk", preparationTime: 4 },
 
       // Mojito
-      { name: "Classic Mojito", category: "Mojito", price: 50, description: "Mint, lime, and sparkling water", preparationTime: 8 },
-      { name: "Strawberry Mojito", category: "Mojito", price: 55, description: "Fresh strawberries with mint and lime", preparationTime: 9 },
-      { name: "Watermelon Mojito", category: "Mojito", price: 52, description: "Watermelon with mint and lime", preparationTime: 8 },
+      { name: "Mixed Mojito", category: "Mojito", price: 250, description: "Mixed fruit mojito", preparationTime: 8 },
+      { name: "Strawberry Mojito", category: "Mojito", price: 220, description: "Fresh strawberry mojito", preparationTime: 8 },
+      { name: "Mint Mojito", category: "Mojito", price: 200, description: "Classic mint mojito", preparationTime: 7 },
 
       // Breakfast
-      { name: "Ethiopian Breakfast", category: "Breakfast", price: 120, description: "Traditional Ethiopian breakfast platter", preparationTime: 15 },
-      { name: "Continental Breakfast", category: "Breakfast", price: 85, description: "Bread, eggs, and coffee", preparationTime: 12 },
-      { name: "Pancakes", category: "Breakfast", price: 65, description: "Fluffy pancakes with syrup", preparationTime: 10 },
-      { name: "French Toast", category: "Breakfast", price: 70, description: "Golden French toast with fruit", preparationTime: 12 },
+      { name: "Spinach Cheese Omelet", category: "Breakfast", price: 250, description: "Omelet with spinach and cheese", preparationTime: 12 },
+      { name: "Vegetable Scramble Egg", category: "Breakfast", price: 200, description: "Scrambled eggs with vegetables", preparationTime: 10 },
+      { name: "Special Fetira Egg & Sausage Roll", category: "Breakfast", price: 300, description: "Ethiopian bread with egg and sausage", preparationTime: 15 },
+      { name: "Normal Fetira with Honey", category: "Breakfast", price: 180, description: "Traditional bread with honey", preparationTime: 8 },
+      { name: "Special Chechebsa", category: "Breakfast", price: 250, description: "Special Ethiopian breakfast bread", preparationTime: 12 },
+      { name: "Foull Madam", category: "Breakfast", price: 200, description: "Fava beans dish", preparationTime: 15 },
+      { name: "Special Foull Madam", category: "Breakfast", price: 250, description: "Special fava beans with extras", preparationTime: 18 },
 
       // Salad
-      { name: "Caesar Salad", category: "Salad", price: 75, description: "Romaine lettuce with Caesar dressing", preparationTime: 8 },
-      { name: "Greek Salad", category: "Salad", price: 80, description: "Fresh vegetables with feta cheese", preparationTime: 10 },
-      { name: "Garden Salad", category: "Salad", price: 65, description: "Mixed greens with vegetables", preparationTime: 7 },
+      { name: "Garden Mixed Salad", category: "Salad", price: 350, description: "Fresh mixed garden salad", preparationTime: 8 },
+      { name: "Chicken Salad", category: "Salad", price: 450, description: "Salad with grilled chicken", preparationTime: 12 },
+      { name: "House of Special Salad", category: "Salad", price: 490, description: "Prime Addis special salad", preparationTime: 15 },
 
       // Burrito
-      { name: "Chicken Burrito", category: "Burrito", price: 95, description: "Grilled chicken with rice and beans", preparationTime: 15 },
-      { name: "Beef Burrito", category: "Burrito", price: 105, description: "Seasoned beef with vegetables", preparationTime: 16 },
-      { name: "Veggie Burrito", category: "Burrito", price: 85, description: "Fresh vegetables and beans", preparationTime: 12 },
+      { name: "Chicken Burrito", category: "Burrito", price: 550, description: "Grilled chicken burrito", preparationTime: 15 },
+      { name: "Beef Burrito", category: "Burrito", price: 500, description: "Seasoned beef burrito", preparationTime: 16 },
+      { name: "Fasting Burrito", category: "Burrito", price: 390, description: "Vegetarian burrito for fasting", preparationTime: 12 },
 
       // Burgers
-      { name: "Classic Burger", category: "Burgers", price: 90, description: "Beef patty with lettuce and tomato", preparationTime: 15 },
-      { name: "Cheese Burger", category: "Burgers", price: 100, description: "Beef patty with cheese", preparationTime: 16 },
-      { name: "Chicken Burger", category: "Burgers", price: 85, description: "Grilled chicken breast", preparationTime: 14 },
+      { name: "Spicy Classic Beef Burger", category: "Burgers", price: 450, description: "Spicy beef burger", preparationTime: 15 },
+      { name: "Classic Cheese Burger", category: "Burgers", price: 400, description: "Classic burger with cheese", preparationTime: 14 },
+      { name: "Prime Addis Cheese Burger", category: "Burgers", price: 600, description: "Special Prime Addis burger", preparationTime: 18 },
+      { name: "Chicken Burger", category: "Burgers", price: 550, description: "Grilled chicken burger", preparationTime: 14 },
+      { name: "Special Burger", category: "Burgers", price: 550, description: "House special burger", preparationTime: 16 },
+      { name: "French Fries", category: "Burgers", price: 150, description: "Crispy french fries", preparationTime: 8 },
 
       // Wraps
-      { name: "Chicken Wrap", category: "Wraps", price: 75, description: "Grilled chicken in tortilla", preparationTime: 10 },
-      { name: "Veggie Wrap", category: "Wraps", price: 65, description: "Fresh vegetables in tortilla", preparationTime: 8 },
-      { name: "Tuna Wrap", category: "Wraps", price: 70, description: "Tuna salad in tortilla", preparationTime: 9 },
+      { name: "Chicken Wrap", category: "Wraps", price: 450, description: "Grilled chicken wrap", preparationTime: 10 },
+      { name: "Beef Wrap", category: "Wraps", price: 400, description: "Seasoned beef wrap", preparationTime: 10 },
+      { name: "Tuna Wrap", category: "Wraps", price: 400, description: "Tuna salad wrap", preparationTime: 9 },
+      { name: "Vegetable Wrap", category: "Wraps", price: 300, description: "Fresh vegetable wrap", preparationTime: 8 },
+      { name: "Falafel Wrap", category: "Wraps", price: 300, description: "Falafel with vegetables", preparationTime: 10 },
 
       // Sandwich
-      { name: "Club Sandwich", category: "Sandwich", price: 80, description: "Triple-decker with chicken and bacon", preparationTime: 12 },
-      { name: "Grilled Cheese", category: "Sandwich", price: 55, description: "Melted cheese on grilled bread", preparationTime: 8 },
-      { name: "BLT Sandwich", category: "Sandwich", price: 70, description: "Bacon, lettuce, and tomato", preparationTime: 10 },
+      { name: "Chicken Sandwich", category: "Sandwich", price: 450, description: "Grilled chicken sandwich", preparationTime: 12 },
+      { name: "Club Sandwich", category: "Sandwich", price: 500, description: "Triple-decker club sandwich", preparationTime: 15 },
+      { name: "Vegetables Sandwich", category: "Sandwich", price: 300, description: "Fresh vegetable sandwich", preparationTime: 8 },
+      { name: "Tuna Melt Sandwich", category: "Sandwich", price: 450, description: "Tuna melt with cheese", preparationTime: 12 },
+      { name: "Potato Sandwich (Special Erteb)", category: "Sandwich", price: 250, description: "Special potato sandwich", preparationTime: 10 },
+      { name: "Avocado Sandwich", category: "Sandwich", price: 250, description: "Fresh avocado sandwich", preparationTime: 8 },
 
-      // Pasta
-      { name: "Spaghetti Bolognese", category: "Pasta", price: 110, description: "Pasta with meat sauce", preparationTime: 20 },
-      { name: "Carbonara", category: "Pasta", price: 105, description: "Creamy pasta with bacon", preparationTime: 18 },
-      { name: "Penne Arrabbiata", category: "Pasta", price: 95, description: "Spicy tomato pasta", preparationTime: 16 },
+      // Pasta (Spaghetti, Penne, Rice, Tagliatelle)
+      { name: "Bolognaise Sauce", category: "Pasta", price: 350, description: "Pasta with meat sauce", preparationTime: 20 },
+      { name: "Tuna Sauce", category: "Pasta", price: 350, description: "Pasta with tuna sauce", preparationTime: 18 },
+      { name: "Primavera Sauce", category: "Pasta", price: 250, description: "Pasta with vegetable sauce", preparationTime: 16 },
+      { name: "Pesto Sauce", category: "Pasta", price: 300, description: "Pasta with pesto sauce", preparationTime: 18 },
 
       // Chicken
-      { name: "Grilled Chicken", category: "Chicken", price: 130, description: "Seasoned grilled chicken breast", preparationTime: 25 },
-      { name: "Chicken Curry", category: "Chicken", price: 125, description: "Spicy chicken curry with rice", preparationTime: 30 },
-      { name: "BBQ Chicken", category: "Chicken", price: 135, description: "Barbecue glazed chicken", preparationTime: 28 },
+      { name: "BBQ Chicken Wing", category: "Chicken", price: 500, description: "Barbecue chicken wings", preparationTime: 20 },
+      { name: "Chicken Nugget", category: "Chicken", price: 400, description: "Crispy chicken nuggets", preparationTime: 15 },
+      { name: "Loaded Chicken Chili Fries", category: "Chicken", price: 550, description: "Fries with chicken and chili", preparationTime: 18 },
+      { name: "Chicken Shawarma", category: "Chicken", price: 490, description: "Middle Eastern chicken wrap", preparationTime: 15 },
 
       // Ethiopian Taste
-      { name: "Doro Wot", category: "Ethiopian Taste", price: 150, description: "Traditional chicken stew with injera", preparationTime: 35 },
-      { name: "Kitfo", category: "Ethiopian Taste", price: 140, description: "Ethiopian steak tartare", preparationTime: 15 },
-      { name: "Veggie Combo", category: "Ethiopian Taste", price: 120, description: "Assorted vegetarian dishes with injera", preparationTime: 25 },
-      { name: "Tibs", category: "Ethiopian Taste", price: 135, description: "Sautéed meat with vegetables", preparationTime: 20 },
+      { name: "Chekena Tibs", category: "Ethiopian Taste", price: 500, description: "Ethiopian sautéed meat", preparationTime: 25 },
+      { name: "Tibs Firfir", category: "Ethiopian Taste", price: 400, description: "Ethiopian meat with injera", preparationTime: 20 },
     ])
     
     console.log(`✅ Created ${menuItems.length} menu items`)

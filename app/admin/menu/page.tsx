@@ -220,25 +220,27 @@ export default function AdminMenuPage() {
         <main className="flex-1 md:ml-64">
           <AuthHeader title="Menu Management" description="Manage menu items, prices, and availability" />
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Menu Items ({filteredItems.length})</h2>
-                <p className="text-muted-foreground">Total: {menuItems.length} items</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Menu Items ({filteredItems.length})</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Total: {menuItems.length} items</p>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                 <AnimatedButton
                   onClick={fetchMenuItems}
                   variant="secondary"
                   disabled={loading}
+                  className="text-sm sm:text-base"
                 >
                   🔄 Refresh
                 </AnimatedButton>
                 <AnimatedButton
                   onClick={() => setShowCreateForm(true)}
                   variant="glow"
+                  className="text-sm sm:text-base"
                 >
                   ➕ Add Menu Item
                 </AnimatedButton>

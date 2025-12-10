@@ -83,8 +83,8 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
             <div className="relative overflow-hidden rounded-2xl">
               <Image
-                src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=faces"
-                alt="Ethiopian Coffee Service"
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop"
+                alt="POS Interface Screen"
                 width={400}
                 height={300}
                 className="w-full h-32 object-cover"
@@ -118,22 +118,22 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-6 sm:mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
+              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-base sm:text-lg">P</span>
               </div>
-              <span className="text-3xl font-bold text-white brand-font">Prime Addis</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white brand-font">Prime Addis</span>
             </div>
           </div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-10 border border-white/20">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-gray-600">Sign in to access your dashboard</p>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border border-white/20">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+              <p className="text-sm sm:text-base text-gray-600">Sign in to access your dashboard</p>
             </div>
 
             {error && (
@@ -149,14 +149,14 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5 mb-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 mb-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white text-sm sm:text-base"
                   placeholder="your@email.com"
                   required
                 />
@@ -168,7 +168,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-white text-sm sm:text-base"
                   placeholder="••••••••"
                   required
                 />
@@ -177,7 +177,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg text-sm sm:text-base"
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
@@ -192,14 +192,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <button
                 type="button"
                 onClick={() => handleDemoLogin("kidayos2014@gmail.com", "123456")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
                   <span className="text-xs font-bold">A</span>
                 </div>
                 {loading ? "..." : "Admin Dashboard"}
@@ -209,9 +209,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleDemoLogin("cashier@cafeteria.com", "password")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
                   <span className="text-xs font-bold">C</span>
                 </div>
                 {loading ? "..." : "Cashier POS"}
@@ -221,9 +221,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleDemoLogin("chef@cafeteria.com", "password")}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-3 shadow-md"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
               >
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
                   <span className="text-xs font-bold">K</span>
                 </div>
                 {loading ? "..." : "Kitchen Display"}
