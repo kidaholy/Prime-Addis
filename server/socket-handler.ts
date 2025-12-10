@@ -52,16 +52,6 @@ export function setupSocketHandlers(io: SocketIOServer) {
       }
     })
 
-    socket.on("inventory-alert", (item) => {
-      console.log("Inventory alert:", item.name)
-      // Notify admin of low stock
-      io.to("role:admin").emit("notification", {
-        type: "warning",
-        message: `Low stock alert: ${item.name}`,
-      })
-      io.emit("inventory-alert", item)
-    })
-
     socket.on("kitchen-notification", (message) => {
       io.to("role:cashier").emit("notification", {
         type: "info",

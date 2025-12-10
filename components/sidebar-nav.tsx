@@ -11,7 +11,6 @@ export function SidebarNav() {
   const menuItems = {
     admin: [
       { label: "Dashboard", href: "/admin", icon: "📊" },
-      { label: "Inventory", href: "/admin/inventory", icon: "📦" },
       { label: "Menu Items", href: "/admin/menu", icon: "🍽️" },
       { label: "Orders", href: "/admin/orders", icon: "📋" },
       { label: "Users", href: "/admin/users", icon: "👥" },

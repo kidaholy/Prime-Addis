@@ -21,18 +21,8 @@ const menuItemSchema = new mongoose.Schema({
   ingredients: [String],
 })
 
-// Inventory Schema
-const inventorySchema = new mongoose.Schema({
-  name: String,
-  quantity: Number,
-  unit: String,
-  minStock: Number,
-  lastUpdated: { type: Date, default: Date.now },
-})
-
 const User = mongoose.models.User || mongoose.model("User", userSchema)
 const MenuItem = mongoose.models.MenuItem || mongoose.model("MenuItem", menuItemSchema)
-const Inventory = mongoose.models.Inventory || mongoose.model("Inventory", inventorySchema)
 
 async function seed() {
   try {
@@ -42,7 +32,6 @@ async function seed() {
     // Clear existing data
     await User.deleteMany({})
     await MenuItem.deleteMany({})
-    await Inventory.deleteMany({})
     console.log("Cleared existing data")
 
     // Create users
@@ -166,35 +155,6 @@ async function seed() {
       { name: "Tibs Firfir", category: "Ethiopian Taste", price: 400, available: true, image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400" },
     ])
     console.log(`Created ${menuItems.length} menu items`)
-
-    // Create inventory - Coffee Shop Supplies
-    const inventory = await Inventory.insertMany([
-      { name: "Coffee Beans (Arabica)", quantity: 50, unit: "kg", minStock: 10 },
-      { name: "Coffee Beans (Robusta)", quantity: 30, unit: "kg", minStock: 8 },
-      { name: "Milk (Fresh)", quantity: 100, unit: "liters", minStock: 20 },
-      { name: "Milk (Almond)", quantity: 20, unit: "liters", minStock: 5 },
-      { name: "Sugar", quantity: 40, unit: "kg", minStock: 10 },
-      { name: "Chocolate Powder", quantity: 15, unit: "kg", minStock: 5 },
-      { name: "Vanilla Syrup", quantity: 10, unit: "liters", minStock: 3 },
-      { name: "Caramel Syrup", quantity: 10, unit: "liters", minStock: 3 },
-      { name: "Tea Leaves", quantity: 8, unit: "kg", minStock: 2 },
-      { name: "Ginger", quantity: 5, unit: "kg", minStock: 1 },
-      { name: "Mint Leaves", quantity: 3, unit: "kg", minStock: 1 },
-      { name: "Avocado", quantity: 50, unit: "pieces", minStock: 10 },
-      { name: "Papaya", quantity: 30, unit: "pieces", minStock: 8 },
-      { name: "Strawberry", quantity: 20, unit: "kg", minStock: 5 },
-      { name: "Watermelon", quantity: 40, unit: "kg", minStock: 10 },
-      { name: "Ice", quantity: 200, unit: "kg", minStock: 50 },
-      { name: "Cups (Small)", quantity: 500, unit: "pieces", minStock: 100 },
-      { name: "Cups (Medium)", quantity: 500, unit: "pieces", minStock: 100 },
-      { name: "Cups (Large)", quantity: 500, unit: "pieces", minStock: 100 },
-      { name: "Lids", quantity: 600, unit: "pieces", minStock: 150 },
-      { name: "Straws", quantity: 1000, unit: "pieces", minStock: 200 },
-      { name: "Napkins", quantity: 2000, unit: "pieces", minStock: 500 },
-      { name: "Ambo Water", quantity: 100, unit: "bottles", minStock: 30 },
-      { name: "Soft Drinks", quantity: 150, unit: "cans", minStock: 50 },
-    ])
-    console.log(`Created ${inventory.length} inventory items`)
 
     console.log("\n✅ Database seeded successfully!")
     console.log("\nLogin credentials:")

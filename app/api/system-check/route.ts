@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { connectDB } from "@/lib/db"
 import User from "@/lib/models/user"
-import Order from "@/lib/models/order"
 import MenuItem from "@/lib/models/menu-item"
 import jwt from "jsonwebtoken"
 
@@ -29,13 +28,11 @@ export async function GET(request: Request) {
     // Check collections
     try {
       const userCount = await User.countDocuments()
-      const orderCount = await Order.countDocuments()
       const menuItemCount = await MenuItem.countDocuments()
       
       checks.collections.status = "✅ Available"
       checks.collections.details = {
         users: userCount,
-        orders: orderCount,
         menuItems: menuItemCount
       }
     } catch (error) {

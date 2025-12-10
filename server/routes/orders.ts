@@ -24,18 +24,6 @@ router.post("/", authenticate, authorize("cashier"), async (req: Request, res: R
       paymentStatus: "paid",
     })
 
-    // Deduct inventory for each item
-    for (const item of items) {
-      const ingredients = await Inventory.find({ name: { $in: item.ingredients || [] } })
-      for (const ingredient of ingredients) {
-        ingredient.quantity -= 1
-        if (ingredient.quantity < ingredient.minStock) {
-          ingredient.isLowStock = true
-        }
-        await ingredient.save()
-      }
-    }
-
     await order.save()
     res.status(201).json(order)
   } catch (error) {

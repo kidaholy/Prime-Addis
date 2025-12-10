@@ -7,7 +7,6 @@ import connectDB from "./config/database"
 import { setupSocketHandlers } from "./socket-handler"
 
 import authRoutes from "./routes/auth"
-import inventoryRoutes from "./routes/inventory"
 import ordersRoutes from "./routes/orders"
 import menuRoutes from "./routes/menu"
 import usersRoutes from "./routes/users"
@@ -32,7 +31,6 @@ setupSocketHandlers(io)
 
 // Routes
 app.use("/api/auth", authRoutes)
-app.use("/api/inventory", inventoryRoutes)
 app.use("/api/orders", ordersRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/users", usersRoutes)
