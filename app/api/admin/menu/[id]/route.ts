@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
 import MenuItem from "@/lib/models/menu-item"
 
@@ -26,10 +27,28 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     
     const updateData = await request.json()
     console.log("📝 Menu item update data:", updateData)
+    console.log("🆔 Menu item ID to update:", params.id)
+
+    // Validate ObjectId format using mongoose
+    if (!params.id || !mongoose.Types.ObjectId.isValid(params.id)) {
+      console.error("❌ Invalid ObjectId format:", params.id)
+      console.error("❌ ID type:", typeof params.id)
+      console.error("❌ ID length:", params.id?.length)
+      return NextResponse.json({ message: "Invalid menu item ID format" }, { status: 400 })
+    }
 
     // Convert numeric fields
     if (updateData.price) updateData.price = Number(updateData.price)
     if (updateData.preparationTime) updateData.preparationTime = Number(updateData.preparationTime)
+
+    // First check if the item exists
+    const existingItem = await MenuItem.findById(params.id)
+    console.log("🔍 Existing menu item found:", existingItem ? "Yes" : "No")
+    
+    if (!existingItem) {
+      console.error("❌ Menu item not found in database:", params.id)
+      return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
+    }
 
     const menuItem = await MenuItem.findByIdAndUpdate(
       params.id, 
@@ -38,6 +57,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     )
 
     if (!menuItem) {
+      console.error("❌ Failed to update menu item:", params.id)
       return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
     }
 
@@ -71,6 +91,13 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     await connectDB()
     console.log("📊 Database connected for menu item deletion")
+    console.log("🆔 Menu item ID to delete:", params.id)
+
+    // Validate ObjectId format using mongoose
+    if (!params.id || !mongoose.Types.ObjectId.isValid(params.id)) {
+      console.error("❌ Invalid ObjectId format for deletion:", params.id)
+      return NextResponse.json({ message: "Invalid menu item ID format" }, { status: 400 })
+    }
 
     const menuItem = await MenuItem.findByIdAndDelete(params.id)
 

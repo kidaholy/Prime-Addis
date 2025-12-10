@@ -128,6 +128,9 @@ export default function AdminMenuPage() {
       const method = editingItem ? "PUT" : "POST"
       
       console.log(`🔄 ${editingItem ? 'Updating' : 'Creating'} menu item:`, formData)
+      console.log(`🔗 URL: ${url}`)
+      console.log(`🆔 Item ID: ${editingItem?._id}`)
+      console.log(`🔑 Token: ${token ? 'Present' : 'Missing'}`)
       
       const response = await fetch(url, {
         method,
@@ -139,6 +142,7 @@ export default function AdminMenuPage() {
       })
 
       const responseData = await response.json()
+      console.log(`📥 Response:`, responseData)
 
       if (response.ok) {
         alert(`✅ Menu item ${editingItem ? 'updated' : 'created'} successfully!`)
@@ -154,6 +158,7 @@ export default function AdminMenuPage() {
         // Refresh menu items
         fetchMenuItems()
       } else {
+        console.error(`❌ API Error - Status: ${response.status}, Message: ${responseData.message}`)
         alert(`❌ Failed to ${editingItem ? 'update' : 'create'} menu item: ${responseData.message}`)
       }
     } catch (error) {
@@ -165,6 +170,11 @@ export default function AdminMenuPage() {
   }
 
   const handleEdit = (item: MenuItem) => {
+    console.log("🔧 Editing menu item:", item)
+    console.log("🆔 Item ID:", item._id)
+    console.log("🔍 ID type:", typeof item._id)
+    console.log("🔍 ID length:", item._id?.length)
+    
     setEditingItem(item)
     setFormData({
       name: item.name,
