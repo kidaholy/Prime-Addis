@@ -77,35 +77,35 @@ export default function LoginPage() {
             <div className="relative overflow-hidden rounded-2xl">
               <Image
                 src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop"
-                alt="POS Interface Screen"
+                alt="Coffee Shop Management"
                 width={400}
                 height={300}
                 className="w-full h-32 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-3 left-3">
-                <p className="text-white text-sm font-semibold">Modern POS</p>
+                <p className="text-white text-sm font-semibold">Management System</p>
               </div>
             </div>
             <div className="relative overflow-hidden rounded-2xl">
               <Image
                 src="https://i.pinimg.com/736x/aa/0d/fc/aa0dfc30734c2833c12974ab8cab3347.jpg"
-                alt="Ethiopian Chef Dashboard"
+                alt="Coffee Shop Operations"
                 width={400}
                 height={300}
                 className="w-full h-32 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-3 left-3">
-                <p className="text-white text-sm font-semibold">Chef Dashboard</p>
+                <p className="text-white text-sm font-semibold">Operations Dashboard</p>
               </div>
             </div>
           </div>
 
           <div className="mt-12 space-y-4 w-full max-w-md">
-            <FeatureItem text="Real-time Order Management" />
+            <FeatureItem text="Order Management" />
             <FeatureItem text="Menu & Pricing Control" />
-            <FeatureItem text="Staff Role Management" />
+            <FeatureItem text="Business Analytics" />
           </div>
         </div>
       </div>
