@@ -72,6 +72,37 @@ export default function CashierPOSPage() {
     }
 
     fetchMenuItems()
+    
+    // Add automatic refresh every 5 seconds for menu items
+    const interval = setInterval(fetchMenuItems, 5000)
+    return () => clearInterval(interval)
+  }, [token])
+
+  // Add localStorage listener for menu updates
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'menuUpdated') {
+        // Refetch menu items when menu is updated
+        const fetchMenuItems = async () => {
+          if (!token) return
+          try {
+            const response = await fetch("/api/menu", {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            if (response.ok) {
+              const data = await response.json()
+              setMenuItems(data)
+            }
+          } catch (err) {
+            console.error("Failed to refresh menu items")
+          }
+        }
+        fetchMenuItems()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [token])
 
   const handleAddToCart = (item: MenuItem) => {
@@ -123,6 +154,9 @@ export default function CashierPOSPage() {
         const data = await response.json()
         setOrderNumber(data.orderNumber)
         setShowOrderAnimation(true)
+
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('newOrderCreated', Date.now().toString())
 
         // Clear cart after animation
         setTimeout(() => {

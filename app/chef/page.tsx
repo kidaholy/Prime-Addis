@@ -33,9 +33,44 @@ export default function KitchenDisplayPage() {
 
   useEffect(() => {
     fetchOrders()
-    const interval = setInterval(fetchOrders, 3000)
+    // Reduced interval to 1 second for immediate updates
+    const interval = setInterval(fetchOrders, 1000)
     return () => clearInterval(interval)
   }, [token])
+
+  // Add visibility change listener for immediate refresh when tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchOrders()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Add focus listener for immediate refresh when window gets focus
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchOrders()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // Add localStorage listener for cross-page updates
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') {
+        fetchOrders()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   const fetchOrders = async () => {
     try {
@@ -63,6 +98,15 @@ export default function KitchenDisplayPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
+      // Optimistic update - immediately update the UI
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId 
+            ? { ...order, status: newStatus as any }
+            : order
+        )
+      )
+
       const response = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
         headers: {
@@ -73,10 +117,19 @@ export default function KitchenDisplayPage() {
       })
 
       if (response.ok) {
+        // Immediate refresh to ensure data consistency
+        fetchOrders()
+        
+        // Trigger refresh on other pages by setting a flag in localStorage
+        localStorage.setItem('orderUpdated', Date.now().toString())
+      } else {
+        // Revert optimistic update on failure
         fetchOrders()
       }
     } catch (err) {
       console.error("Failed to update order status")
+      // Revert optimistic update on error
+      fetchOrders()
     }
   }
 

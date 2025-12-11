@@ -127,6 +127,9 @@ export default function AdminUsersPage() {
         
         // Refresh users list
         fetchUsers()
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('userUpdated', Date.now().toString())
       } else {
         alert(`❌ Failed to create user: ${responseData.message}`)
       }
@@ -223,6 +226,9 @@ export default function AdminUsersPage() {
         
         // Refresh users list
         fetchUsers()
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('userUpdated', Date.now().toString())
       } else {
         console.error("❌ Update failed:", response.status, responseData)
         alert(`❌ Failed to update user: ${responseData.message || 'Unknown error'}\n\nStatus: ${response.status}\nUser ID: ${editingUser._id}`)
@@ -258,6 +264,9 @@ export default function AdminUsersPage() {
         
         // Refresh users list
         fetchUsers()
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('userUpdated', Date.now().toString())
       } else {
         alert(`❌ Failed to delete user: ${responseData.message}`)
       }

@@ -24,7 +24,13 @@ export async function GET(request: Request) {
     const orders = await Order.find().sort({ createdAt: -1 }).lean()
     console.log(`📦 Found ${orders.length} orders in database`)
 
-    return NextResponse.json(orders)
+    // Convert ObjectId to string for frontend compatibility
+    const serializedOrders = orders.map(order => ({
+      ...order,
+      _id: order._id.toString()
+    }))
+
+    return NextResponse.json(serializedOrders)
   } catch (error: any) {
     console.error("❌ Get orders error:", error)
     return NextResponse.json({ message: error.message || "Failed to get orders" }, { status: 500 })
@@ -60,13 +66,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Valid total amount is required" }, { status: 400 })
     }
 
-    // Generate order number
-    const lastOrder = await Order.findOne().sort({ createdAt: -1 })
-    const orderNumber = lastOrder
-      ? String(Number(lastOrder.orderNumber) + 1).padStart(3, "0")
-      : "001"
+    // Generate order number based on highest existing number + 1
+    const lastOrder = await Order.findOne({}, { orderNumber: 1 }).sort({ orderNumber: -1 })
+    let orderNumber: string
     
+    if (lastOrder && lastOrder.orderNumber) {
+      // Increment the highest order number
+      const lastNumber = Number(lastOrder.orderNumber)
+      orderNumber = String(lastNumber + 1).padStart(3, "0")
+    } else {
+      // No orders exist, start with 001
+      orderNumber = "001"
+    }
+    
+    console.log("🔢 Last order number:", lastOrder?.orderNumber || "none")
     console.log("🔢 Generated order number:", orderNumber)
+    
+    // Log total order count for verification
+    const totalOrders = await Order.countDocuments()
+    console.log("📊 Total orders in database:", totalOrders)
+    
+    // Double-check that this order number doesn't already exist (safety check)
+    const existingOrder = await Order.findOne({ orderNumber })
+    if (existingOrder) {
+      console.log("⚠️ Order number conflict detected, finding next available number")
+      // Find all order numbers and get the next available one
+      const allOrderNumbers = await Order.find({}, { orderNumber: 1 }).sort({ orderNumber: 1 })
+      const numbers = allOrderNumbers.map(o => Number(o.orderNumber)).filter(n => !isNaN(n))
+      let nextNumber = 1
+      while (numbers.includes(nextNumber)) {
+        nextNumber++
+      }
+      orderNumber = String(nextNumber).padStart(3, "0")
+      console.log("🔢 Using next available number:", orderNumber)
+    }
 
     // Create order data
     const orderData = {
@@ -110,7 +143,13 @@ export async function POST(request: Request) {
       console.error("❌ Failed to send order notifications:", error)
     }
 
-    return NextResponse.json(order, { status: 201 })
+    // Return order with string ID
+    const serializedOrder = {
+      ...order.toObject(),
+      _id: order._id.toString()
+    }
+
+    return NextResponse.json(serializedOrder, { status: 201 })
   } catch (error: any) {
     console.error("Create order error:", error)
     return NextResponse.json({ message: error.message || "Failed to create order" }, { status: 500 })

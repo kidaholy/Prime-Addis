@@ -32,9 +32,44 @@ export default function CashierOrdersPage() {
 
   useEffect(() => {
     fetchOrders()
-    const interval = setInterval(fetchOrders, 10000) // Refresh every 10 seconds
+    // Reduced interval to 1 second for immediate updates
+    const interval = setInterval(fetchOrders, 1000)
     return () => clearInterval(interval)
   }, [token])
+
+  // Add visibility change listener for immediate refresh when tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchOrders()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Add focus listener for immediate refresh when window gets focus
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchOrders()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [])
+
+  // Add localStorage listener for cross-page updates
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') {
+        fetchOrders()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   const fetchOrders = async () => {
     try {

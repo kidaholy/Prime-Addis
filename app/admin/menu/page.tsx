@@ -163,6 +163,9 @@ export default function AdminMenuPage() {
         
         // Refresh menu items
         fetchMenuItems()
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('menuUpdated', Date.now().toString())
       } else {
         console.error(`❌ API Error - Status: ${response.status}, Message: ${responseData.message}`)
         alert(`❌ Failed to ${editingItem ? 'update' : 'create'} menu item: ${responseData.message}`)
@@ -210,6 +213,9 @@ export default function AdminMenuPage() {
       if (response.ok) {
         alert("✅ Menu item deleted successfully!")
         fetchMenuItems()
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('menuUpdated', Date.now().toString())
       } else {
         const errorData = await response.json()
         alert(`❌ Failed to delete menu item: ${errorData.message}`)

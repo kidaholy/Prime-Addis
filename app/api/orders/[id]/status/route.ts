@@ -6,8 +6,11 @@ import { addNotification } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: any) {
   try {
+    const params = await context.params
+    console.log("🔄 Updating order status for ID:", params.id)
+    
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
 
     if (!token) {
@@ -19,6 +22,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     await connectDB()
 
     const { status } = await request.json()
+    console.log("📝 New status:", status)
 
     const order = await Order.findByIdAndUpdate(params.id, { status }, { new: true })
 
