@@ -59,18 +59,31 @@ export function SidebarNav() {
       <div className="p-4 hidden md:block">
         <ul className="space-y-2">
           {items.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+            // Find the most specific matching route
+            const matchingItems = items.filter(menuItem => 
+              pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
+            )
+            
+            // Sort by specificity (longer paths are more specific)
+            const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
+            
+            // Only the most specific item should be active
+            const isActive = mostSpecificItem?.href === item.href
+            
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
+                  )}
+                  <span className={`text-lg ${isActive ? 'animate-bounce-gentle' : ''}`}>{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               </li>
