@@ -30,20 +30,7 @@ export default function LoginPage() {
     [email, password, login],
   )
 
-  const handleDemoLogin = useCallback(
-    async (demoEmail: string, demoPassword: string) => {
-      setError("")
-      setLoading(true)
 
-      try {
-        await login(demoEmail, demoPassword)
-      } catch (err: any) {
-        setError(err.message || "Login failed")
-        setLoading(false)
-      }
-    },
-    [login],
-  )
 
   return (
     <div className="min-h-screen flex relative overflow-hidden">
@@ -201,52 +188,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">Quick Access</span>
-              </div>
-            </div>
 
-            <div className="space-y-2 sm:space-y-3">
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("kidayos2014@gmail.com", "123456")}
-                disabled={loading}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
-              >
-                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold">A</span>
-                </div>
-                {loading ? "..." : "Admin Dashboard"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("cashier@cafeteria.com", "password")}
-                disabled={loading}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
-              >
-                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold">C</span>
-                </div>
-                {loading ? "..." : "Cashier POS"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("chef@cafeteria.com", "password")}
-                disabled={loading}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2 sm:gap-3 shadow-md text-sm sm:text-base"
-              >
-                <div className="w-5 sm:w-6 h-5 sm:h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold">K</span>
-                </div>
-                {loading ? "..." : "Kitchen Display"}
-              </button>
-            </div>
 
             <div className="mt-8 text-center">
               <Link href="/" className="text-amber-600 hover:text-amber-700 font-medium text-sm transition-colors">

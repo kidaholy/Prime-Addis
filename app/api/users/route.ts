@@ -28,7 +28,13 @@ export async function GET(request: Request) {
     const users = await User.find({}).select("-password").lean()
     console.log(`👥 Found ${users.length} users in database`)
 
-    return NextResponse.json(users)
+    // Convert ObjectId to string for frontend compatibility
+    const serializedUsers = users.map(user => ({
+      ...user,
+      _id: user._id.toString()
+    }))
+
+    return NextResponse.json(serializedUsers)
   } catch (error: any) {
     console.error("❌ Get users error:", error)
     return NextResponse.json({ message: error.message || "Failed to get users" }, { status: 500 })

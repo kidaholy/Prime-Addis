@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
+import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
 import User from "@/lib/models/user"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
 // Get single user (admin only)
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: any) {
   try {
+    const params = await context.params
+    
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
     
     if (!token) {
@@ -30,7 +33,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     console.log("✅ User retrieved:", user.email)
-    return NextResponse.json(user)
+    return NextResponse.json({
+      ...user,
+      _id: user._id.toString()
+    })
   } catch (error: any) {
     console.error("❌ Get user error:", error)
     return NextResponse.json({ message: error.message || "Failed to get user" }, { status: 500 })
@@ -38,7 +44,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // Update user (admin only)
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: any) {
+  const params = await context.params
   console.log("🚀 PUT /api/users/[id] route hit!")
   console.log("📋 Params received:", JSON.stringify(params))
   console.log("📋 Params.id:", params?.id)
@@ -234,8 +241,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // Delete user (admin only)
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: any) {
   try {
+    const params = await context.params
+    console.log("🗑️ DELETE request received for user deletion")
+    console.log("🆔 User ID to delete:", params.id)
+    
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
     
     if (!token) {
@@ -252,8 +263,16 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     await connectDB()
     console.log("📊 Database connected for user deletion")
     
+    // Validate ObjectId format using mongoose
+    if (!params.id || !/^[0-9a-fA-F]{24}$/.test(params.id)) {
+      console.error("❌ Invalid ObjectId format for deletion:", params.id)
+      return NextResponse.json({ message: "Invalid user ID format" }, { status: 400 })
+    }
+    
     // Check if user exists
     const existingUser = await User.findById(params.id)
+    console.log("🔍 User found for deletion:", existingUser ? "Yes" : "No")
+    
     if (!existingUser) {
       return NextResponse.json({ message: "User not found" }, { status: 404 })
     }
