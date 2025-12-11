@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { AuthHeader } from "@/components/auth-header"
 import { AnimatedButton } from "@/components/animated-button"
-import { TestUsersFetch } from "@/components/test-users-fetch"
+
 import { useAuth } from "@/context/auth-context"
 
 
@@ -286,8 +286,7 @@ export default function AdminUsersPage() {
           <AuthHeader title="User Management" description="Manage system users and permissions" />
 
           <div className="p-6">
-            {/* Debug Component */}
-            <TestUsersFetch />
+
             
             {/* Header with Create Button */}
             <div className="flex justify-between items-center mb-6">
@@ -300,48 +299,7 @@ export default function AdminUsersPage() {
                 >
                   🔄 Refresh
                 </AnimatedButton>
-                <AnimatedButton
-                  onClick={async () => {
-                    try {
-                      const response = await fetch("/api/debug/users", {
-                        headers: { Authorization: `Bearer ${token}` },
-                      })
-                      const data = await response.json()
-                      console.log("🔍 Debug user data:", data)
-                      alert(`Debug Info:\n${JSON.stringify(data, null, 2)}`)
-                    } catch (error) {
-                      console.error("Debug error:", error)
-                    }
-                  }}
-                  variant="secondary"
-                >
-                  🔍 Debug
-                </AnimatedButton>
-                <AnimatedButton
-                  onClick={async () => {
-                    try {
-                      console.log("🧪 Testing API endpoint...")
-                      const response = await fetch("/api/test-user-update", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ test: "data", userId: "test123" }),
-                      })
-                      console.log("📥 Test response status:", response.status)
-                      const data = await response.json()
-                      console.log("📄 Test response data:", data)
-                      alert(`Test Result:\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`)
-                    } catch (error) {
-                      console.error("Test error:", error)
-                      alert(`Test Error: ${error}`)
-                    }
-                  }}
-                  variant="secondary"
-                >
-                  🧪 Test API
-                </AnimatedButton>
+
                 <AnimatedButton
                   onClick={() => setShowCreateForm(true)}
                   variant="glow"

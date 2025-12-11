@@ -10,8 +10,7 @@ import { OrderAnimation } from "@/components/order-animation"
 import { ParticleSystem } from "@/components/particle-system"
 import { AnimatedLoading } from "@/components/animated-loading"
 import { AnimatedButton } from "@/components/animated-button"
-import { TestOrderButton } from "@/components/test-order-button"
-import { DebugPanel } from "@/components/debug-panel"
+
 import { useAuth } from "@/context/auth-context"
 
 interface MenuItem {
@@ -182,16 +181,7 @@ export default function CashierPOSPage() {
         <main className="flex-1 md:ml-64 md:mr-80">
           <AuthHeader title="POS System" description="Browse menu and take orders" />
           
-          {/* Debug Test Button */}
-          <div className="mx-6 mt-4 p-4 bg-card rounded-lg border border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-foreground">Debug Tools</h3>
-                <p className="text-sm text-muted-foreground">Test order creation and notifications</p>
-              </div>
-              <TestOrderButton />
-            </div>
-          </div>
+
 
           <div className="p-6">
             {/* Loading State */}
@@ -279,9 +269,7 @@ export default function CashierPOSPage() {
 
         {/* Order Animation */}
         <OrderAnimation orderNumber={orderNumber} totalItems={cartItems.length} isVisible={showOrderAnimation} />
-        
-        {/* Debug Panel */}
-        <DebugPanel />
+
       </div>
     </ProtectedRoute>
   )
