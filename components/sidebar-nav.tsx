@@ -75,7 +75,7 @@ export function SidebarNav() {
   return (
     <>
       {/* Mobile Header - Optimized for 412px width */}
-      <div className="md:hidden bg-sidebar border-b border-sidebar-border sticky top-0 z-40">
+      <div className="md:hidden bg-sidebar border-b border-sidebar-border sticky top-0 z-[55]">
         <div className="flex items-center justify-between px-3 py-2.5">
           <Link
             href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
@@ -114,7 +114,7 @@ export function SidebarNav() {
 
       {/* Mobile Menu Overlay - Optimized for 412px */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 md:hidden">
+        <div className="fixed inset-0 bg-black/50 z-[60] md:hidden">
           <div 
             id="mobile-sidebar"
             className="fixed left-0 top-0 h-full w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto"

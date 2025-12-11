@@ -280,54 +280,57 @@ export default function AdminUsersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="flex flex-col md:flex-row">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 md:ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="User Management" description="Manage system users and permissions" />
 
-          <div className="p-6">
+          <div className="p-2.5 sm:p-4 lg:p-6">
 
             
-            {/* Header with Create Button */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-foreground">System Users</h2>
-              <div className="flex gap-3">
-                <AnimatedButton
-                  onClick={fetchUsers}
-                  variant="secondary"
-                  disabled={loading}
-                >
-                  🔄 Refresh
-                </AnimatedButton>
-
-                <AnimatedButton
-                  onClick={() => setShowCreateForm(true)}
-                  variant="glow"
-                >
-                  ➕ Create User
-                </AnimatedButton>
+            {/* Header with Create Button - Mobile Optimized */}
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <h2 className="text-lg sm:text-2xl font-bold text-foreground">System Users</h2>
+                <div className="flex gap-2">
+                  <AnimatedButton
+                    onClick={fetchUsers}
+                    variant="secondary"
+                    disabled={loading}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm px-2 sm:px-4 py-2"
+                  >
+                    🔄 <span className="hidden xs:inline">Refresh</span>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    onClick={() => setShowCreateForm(true)}
+                    variant="glow"
+                    className="flex-1 sm:flex-none text-xs sm:text-sm px-2 sm:px-4 py-2"
+                  >
+                    ➕ <span className="hidden xs:inline">Create User</span>
+                  </AnimatedButton>
+                </div>
               </div>
             </div>
 
-            {/* System Status */}
-            <div className="mb-6 p-4 bg-card/50 rounded-lg border border-border">
-              <h3 className="font-semibold mb-2">System Status</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Database:</span>
-                  <span className="ml-2 text-success">Connected</span>
+            {/* System Status - Mobile Optimized */}
+            <div className="mb-4 p-3 bg-card/50 rounded-lg border border-border">
+              <h3 className="text-sm font-semibold mb-2">System Status</h3>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Database</span>
+                  <span className="text-success font-medium">Connected</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Auth:</span>
-                  <span className="ml-2">{token ? "✅ Valid" : "❌ Missing"}</span>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Auth</span>
+                  <span className="font-medium">{token ? "✅ Valid" : "❌ Missing"}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Role:</span>
-                  <span className="ml-2">{user?.role || "Unknown"}</span>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Role</span>
+                  <span className="font-medium capitalize">{user?.role || "Unknown"}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Users:</span>
-                  <span className="ml-2">{users.length} found</span>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Users</span>
+                  <span className="font-medium">{users.length} found</span>
                 </div>
               </div>
             </div>
@@ -341,41 +344,49 @@ export default function AdminUsersPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-3">
                 {users.map((userItem) => (
-                  <div key={userItem._id} className="card-base hover-lift">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
-                          <span className="text-xl">
+                  <div key={userItem._id} className="card-base hover-lift p-3">
+                    {/* Mobile-Optimized User Card */}
+                    <div className="flex flex-col gap-3">
+                      {/* User Info Section */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-base">
                             {userItem.role === "admin" ? "👑" : userItem.role === "cashier" ? "💳" : "👨‍🍳"}
                           </span>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{userItem.name}</h3>
-                          <p className="text-sm text-muted-foreground">{userItem.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground text-sm truncate">{userItem.name}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{userItem.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                          userItem.role === "admin" ? "bg-accent/20 text-accent" :
-                          userItem.role === "cashier" ? "bg-info/20 text-info" :
-                          "bg-success/20 text-success"
-                        }`}>
-                          {userItem.role}
-                        </span>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          userItem.isActive ? "bg-success/20 text-success" : "bg-danger/20 text-danger"
-                        }`}>
-                          {userItem.isActive ? "Active" : "Inactive"}
-                        </span>
+                      
+                      {/* Status and Actions Section */}
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
+                            userItem.role === "admin" ? "bg-accent/20 text-accent" :
+                            userItem.role === "cashier" ? "bg-info/20 text-info" :
+                            "bg-success/20 text-success"
+                          }`}>
+                            {userItem.role}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            userItem.isActive ? "bg-success/20 text-success" : "bg-danger/20 text-danger"
+                          }`}>
+                            {userItem.isActive ? "✓" : "✗"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
                           <AnimatedButton
                             onClick={() => handleEditUser(userItem)}
                             variant="secondary"
                             size="sm"
+                            className="text-xs px-2 py-1"
                           >
-                            ✏️ Edit
+                            ✏️
                           </AnimatedButton>
                           {userItem.email !== user?.email && (
                             <AnimatedButton
@@ -383,9 +394,9 @@ export default function AdminUsersPage() {
                               variant="secondary"
                               size="sm"
                               disabled={deleteLoading === userItem._id}
-                              className="text-danger hover:bg-danger/20"
+                              className="text-xs px-2 py-1 text-danger hover:bg-danger/20"
                             >
-                              {deleteLoading === userItem._id ? "..." : "🗑️ Delete"}
+                              {deleteLoading === userItem._id ? "..." : "🗑️"}
                             </AnimatedButton>
                           )}
                         </div>
@@ -405,43 +416,43 @@ export default function AdminUsersPage() {
             )}
           </div>
 
-          {/* Edit User Modal */}
+          {/* Edit User Modal - Mobile Optimized */}
           {showEditForm && editingUser && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-4">Edit User</h3>
+            <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-2">
+              <div className="bg-card rounded-xl p-3 w-full max-w-sm border border-border max-h-[98vh] overflow-y-auto mt-2">
+                <h3 className="text-base font-bold text-foreground mb-3">Edit User</h3>
                 
-                <form onSubmit={handleUpdateUser} className="space-y-4">
+                <form onSubmit={handleUpdateUser} className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Name</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Name</label>
                     <input
                       type="text"
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="input-base"
-                      placeholder="Enter full name"
+                      className="input-base text-sm"
+                      placeholder="Full name"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Email</label>
                     <input
                       type="email"
                       value={editFormData.email}
                       onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                      className="input-base"
-                      placeholder="Enter email address"
+                      className="input-base text-sm"
+                      placeholder="Email address"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Role</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Role</label>
                     <select
                       value={editFormData.role}
                       onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as "admin" | "cashier" | "chef" })}
-                      className="input-base"
+                      className="input-base text-sm"
                     >
                       <option value="admin">Admin</option>
                       <option value="cashier">Cashier</option>
@@ -450,21 +461,21 @@ export default function AdminUsersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">New Password (optional)</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">New Password (optional)</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={editFormData.password}
                         onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
-                        className="input-base flex-1"
-                        placeholder="Leave empty to keep current password"
+                        className="input-base text-sm flex-1"
+                        placeholder="Leave empty to keep current"
                       />
                       <button
                         type="button"
                         onClick={generateEditPassword}
-                        className="px-3 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 text-sm"
+                        className="px-2 py-1 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 text-xs"
                       >
-                        Generate
+                        Gen
                       </button>
                     </div>
                   </div>
@@ -477,19 +488,19 @@ export default function AdminUsersPage() {
                       onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
                       className="w-4 h-4 text-accent"
                     />
-                    <label htmlFor="editIsActive" className="text-sm font-medium text-foreground">
+                    <label htmlFor="editIsActive" className="text-xs font-medium text-foreground">
                       User is active
                     </label>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-2 pt-3">
                     <AnimatedButton
                       type="submit"
                       disabled={updateLoading}
                       variant="glow"
-                      className="flex-1"
+                      className="flex-1 text-xs py-2"
                     >
-                      {updateLoading ? "Updating..." : "Update User"}
+                      {updateLoading ? "Updating..." : "Update"}
                     </AnimatedButton>
                     <AnimatedButton
                       type="button"
@@ -498,6 +509,7 @@ export default function AdminUsersPage() {
                         setEditingUser(null)
                       }}
                       variant="secondary"
+                      className="px-3 text-xs py-2"
                     >
                       Cancel
                     </AnimatedButton>
@@ -507,43 +519,43 @@ export default function AdminUsersPage() {
             </div>
           )}
 
-          {/* Create User Modal */}
+          {/* Create User Modal - Mobile Optimized */}
           {showCreateForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-4">Create New User</h3>
+            <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-2">
+              <div className="bg-card rounded-xl p-3 w-full max-w-sm border border-border max-h-[98vh] overflow-y-auto mt-2">
+                <h3 className="text-base font-bold text-foreground mb-3">Create User</h3>
                 
-                <form onSubmit={handleCreateUser} className="space-y-4">
+                <form onSubmit={handleCreateUser} className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Name</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Name</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="input-base"
-                      placeholder="Enter full name"
+                      className="input-base text-sm"
+                      placeholder="Full name"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Email</label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="input-base"
-                      placeholder="Enter email address"
+                      className="input-base text-sm"
+                      placeholder="Email address"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Role</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Role</label>
                     <select
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as "cashier" | "chef" })}
-                      className="input-base"
+                      className="input-base text-sm"
                     >
                       <option value="cashier">Cashier</option>
                       <option value="chef">Chef</option>
@@ -551,39 +563,40 @@ export default function AdminUsersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Password</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">Password</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="input-base flex-1"
-                        placeholder="Enter password"
+                        className="input-base text-sm flex-1"
+                        placeholder="Password"
                         required
                       />
                       <button
                         type="button"
                         onClick={generatePassword}
-                        className="px-3 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 text-sm"
+                        className="px-2 py-1 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 text-xs"
                       >
-                        Generate
+                        Gen
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-2 pt-3">
                     <AnimatedButton
                       type="submit"
                       disabled={createLoading}
                       variant="glow"
-                      className="flex-1"
+                      className="flex-1 text-xs py-2"
                     >
-                      {createLoading ? "Creating..." : "Create User"}
+                      {createLoading ? "Creating..." : "Create"}
                     </AnimatedButton>
                     <AnimatedButton
                       type="button"
                       onClick={() => setShowCreateForm(false)}
                       variant="secondary"
+                      className="px-3 text-xs py-2"
                     >
                       Cancel
                     </AnimatedButton>

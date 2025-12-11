@@ -32,9 +32,6 @@ export default function CashierOrdersPage() {
 
   useEffect(() => {
     fetchOrders()
-    // Reduced interval to 1 second for immediate updates
-    const interval = setInterval(fetchOrders, 1000)
-    return () => clearInterval(interval)
   }, [token])
 
   // Add visibility change listener for immediate refresh when tab becomes active
@@ -98,39 +95,39 @@ export default function CashierOrdersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="flex">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="Order History" description="View all cashier orders" />
 
-          <div className="p-6">
-            {/* Statistics */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="card-base bg-secondary/10 border-2 border-secondary">
-                <p className="text-secondary font-semibold">Total Orders</p>
-                <p className="text-4xl font-bold text-secondary mt-2">{stats.total}</p>
+          <div className="p-2.5 sm:p-4 lg:p-6">
+            {/* Statistics - Mobile Optimized */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
+              <div className="card-base bg-secondary/10 border-2 border-secondary p-2 sm:p-3">
+                <p className="text-secondary font-semibold text-xs sm:text-sm">Total Orders</p>
+                <p className="text-xl sm:text-3xl font-bold text-secondary mt-1">{stats.total}</p>
               </div>
-              <div className="card-base bg-warning/10 border-2 border-warning">
-                <p className="text-warning font-semibold">Pending</p>
-                <p className="text-4xl font-bold text-warning mt-2">{stats.pending}</p>
+              <div className="card-base bg-warning/10 border-2 border-warning p-2 sm:p-3">
+                <p className="text-warning font-semibold text-xs sm:text-sm">Pending</p>
+                <p className="text-xl sm:text-3xl font-bold text-warning mt-1">{stats.pending}</p>
               </div>
-              <div className="card-base bg-success/10 border-2 border-success">
-                <p className="text-success font-semibold">Completed</p>
-                <p className="text-4xl font-bold text-success mt-2">{stats.completed}</p>
+              <div className="card-base bg-success/10 border-2 border-success p-2 sm:p-3">
+                <p className="text-success font-semibold text-xs sm:text-sm">Completed</p>
+                <p className="text-xl sm:text-3xl font-bold text-success mt-1">{stats.completed}</p>
               </div>
-              <div className="card-base bg-primary/10 border-2 border-primary">
-                <p className="text-primary font-semibold">Revenue</p>
-                <p className="text-3xl font-bold text-primary mt-2">{stats.revenue.toFixed(2)} Birr</p>
+              <div className="card-base bg-primary/10 border-2 border-primary p-2 sm:p-3">
+                <p className="text-primary font-semibold text-xs sm:text-sm">Revenue</p>
+                <p className="text-lg sm:text-2xl font-bold text-primary mt-1">{stats.revenue.toFixed(2)} Br</p>
               </div>
             </div>
 
-            {/* Filter Buttons */}
-            <div className="flex gap-3 mb-6">
+            {/* Filter Buttons - Mobile Optimized */}
+            <div className="grid grid-cols-2 sm:flex gap-2 mb-4">
               {["all", "pending", "completed", "cancelled"].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status as typeof filterStatus)}
-                  className={`px-4 py-2 rounded-lg transition-colors capitalize ${
+                  className={`px-2 sm:px-4 py-2 rounded-lg transition-colors capitalize text-xs sm:text-sm font-medium ${
                     filterStatus === status
                       ? "bg-primary text-primary-foreground"
                       : "bg-card border border-border hover:border-primary"
@@ -141,51 +138,85 @@ export default function CashierOrdersPage() {
               ))}
             </div>
 
-            {/* Orders Table */}
+            {/* Orders List - Mobile Optimized */}
             {loading ? (
-              <div className="text-center py-8">Loading orders...</div>
+              <div className="flex items-center justify-center py-8 sm:py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
+                  <p className="text-sm sm:text-base text-muted-foreground">Loading orders...</p>
+                </div>
+              </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border-2 border-border">
-                No orders found
+              <div className="card-base text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-6xl mb-3">📋</div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Orders Found</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  {filterStatus === "all" ? "No orders have been placed yet" : `No ${filterStatus} orders found`}
+                </p>
               </div>
             ) : (
-              <div className="card-base overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Order #</th>
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Items</th>
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Amount</th>
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Payment</th>
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Status</th>
-                      <th className="px-4 py-3 text-left font-semibold text-foreground">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.map((order) => (
-                      <tr key={order._id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3 font-bold text-foreground">{order.orderNumber}</td>
-                        <td className="px-4 py-3 text-foreground">
-                          {order.items.map((item) => `${item.name} x${item.quantity}`).join(", ")}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-primary">{order.totalAmount.toFixed(2)} Birr</td>
-                        <td className="px-4 py-3 capitalize text-foreground">{order.paymentMethod}</td>
-                        <td className="px-4 py-3">
+              <div className="space-y-3">
+                {filteredOrders.map((order) => (
+                  <div key={order._id} className="card-base hover-lift p-3">
+                    {/* Mobile-Optimized Order Card */}
+                    <div className="flex flex-col gap-3">
+                      {/* Header Row */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-mono text-sm sm:text-base font-bold text-foreground">
+                            #{order.orderNumber}
+                          </h3>
+                          <span className="text-xs text-muted-foreground">
+                            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(
-                              order.status,
-                            )}`}
+                            className={`px-2 py-1 rounded text-xs font-semibold capitalize ${getStatusColor(order.status)}`}
                           >
                             {order.status}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground text-sm">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+                      
+                      {/* Items Row */}
+                      <div className="border-t pt-2">
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {order.items.slice(0, 3).map((item, idx) => (
+                            <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
+                              {item.quantity}x {item.name}
+                            </span>
+                          ))}
+                          {order.items.length > 3 && (
+                            <span className="text-xs text-muted-foreground px-2 py-1">
+                              +{order.items.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Details Row */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-4">
+                          <span className="font-semibold text-accent text-base">
+                            {order.totalAmount.toFixed(2)} Br
+                          </span>
+                          <span className="text-muted-foreground capitalize">
+                            {order.paymentMethod}
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground text-xs">
+                          {new Date(order.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

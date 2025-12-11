@@ -44,49 +44,54 @@ export default function TransactionsPage() {
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="flex">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="Transactions" description="View all orders and transactions" />
 
-          <div className="p-6">
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="card-base">
-                <p className="text-muted-foreground text-sm">Total Orders</p>
-                <p className="text-3xl font-bold text-primary mt-2">{orders.length}</p>
+          <div className="p-2.5 sm:p-4 lg:p-6">
+            {/* Stats - Mobile Optimized */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+              <div className="card-base p-3">
+                <p className="text-muted-foreground text-xs sm:text-sm">Total Orders</p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary mt-1">{orders.length}</p>
               </div>
-              <div className="card-base">
-                <p className="text-muted-foreground text-sm">Total Revenue</p>
-                <p className="text-3xl font-bold text-success mt-2">${totalRevenue.toFixed(2)}</p>
+              <div className="card-base p-3">
+                <p className="text-muted-foreground text-xs sm:text-sm">Total Revenue</p>
+                <p className="text-2xl sm:text-3xl font-bold text-success mt-1">{totalRevenue.toFixed(2)} Br</p>
               </div>
-              <div className="card-base">
-                <p className="text-muted-foreground text-sm">Avg Transaction</p>
-                <p className="text-3xl font-bold text-info mt-2">${(totalRevenue / (orders.length || 1)).toFixed(2)}</p>
+              <div className="card-base p-3">
+                <p className="text-muted-foreground text-xs sm:text-sm">Avg Transaction</p>
+                <p className="text-2xl sm:text-3xl font-bold text-info mt-1">{(totalRevenue / (orders.length || 1)).toFixed(2)} Br</p>
               </div>
             </div>
 
-            {/* Orders Table */}
+            {/* Transactions List - Mobile Optimized */}
             {loading ? (
-              <div className="text-center py-8">Loading transactions...</div>
+              <div className="flex items-center justify-center py-8 sm:py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
+                  <p className="text-sm sm:text-base text-muted-foreground">Loading transactions...</p>
+                </div>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="card-base text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-6xl mb-3">💳</div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Transactions Found</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">No transactions have been processed yet</p>
+              </div>
             ) : (
-              <div className="card-base overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b border-border">
-                    <tr>
-                      <th className="text-left py-3 px-4 font-semibold">Order #</th>
-                      <th className="text-left py-3 px-4 font-semibold">Amount</th>
-                      <th className="text-left py-3 px-4 font-semibold">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold">Payment</th>
-                      <th className="text-left py-3 px-4 font-semibold">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order._id} className="border-b border-border hover:bg-muted">
-                        <td className="py-3 px-4 font-mono">{order.orderNumber}</td>
-                        <td className="py-3 px-4 font-semibold text-lg">${order.totalAmount.toFixed(2)}</td>
-                        <td className="py-3 px-4">
+              <div className="space-y-3">
+                {orders.map((order) => (
+                  <div key={order._id} className="card-base hover-lift p-3">
+                    {/* Mobile-Optimized Transaction Card */}
+                    <div className="flex flex-col gap-2">
+                      {/* Header Row */}
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-mono text-sm sm:text-base font-bold text-foreground">
+                          #{order.orderNumber}
+                        </h3>
+                        <div className="flex items-center gap-2">
                           <span
                             className={`px-2 py-1 rounded text-xs font-semibold ${
                               order.status === "completed" ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
@@ -94,8 +99,6 @@ export default function TransactionsPage() {
                           >
                             {order.status}
                           </span>
-                        </td>
-                        <td className="py-3 px-4">
                           <span
                             className={`px-2 py-1 rounded text-xs font-semibold ${
                               order.paymentStatus === "paid"
@@ -103,14 +106,28 @@ export default function TransactionsPage() {
                                 : "bg-warning/20 text-warning"
                             }`}
                           >
-                            {order.paymentStatus}
+                            {order.paymentStatus || "pending"}
                           </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm">{new Date(order.createdAt).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+                      
+                      {/* Details Row */}
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-accent text-lg sm:text-xl">
+                          {order.totalAmount.toFixed(2)} Br
+                        </span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">
+                          {new Date(order.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

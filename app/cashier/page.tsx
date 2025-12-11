@@ -7,9 +7,7 @@ import { AuthHeader } from "@/components/auth-header"
 import { CartSidebar } from "@/components/cart-sidebar"
 import { MenuItemCard } from "@/components/menu-item-card"
 import { OrderAnimation } from "@/components/order-animation"
-import { ParticleSystem } from "@/components/particle-system"
-import { AnimatedLoading } from "@/components/animated-loading"
-import { AnimatedButton } from "@/components/animated-button"
+
 
 import { useAuth } from "@/context/auth-context"
 
@@ -71,10 +69,6 @@ export default function CashierPOSPage() {
     }
 
     fetchMenuItems()
-    
-    // Add automatic refresh every 5 seconds for menu items
-    const interval = setInterval(fetchMenuItems, 5000)
-    return () => clearInterval(interval)
   }, [token])
 
   // Add localStorage listener for menu updates
@@ -183,7 +177,7 @@ export default function CashierPOSPage() {
           
 
 
-          <div className="p-6">
+          <div className="p-6 pos-container">
             {/* Loading State */}
             {menuLoading && (
               <div className="flex items-center justify-center py-12">
@@ -211,22 +205,59 @@ export default function CashierPOSPage() {
 
             {/* Menu Content */}
             {!menuLoading && !error && (
-              <>
+              <div className="pos-menu-section">
                 {/* Category Filter */}
-                <div className="flex gap-3 mb-8 flex-wrap sticky top-0 bg-background/80 backdrop-blur-sm py-4 z-20">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoryFilter(cat)}
-                      className={`px-6 py-2 rounded-full transition-all capitalize font-semibold ${
-                        categoryFilter === cat
-                          ? "bg-accent text-accent-foreground shadow-lg scale-105"
-                          : "bg-card border-2 border-border hover:border-accent text-foreground"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                <div 
+                  className="cashier-category-filter-static"
+                  style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    background: 'transparent',
+                    marginBottom: '1rem',
+                    padding: '0.5rem 0',
+                    maxHeight: '60px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div 
+                    className="cashier-category-buttons"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      flexWrap: 'nowrap',
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      gap: '0.5rem',
+                      padding: '0',
+                      margin: '0',
+                      scrollbarWidth: 'thin'
+                    }}
+                  >
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setCategoryFilter(cat)}
+                        className={`transition-all capitalize font-semibold ${
+                          categoryFilter === cat
+                            ? "bg-accent text-accent-foreground shadow-lg"
+                            : "bg-card border border-border hover:border-accent text-foreground"
+                        }`}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.8rem',
+                          borderRadius: '1.5rem',
+                          minHeight: '36px',
+                          maxHeight: '36px',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          minWidth: 'fit-content',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Empty State */}
@@ -240,22 +271,33 @@ export default function CashierPOSPage() {
 
                 {/* Menu Grid */}
                 {filteredItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredItems.map((item, idx) => (
-                      <MenuItemCard
-                        key={item._id}
-                        name={item.name}
-                        price={item.price}
-                        description={item.description}
-                        category={item.category}
-                        preparationTime={item.preparationTime}
-                        onAddToCart={() => handleAddToCart(item)}
-                        index={idx}
-                      />
-                    ))}
+                  <div 
+                    className="cashier-menu-grid-static"
+                    style={{
+                      position: 'relative',
+                      zIndex: 5,
+                      marginTop: '0.1rem',
+                      minHeight: 'calc(100vh - 300px)'
+                    }}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredItems.map((item, idx) => (
+                        <div key={item._id} className="cashier-menu-item">
+                          <MenuItemCard
+                            name={item.name}
+                            price={item.price}
+                            description={item.description}
+                            category={item.category}
+                            preparationTime={item.preparationTime}
+                            onAddToCart={() => handleAddToCart(item)}
+                            index={idx}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </main>

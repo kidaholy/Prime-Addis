@@ -176,7 +176,7 @@ export default function MenuPage() {
               </p>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 menu-page-container">
               {/* Loading State */}
               {menuLoading && (
                 <AnimatedLoading message="Loading delicious menu items..." type="food" />
@@ -200,21 +200,23 @@ export default function MenuPage() {
 
               {/* Menu Content */}
               {!menuLoading && !error && (
-                <>
+                <div className="menu-content-safe-area">
                   {/* Category Filter */}
-                  <div className="flex gap-3 mb-8 flex-wrap sticky top-0 bg-background/80 backdrop-blur-sm py-4 z-20">
-                    {categories.map((cat, index) => (
-                      <AnimatedButton
-                        key={cat}
-                        onClick={() => setCategoryFilter(cat)}
-                        variant={categoryFilter === cat ? "glow" : "secondary"}
-                        className={`capitalize animate-slide-in-down stagger-${Math.min(index + 1, 6)} ${
-                          categoryFilter === cat ? "animate-pulse-glow" : ""
-                        }`}
-                      >
-                        {cat === "all" ? "🌟 All" : `${getCategoryIcon(cat)} ${cat}`}
-                      </AnimatedButton>
-                    ))}
+                  <div className="menu-category-filter">
+                    <div className="category-button-container">
+                      {categories.map((cat, index) => (
+                        <AnimatedButton
+                          key={cat}
+                          onClick={() => setCategoryFilter(cat)}
+                          variant={categoryFilter === cat ? "glow" : "secondary"}
+                          className={`capitalize animate-slide-in-down stagger-${Math.min(index + 1, 6)} ${
+                            categoryFilter === cat ? "animate-pulse-glow" : ""
+                          }`}
+                        >
+                          {cat === "all" ? "🌟 All" : `${getCategoryIcon(cat)} ${cat}`}
+                        </AnimatedButton>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Empty State */}
@@ -228,19 +230,22 @@ export default function MenuPage() {
 
                   {/* Menu Grid */}
                   {filteredItems.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredItems.map((item, idx) => (
-                        <MenuItemCard
-                          key={item._id}
-                          item={item}
-                          onAddToCart={handleAddToCart}
-                          isSelected={selectedItem?._id === item._id}
-                          index={idx}
-                        />
-                      ))}
+                    <div className="menu-items-grid">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredItems.map((item, idx) => (
+                          <div key={item._id} className="menu-item-container">
+                            <MenuItemCard
+                              item={item}
+                              onAddToCart={handleAddToCart}
+                              isSelected={selectedItem?._id === item._id}
+                              index={idx}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
           </main>
@@ -278,7 +283,7 @@ function MenuItemCard({
 }: { item: MenuItem; onAddToCart: (item: MenuItem) => void; isSelected: boolean; index: number }) {
   return (
     <div
-      className={`group card-base hover-lift cursor-pointer animate-bounce-in overflow-hidden relative ${
+      className={`group card-base hover-lift cursor-pointer animate-bounce-in overflow-hidden relative menu-item-card ${
         isSelected ? "animate-rainbow-glow" : ""
       }`}
       style={{ animationDelay: `${index * 100}ms` }}
@@ -359,10 +364,7 @@ function MenuItemCard({
 
       {/* Add to Cart Button */}
       <AnimatedButton
-        onClick={(e) => {
-          e?.stopPropagation?.()
-          onAddToCart(item)
-        }}
+        onClick={() => onAddToCart(item)}
         variant={isSelected ? "rainbow" : "glow"}
         className={`w-full ${isSelected ? "animate-heartbeat" : ""}`}
       >

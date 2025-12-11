@@ -103,75 +103,103 @@ export default function AdminOrdersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="flex">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="Orders" description="View and manage all orders" />
 
-          <div className="p-6">
-            <div className="flex gap-2 mb-6">
+          <div className="p-2.5 sm:p-4 lg:p-6">
+            {/* Filter Buttons - Optimized for Mobile */}
+            <div className="grid grid-cols-2 sm:flex gap-2 mb-4">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-lg ${filter === "all" ? "bg-primary text-white" : "bg-card"}`}
+                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                  filter === "all" ? "bg-primary text-white" : "bg-card hover:bg-muted"
+                }`}
               >
                 All ({orders.length})
               </button>
               <button
                 onClick={() => setFilter("pending")}
-                className={`px-4 py-2 rounded-lg ${filter === "pending" ? "bg-warning text-white" : "bg-card"}`}
+                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                  filter === "pending" ? "bg-warning text-white" : "bg-card hover:bg-muted"
+                }`}
               >
                 Pending ({orders.filter((o) => o.status === "pending").length})
               </button>
               <button
                 onClick={() => setFilter("preparing")}
-                className={`px-4 py-2 rounded-lg ${filter === "preparing" ? "bg-info text-white" : "bg-card"}`}
+                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                  filter === "preparing" ? "bg-info text-white" : "bg-card hover:bg-muted"
+                }`}
               >
                 Preparing ({orders.filter((o) => o.status === "preparing").length})
               </button>
               <button
                 onClick={() => setFilter("completed")}
-                className={`px-4 py-2 rounded-lg ${filter === "completed" ? "bg-success text-white" : "bg-card"}`}
+                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                  filter === "completed" ? "bg-success text-white" : "bg-card hover:bg-muted"
+                }`}
               >
                 Completed ({orders.filter((o) => o.status === "completed").length})
               </button>
             </div>
 
             {loading ? (
-              <div className="text-center py-12">Loading orders...</div>
+              <div className="flex items-center justify-center py-8 sm:py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
+                  <p className="text-sm sm:text-base text-muted-foreground">Loading orders...</p>
+                </div>
+              </div>
             ) : filteredOrders.length === 0 ? (
-              <div className="card-base text-center py-12">
-                <p className="text-muted-foreground">No orders found</p>
+              <div className="card-base text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-6xl mb-3">📋</div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Orders Found</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  {filter === "all" ? "No orders have been placed yet" : `No ${filter} orders found`}
+                </p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-3">
                 {filteredOrders.map((order) => (
-                  <div key={order._id} className="card-base">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-bold">Order #{order.orderNumber}</h3>
-                        {order.customerName && <p className="text-sm text-muted-foreground">{order.customerName}</p>}
+                  <div key={order._id} className="card-base p-3 sm:p-4">
+                    {/* Header - Mobile Optimized */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-bold truncate">Order #{order.orderNumber}</h3>
+                        {order.customerName && (
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{order.customerName}</p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {new Date(order.createdAt).toLocaleString()}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-semibold self-start ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
                     </div>
 
-                    <div className="space-y-2 mb-4">
+                    {/* Items - Mobile Optimized */}
+                    <div className="space-y-1.5 mb-3">
                       {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span>
-                            {item.quantity}x {item.name}
+                        <div key={idx} className="flex justify-between items-start text-xs sm:text-sm gap-2">
+                          <span className="flex-1 min-w-0">
+                            <span className="font-medium">{item.quantity}x</span>{" "}
+                            <span className="truncate">{item.name}</span>
                           </span>
-                          <span className="font-semibold">{item.price.toFixed(2)} Birr</span>
+                          <span className="font-semibold text-accent flex-shrink-0">
+                            {item.price.toFixed(2)} Br
+                          </span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="border-t pt-3 flex justify-between items-center">
-                      <span className="font-bold text-lg">Total: {order.totalAmount.toFixed(2)} Birr</span>
+                    {/* Total - Mobile Optimized */}
+                    <div className="border-t pt-2 flex justify-between items-center">
+                      <span className="font-bold text-sm sm:text-lg text-foreground">
+                        Total: <span className="text-accent">{order.totalAmount.toFixed(2)} Br</span>
+                      </span>
                     </div>
                   </div>
                 ))}
