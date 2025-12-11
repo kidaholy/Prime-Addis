@@ -27,7 +27,13 @@ export async function GET(request: Request) {
     const menuItems = await MenuItem.find({}).lean()
     console.log(`🍽️ Found ${menuItems.length} menu items in database`)
 
-    return NextResponse.json(menuItems)
+    // Convert ObjectId to string for frontend compatibility
+    const serializedItems = menuItems.map(item => ({
+      ...item,
+      _id: item._id.toString()
+    }))
+
+    return NextResponse.json(serializedItems)
   } catch (error: any) {
     console.error("❌ Get menu items error:", error)
     return NextResponse.json({ message: error.message || "Failed to get menu items" }, { status: 500 })

@@ -6,12 +6,22 @@ import MenuItem from "@/lib/models/menu-item"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
+
 // Update menu item (admin only)
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: any) {
   try {
+    console.log("🔄 PUT request received for menu item update")
+    
+    const params = await context.params
+    console.log("🆔 Raw params:", params)
+    console.log("🆔 Params ID:", params.id)
+    console.log("🔍 ID type:", typeof params.id)
+    console.log("🔍 ID length:", params.id?.length)
+    
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
     
     if (!token) {
+      console.log("❌ No token provided")
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
@@ -19,6 +29,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     console.log("🔐 Admin updating menu item:", decoded.email || decoded.id)
     
     if (decoded.role !== "admin") {
+      console.log("❌ User is not admin:", decoded.role)
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
@@ -34,6 +45,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       console.error("❌ Invalid ObjectId format:", params.id)
       console.error("❌ ID type:", typeof params.id)
       console.error("❌ ID length:", params.id?.length)
+      console.error("❌ ID value:", JSON.stringify(params.id))
       return NextResponse.json({ message: "Invalid menu item ID format" }, { status: 400 })
     }
 
@@ -74,8 +86,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // Delete menu item (admin only)
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: any) {
   try {
+    const params = await context.params
+    
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
     
     if (!token) {

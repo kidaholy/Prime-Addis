@@ -72,12 +72,18 @@ export default function AdminMenuPage() {
       console.log("🔄 Fetching menu items...")
       
       const response = await fetch("/api/admin/menu", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
       })
 
       if (response.ok) {
         const data = await response.json()
         console.log("✅ Menu items fetched:", data.length)
+        console.log("🔍 Sample menu item:", data[0])
+        console.log("🆔 Sample ID type:", typeof data[0]?._id)
         setMenuItems(data)
       } else {
         const errorData = await response.json()
