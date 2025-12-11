@@ -665,3 +665,257 @@
     opacity: 0.7;
   }
 }
+
+/* Responsive Utilities */
+@layer utilities {
+  /* Extra small screens */
+  .xs\:inline {
+    @media (min-width: 475px) {
+      display: inline;
+    }
+  }
+  
+  .xs\:flex-row {
+    @media (min-width: 475px) {
+      flex-direction: row;
+    }
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Responsive text utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm;
+  }
+
+  /* Responsive spacing */
+  .p-responsive {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+
+  .px-responsive {
+    @apply px-3 sm:px-4 lg:px-6;
+  }
+
+  .py-responsive {
+    @apply py-3 sm:py-4 lg:py-6;
+  }
+
+  /* Mobile-first button styles */
+  .btn-responsive {
+    @apply px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base;
+  }
+
+  /* Responsive grid */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  /* Safe area for mobile devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, .btn, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better form inputs on mobile */
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Optimize modal for mobile */
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-optimized {
+    padding: 1.5rem;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  .desktop-optimized {
+    padding: 2rem;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-optimized {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}/*
+ Specific optimizations for 412px width screens (Galaxy S20/S21) */
+@media (max-width: 420px) {
+  /* Ensure content fits within 412px width */
+  .container-412 {
+    max-width: 412px;
+    margin: 0 auto;
+  }
+
+  /* Compact padding for small screens */
+  .p-compact {
+    padding: 0.5rem;
+  }
+
+  .px-compact {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .py-compact {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Smaller text for mobile */
+  .text-mobile {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .text-mobile-sm {
+    font-size: 0.625rem;
+    line-height: 0.875rem;
+  }
+
+  /* Compact buttons */
+  .btn-compact {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  /* Smaller gaps */
+  .gap-compact {
+    gap: 0.375rem;
+  }
+
+  .space-y-compact > * + * {
+    margin-top: 0.375rem;
+  }
+
+  /* Optimize form inputs for mobile */
+  .input-mobile {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Compact cards */
+  .card-compact {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+  }
+
+  /* Mobile-optimized grid */
+  .grid-mobile-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  /* Ensure modals fit on small screens */
+  .modal-mobile {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    width: calc(100vw - 1rem);
+  }
+
+  /* Compact header */
+  .header-mobile {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Smaller icons */
+  .icon-mobile {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Truncate long text more aggressively */
+  .truncate-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 8rem;
+  }
+}
+
+/* Optimizations for screens exactly 412px wide */
+@media (width: 412px) {
+  body {
+    font-size: 14px;
+  }
+
+  .sidebar-mobile {
+    width: 280px; /* 68% of 412px */
+  }
+
+  .content-mobile {
+    padding: 0.5rem;
+  }
+}
+
+/* Height optimizations for 891px screens */
+@media (max-height: 900px) {
+  .vh-mobile {
+    min-height: 100vh;
+  }
+
+  .modal-height-mobile {
+    max-height: 85vh;
+  }
+
+  .content-height-mobile {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}

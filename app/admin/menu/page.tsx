@@ -177,16 +177,10 @@ export default function AdminMenuPage() {
         })
         setShowCreateForm(false)
         setEditingItem(null)
-        
-<<<<<<< HEAD
-        // Refresh menu items
-        fetchMenuItems()
-=======
         // Refresh menu items to show updated data (with delay to ensure DB consistency)
         setTimeout(async () => {
           await fetchMenuItems()
         }, 500)
->>>>>>> menu-functionality
         
         // Trigger immediate refresh on other pages
         localStorage.setItem('menuUpdated', Date.now().toString())
@@ -261,56 +255,58 @@ export default function AdminMenuPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="flex flex-col md:flex-row">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 md:ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="Menu Management" description="Manage menu items, prices, and availability" />
 
-          <div className="p-4 sm:p-6">
-            {/* Header with Controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Menu Items ({filteredItems.length})</h2>
-                <p className="text-sm sm:text-base text-muted-foreground">Total: {menuItems.length} items</p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                <AnimatedButton
-                  onClick={fetchMenuItems}
-                  variant="secondary"
-                  disabled={loading}
-                  className="text-sm sm:text-base"
-                >
-                  🔄 Refresh
-                </AnimatedButton>
-                <AnimatedButton
-                  onClick={() => setShowCreateForm(true)}
-                  variant="glow"
-                  className="text-sm sm:text-base"
-                >
-                  ➕ Add Menu Item
-                </AnimatedButton>
+          <div className="p-2.5 sm:p-4 lg:p-6">
+            {/* Header with Controls - Optimized for 412px */}
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="flex flex-col gap-2">
+                <div>
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground">Menu Items ({filteredItems.length})</h2>
+                  <p className="text-xs sm:text-base text-muted-foreground">Total: {menuItems.length} items</p>
+                </div>
+                
+                <div className="flex gap-2 w-full">
+                  <AnimatedButton
+                    onClick={fetchMenuItems}
+                    variant="secondary"
+                    disabled={loading}
+                    className="text-xs px-2.5 py-1.5 flex-1"
+                  >
+                    🔄 Refresh
+                  </AnimatedButton>
+                  <AnimatedButton
+                    onClick={() => setShowCreateForm(true)}
+                    variant="glow"
+                    className="text-xs px-2.5 py-1.5 flex-1"
+                  >
+                    ➕ Add Item
+                  </AnimatedButton>
+                </div>
               </div>
             </div>
 
-            {/* Search and Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Search and Filter - Optimized for 412px */}
+            <div className="space-y-3 mb-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Search</label>
+                <label className="block text-xs font-medium text-foreground mb-1">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-base"
+                  className="input-base w-full text-sm"
                   placeholder="Search by name or category..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Category</label>
+                <label className="block text-xs font-medium text-foreground mb-1">Category</label>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="input-base"
+                  className="input-base w-full text-sm"
                 >
                   <option value="all">All Categories</option>
                   {categories.map(cat => (
@@ -329,53 +325,62 @@ export default function AdminMenuPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-2">
                 {filteredItems.map((item) => (
-                  <div key={item._id} className="card-base hover-lift">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-16 h-16 bg-accent/20 rounded-lg flex items-center justify-center overflow-hidden">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-2xl">🍽️</span>
-                          )}
+                  <div key={item._id} className="card-base hover-lift p-3">
+                    {/* Compact layout for 412px */}
+                    <div className="flex items-start gap-2.5">
+                      {/* Image */}
+                      <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm">🍽️</span>
+                        )}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground text-sm truncate">{item.name}</h3>
+                          <span className={`px-1.5 py-0.5 rounded text-xs flex-shrink-0 ${item.available ? "bg-success/20 text-success" : "bg-danger/20 text-danger"}`}>
+                            {item.available ? "✓" : "✗"}
+                          </span>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-semibold text-foreground">{item.name}</h3>
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              item.available ? "bg-success/20 text-success" : "bg-danger/20 text-danger"
-                            }`}>
-                              {item.available ? "Available" : "Unavailable"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
+                        
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mb-1.5 line-clamp-1">{item.description}</p>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs">
                             <span className="text-accent font-semibold">{item.price} Br</span>
-                            <span className="text-muted-foreground">{item.category}</span>
                             {item.preparationTime && (
-                              <span className="text-muted-foreground">⏱ {item.preparationTime}m</span>
+                              <span className="text-muted-foreground">⏱{item.preparationTime}m</span>
                             )}
                           </div>
+                          
+                          <div className="flex items-center gap-1">
+                            <AnimatedButton
+                              onClick={() => handleEdit(item)}
+                              variant="secondary"
+                              size="sm"
+                              className="text-xs px-2 py-1"
+                            >
+                              ✏️
+                            </AnimatedButton>
+                            <AnimatedButton
+                              onClick={() => handleDelete(item)}
+                              variant="secondary"
+                              size="sm"
+                              className="text-xs px-2 py-1 text-danger hover:bg-danger/20"
+                            >
+                              🗑️
+                            </AnimatedButton>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <AnimatedButton
-                          onClick={() => handleEdit(item)}
-                          variant="secondary"
-                          size="sm"
-                        >
-                          ✏️ Edit
-                        </AnimatedButton>
-                        <AnimatedButton
-                          onClick={() => handleDelete(item)}
-                          variant="secondary"
-                          size="sm"
-                          className="text-danger hover:bg-danger/20"
-                        >
-                          🗑️ Delete
-                        </AnimatedButton>
+                        
+                        <div className="text-xs text-muted-foreground mt-1 truncate">{item.category}</div>
                       </div>
                     </div>
                   </div>
@@ -383,9 +388,9 @@ export default function AdminMenuPage() {
                 
                 {filteredItems.length === 0 && !loading && (
                   <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🍽️</div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">No Menu Items Found</h3>
-                    <p className="text-muted-foreground">
+                    <div className="text-4xl sm:text-6xl mb-4">🍽️</div>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">No Menu Items Found</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground px-4">
                       {searchTerm || categoryFilter !== "all" 
                         ? "Try adjusting your search or filter" 
                         : "Create your first menu item to get started"
@@ -397,34 +402,34 @@ export default function AdminMenuPage() {
             )}
           </div>
 
-          {/* Create/Edit Menu Item Modal */}
+          {/* Create/Edit Menu Item Modal - Optimized for 412px */}
           {showCreateForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-card rounded-xl p-6 w-full max-w-2xl border border-border max-h-[90vh] overflow-y-auto">
-                <h3 className="text-xl font-bold text-foreground mb-4">
-                  {editingItem ? "Edit Menu Item" : "Create New Menu Item"}
+            <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-2">
+              <div className="bg-card rounded-xl p-3 w-full max-w-sm border border-border max-h-[98vh] overflow-y-auto mt-2">
+                <h3 className="text-base font-bold text-foreground mb-3">
+                  {editingItem ? "Edit Item" : "New Item"}
                 </h3>
                 
-                <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleCreateOrUpdate} className="space-y-3">
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">Name *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Name *</label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="input-base"
-                        placeholder="Enter menu item name"
+                        className="input-base text-sm"
+                        placeholder="Item name"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">Category *</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Category *</label>
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="input-base"
+                        className="input-base text-sm"
                         required
                       >
                         <option value="">Select category</option>
@@ -434,79 +439,82 @@ export default function AdminMenuPage() {
                       </select>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">Price (Br) *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          className="input-base text-sm"
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">Time (min)</label>
+                        <input
+                          type="number"
+                          value={formData.preparationTime}
+                          onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
+                          className="input-base text-sm"
+                          placeholder="10"
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">Price (Br) *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        className="input-base"
-                        placeholder="0.00"
-                        required
+                      <label className="block text-xs font-medium text-foreground mb-1">Description</label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="input-base text-sm"
+                        rows={2}
+                        placeholder="Item description"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">Preparation Time (minutes)</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Image URL</label>
                       <input
-                        type="number"
-                        value={formData.preparationTime}
-                        onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
-                        className="input-base"
-                        placeholder="10"
+                        type="url"
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        className="input-base text-sm"
+                        placeholder="https://example.com/image.jpg"
                       />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="available"
+                        checked={formData.available}
+                        onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                        className="w-4 h-4 text-accent"
+                      />
+                      <label htmlFor="available" className="text-xs font-medium text-foreground">
+                        Available for ordering
+                      </label>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Description</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="input-base"
-                      rows={3}
-                      placeholder="Enter item description"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Image URL</label>
-                    <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      className="input-base"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="available"
-                      checked={formData.available}
-                      onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                      className="w-4 h-4 text-accent"
-                    />
-                    <label htmlFor="available" className="text-sm font-medium text-foreground">
-                      Available for ordering
-                    </label>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-2 pt-3">
                     <AnimatedButton
                       type="submit"
                       disabled={createLoading}
                       variant="glow"
-                      className="flex-1"
+                      className="flex-1 text-xs py-2"
                     >
-                      {createLoading ? "Saving..." : editingItem ? "Update Item" : "Create Item"}
+                      {createLoading ? "Saving..." : editingItem ? "Update" : "Create"}
                     </AnimatedButton>
                     <AnimatedButton
                       type="button"
                       onClick={resetForm}
                       variant="secondary"
+                      className="px-4 text-xs py-2"
                     >
                       Cancel
                     </AnimatedButton>

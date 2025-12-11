@@ -68,14 +68,14 @@ export default function AdminDashboardPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="flex flex-col md:flex-row">
+      <div className="min-h-screen bg-background">
         <SidebarNav />
-        <main className="flex-1 md:ml-64">
+        <main className="md:ml-64">
           <AuthHeader title="Dashboard" description="System overview and analytics" />
 
-          <div className="p-4 md:p-6 space-y-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-2.5 sm:p-4 lg:p-6 space-y-3 sm:space-y-6">
+            {/* Key Metrics - Optimized for 412px */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <StatCard label="Total Orders" value={stats.totalOrders} icon="📋" color="primary" />
               <StatCard label="Revenue" value={`${stats.totalRevenue.toFixed(2)} Br`} icon="💰" color="success" />
               <StatCard label="Avg Order" value={`${stats.averageOrderValue.toFixed(2)} Br`} icon="🧮" color="info" />
@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Secondary Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <StatCard label="Pending" value={stats.pendingOrders} icon="⏳" color="warning" />
               <StatCard label="Completed" value={stats.completedOrders} icon="✅" color="success" />
               <StatCard
@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Overview Sections */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3 sm:space-y-4">
               <div className="card-base">
                 <h2 className="text-lg font-bold text-foreground mb-4">Quick Stats</h2>
                 <div className="space-y-3">

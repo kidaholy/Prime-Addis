@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/theme-context'
 import { Sun, Moon, Coffee } from 'lucide-react'
 
@@ -10,7 +10,22 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ variant = 'default', className = '' }: ThemeToggleProps) {
+  const [mounted, setMounted] = useState(false)
   const { theme, toggleTheme } = useTheme()
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    // Return a placeholder that matches the button size
+    return (
+      <div className={`relative inline-flex items-center justify-center rounded-xl w-12 h-12 bg-card border border-border ${className}`}>
+        <div className="w-5 h-5 bg-muted rounded animate-pulse" />
+      </div>
+    )
+  }
 
   const baseClasses = "relative inline-flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
   

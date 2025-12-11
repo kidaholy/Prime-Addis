@@ -4,10 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { SidebarThemeToggle } from "@/components/theme-toggle"
+import { useState, useEffect } from "react"
 
 export function SidebarNav() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = {
     admin: [
@@ -31,82 +33,222 @@ export function SidebarNav() {
 
   const items = user ? menuItems[user.role as keyof typeof menuItems] : []
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('mobile-sidebar')
+      const hamburger = document.getElementById('hamburger-button')
+      
+      if (isMobileMenuOpen && sidebar && hamburger && 
+          !sidebar.contains(event.target as Node) && 
+          !hamburger.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isMobileMenuOpen])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMobileMenuOpen])
+
+  const handleMobileMenuItemClick = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   return (
-    <nav className="w-full md:w-64 bg-sidebar text-sidebar-foreground md:min-h-screen md:fixed md:left-0 md:top-0 border-r border-sidebar-border md:shadow-xl">
-      <div className="p-6 border-b border-sidebar-border/50 flex items-center justify-between md:flex-col md:gap-6">
-        <Link
-          href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <span className="text-2xl">☕</span>
-          <div>
-            <h1 className="text-lg font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
-            <p className="text-xs text-sidebar-foreground/70">Coffee Management</p>
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <SidebarThemeToggle />
-          <button
-            onClick={() => logout()}
-            className="text-xs px-2 py-1 rounded bg-danger/20 text-danger hover:bg-danger/30 transition-colors md:hidden"
+    <>
+      {/* Mobile Header - Optimized for 412px width */}
+      <div className="md:hidden bg-sidebar border-b border-sidebar-border sticky top-0 z-40">
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <Link
+            href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            Logout
-          </button>
-        </div>
-      </div>
+            <span className="text-lg">☕</span>
+            <div>
+              <h1 className="text-sm font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
+              <p className="text-xs text-sidebar-foreground/70">Coffee Management</p>
+            </div>
+          </Link>
 
-      <div className="p-4 hidden md:block">
-        <ul className="space-y-2">
-          {items.map((item) => {
-            // Find the most specific matching route
-            const matchingItems = items.filter(menuItem => 
-              pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
-            )
-            
-            // Sort by specificity (longer paths are more specific)
-            const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
-            
-            // Only the most specific item should be active
-            const isActive = mostSpecificItem?.href === item.href
-            
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  }`}
-                >
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
-                  )}
-                  <span className={`text-lg ${isActive ? 'animate-bounce-gentle' : ''}`}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-
-        {/* Theme Toggle & Logout */}
-        <div className="mt-8 space-y-3">
-          <div className="flex items-center justify-between px-4 py-2">
-            <span className="text-sm text-sidebar-foreground/70">Theme</span>
+          <div className="flex items-center gap-1.5">
             <SidebarThemeToggle />
+            <button
+              id="hamburger-button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-1.5 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80 transition-colors"
+              aria-label="Toggle menu"
+            >
+              <div className="w-5 h-5 flex flex-col justify-center items-center">
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? 'rotate-45 translate-y-0.5' : '-translate-y-1'
+                }`}></span>
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                }`}></span>
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? '-rotate-45 -translate-y-0.5' : 'translate-y-1'
+                }`}></span>
+              </div>
+            </button>
           </div>
-          
-          <button
-            onClick={() => logout()}
-            className="w-full px-4 py-3 bg-danger/20 text-danger rounded-lg hover:bg-danger/30 transition-all font-semibold flex items-center justify-center gap-2"
-          >
-            <span>🚪</span>
-            Logout
-          </button>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu Overlay - Optimized for 412px */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 md:hidden">
+          <div 
+            id="mobile-sidebar"
+            className="fixed left-0 top-0 h-full w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto"
+          >
+            <div className="p-4 border-b border-sidebar-border/50">
+              <Link
+                href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
+                className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                onClick={handleMobileMenuItemClick}
+              >
+                <span className="text-xl">☕</span>
+                <div>
+                  <h1 className="text-base font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
+                  <p className="text-sm text-sidebar-foreground/70">Coffee Management</p>
+                </div>
+              </Link>
+            </div>
+
+            <div className="p-3">
+              <ul className="space-y-1.5">
+                {items.map((item) => {
+                  const matchingItems = items.filter(menuItem => 
+                    pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
+                  )
+                  
+                  const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
+                  const isActive = mostSpecificItem?.href === item.href
+                  
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={handleMobileMenuItemClick}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
+                          isActive
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        }`}
+                      >
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
+                        )}
+                        <span className={`text-base ${isActive ? 'animate-bounce-gentle' : ''}`}>{item.icon}</span>
+                        <span className="text-sm">{item.label}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              <div className="mt-6 space-y-2.5">
+                <div className="flex items-center justify-between px-3 py-2">
+                  <span className="text-xs text-sidebar-foreground/70">Theme</span>
+                  <SidebarThemeToggle />
+                </div>
+                
+                <button
+                  onClick={() => {
+                    logout()
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="w-full px-3 py-2.5 bg-danger/20 text-danger rounded-lg hover:bg-danger/30 transition-all font-medium flex items-center justify-center gap-2 text-sm"
+                >
+                  <span>🚪</span>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <nav className="hidden md:block w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 border-r border-sidebar-border shadow-xl">
+        <div className="p-6 border-b border-sidebar-border/50">
+          <Link
+            href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-2xl">☕</span>
+            <div>
+              <h1 className="text-lg font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
+              <p className="text-xs text-sidebar-foreground/70">Coffee Management</p>
+            </div>
+          </Link>
+        </div>
+
+        <div className="p-4">
+          <ul className="space-y-2">
+            {items.map((item) => {
+              const matchingItems = items.filter(menuItem => 
+                pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
+              )
+              
+              const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
+              const isActive = mostSpecificItem?.href === item.href
+              
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    }`}
+                  >
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
+                    )}
+                    <span className={`text-lg ${isActive ? 'animate-bounce-gentle' : ''}`}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="mt-8 space-y-3">
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="text-sm text-sidebar-foreground/70">Theme</span>
+              <SidebarThemeToggle />
+            </div>
+            
+            <button
+              onClick={() => logout()}
+              className="w-full px-4 py-3 bg-danger/20 text-danger rounded-lg hover:bg-danger/30 transition-all font-semibold flex items-center justify-center gap-2"
+            >
+              <span>🚪</span>
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+    </>
   )
 }
