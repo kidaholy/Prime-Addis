@@ -71,10 +71,11 @@ export default function AdminMenuPage() {
       setLoading(true)
       console.log("🔄 Fetching menu items...")
       
-      const response = await fetch("/api/admin/menu", {
+      const response = await fetch(`/api/admin/menu?t=${Date.now()}`, {
         headers: { 
           Authorization: `Bearer ${token}`,
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
         cache: 'no-store'
       })
@@ -134,6 +135,7 @@ export default function AdminMenuPage() {
       const method = editingItem ? "PUT" : "POST"
       
       console.log(`🔄 ${editingItem ? 'Updating' : 'Creating'} menu item:`, formData)
+      console.log(`🖼️ Image URL being sent:`, formData.image)
       console.log(`🔗 URL: ${url}`)
       console.log(`🆔 Item ID: ${editingItem?._id}`)
       console.log(`🔑 Token: ${token ? 'Present' : 'Missing'}`)
@@ -151,6 +153,21 @@ export default function AdminMenuPage() {
       console.log(`📥 Response:`, responseData)
 
       if (response.ok) {
+        console.log("✅ Menu item operation successful:", responseData)
+        console.log("🖼️ Updated item image:", responseData.menuItem?.image)
+        
+        // Optimistic update: immediately update the local state
+        if (editingItem && responseData.menuItem) {
+          setMenuItems(prevItems => 
+            prevItems.map(item => 
+              item._id === editingItem._id 
+                ? { ...responseData.menuItem, _id: responseData.menuItem._id }
+                : item
+            )
+          )
+          console.log("🔄 Optimistic update applied to local state")
+        }
+        
         alert(`✅ Menu item ${editingItem ? 'updated' : 'created'} successfully!`)
         
         // Reset form and close modal
@@ -161,8 +178,13 @@ export default function AdminMenuPage() {
         setShowCreateForm(false)
         setEditingItem(null)
         
-        // Refresh menu items
-        fetchMenuItems()
+        // Refresh menu items to show updated data (with delay to ensure DB consistency)
+        setTimeout(async () => {
+          await fetchMenuItems()
+        }, 500)
+        
+        // Trigger immediate refresh on other pages
+        localStorage.setItem('menuUpdated', Date.now().toString())
       } else {
         console.error(`❌ API Error - Status: ${response.status}, Message: ${responseData.message}`)
         alert(`❌ Failed to ${editingItem ? 'update' : 'create'} menu item: ${responseData.message}`)

@@ -38,6 +38,7 @@ export async function PUT(request: Request, context: any) {
     
     const updateData = await request.json()
     console.log("📝 Menu item update data:", updateData)
+    console.log("🖼️ Image URL in update data:", updateData.image)
     console.log("🆔 Menu item ID to update:", params.id)
 
     // Validate ObjectId format using mongoose
@@ -52,16 +53,28 @@ export async function PUT(request: Request, context: any) {
     // Convert numeric fields
     if (updateData.price) updateData.price = Number(updateData.price)
     if (updateData.preparationTime) updateData.preparationTime = Number(updateData.preparationTime)
+    
+    // Ensure image field is properly handled (empty string should be saved as empty string, not undefined)
+    if (updateData.hasOwnProperty('image')) {
+      updateData.image = updateData.image || ""
+      console.log("🖼️ Processed image URL:", updateData.image)
+    }
 
     // First check if the item exists
     const existingItem = await MenuItem.findById(params.id)
     console.log("🔍 Existing menu item found:", existingItem ? "Yes" : "No")
+    
+    if (existingItem) {
+      console.log("🖼️ Current image URL:", existingItem.image)
+    }
     
     if (!existingItem) {
       console.error("❌ Menu item not found in database:", params.id)
       return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
     }
 
+    console.log("🔄 Performing MongoDB update with data:", JSON.stringify(updateData, null, 2))
+    
     const menuItem = await MenuItem.findByIdAndUpdate(
       params.id, 
       updateData, 
@@ -74,10 +87,27 @@ export async function PUT(request: Request, context: any) {
     }
 
     console.log("✅ Menu item updated successfully:", menuItem._id)
+    console.log("🖼️ Updated image URL:", menuItem.image)
+    
+    // Verify the update by fetching the item again
+    const verificationItem = await MenuItem.findById(params.id)
+    console.log("🔍 Verification fetch - Image URL:", verificationItem?.image)
+    
+    if (verificationItem?.image !== updateData.image) {
+      console.error("⚠️ Image URL mismatch after update!")
+      console.error("   Expected:", updateData.image)
+      console.error("   Actual:", verificationItem?.image)
+    }
+
+    // Return the updated menu item with string ID
+    const serializedMenuItem = {
+      ...menuItem.toObject(),
+      _id: menuItem._id.toString()
+    }
 
     return NextResponse.json({
       message: "Menu item updated successfully",
-      menuItem
+      menuItem: serializedMenuItem
     })
   } catch (error: any) {
     console.error("❌ Update menu item error:", error)
