@@ -42,7 +42,7 @@ async function testAdminMenuAPI() {
       const categories = [...new Set(menuItems.map((item: any) => item.category))]
       console.log("📋 Categories found:", categories.length)
       
-      categories.slice(0, 5).forEach((category: string) => {
+      categories.slice(0, 5).forEach((category) => {
         const itemsInCategory = menuItems.filter((item: any) => item.category === category)
         console.log(`  📂 ${category}: ${itemsInCategory.length} items`)
         itemsInCategory.slice(0, 2).forEach((item: any) => {
