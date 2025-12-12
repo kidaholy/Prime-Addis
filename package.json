@@ -79,16 +79,16 @@
     "@tailwindcss/postcss": "^4.1.9",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
-    "typescript": "^5"
-  },
-  "devDependencies": {
+    "typescript": "^5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/socket.io": "^3.0.1",
+    "@types/socket.io": "^3.0.1"
+  },
+  "devDependencies": {
     "tsx": "^4.21.0"
   }
 }
