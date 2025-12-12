@@ -23,7 +23,11 @@ async function testAtlasConnection() {
     console.log("✅ Successfully connected to MongoDB Atlas!")
 
     // Test database operations
-    const collections = await mongoose.connection.db.listCollections().toArray()
+    const db = mongoose.connection.db
+    if (!db) {
+      throw new Error("Database connection not established")
+    }
+    const collections = await db.listCollections().toArray()
     console.log("📚 Available collections:", collections.map(c => c.name))
 
     // Test a simple query
