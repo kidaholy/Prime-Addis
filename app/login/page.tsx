@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
 import { HeaderThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
@@ -27,21 +27,18 @@ export default function LoginPage() {
     )
   }
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-      setError("")
-      setLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
-      try {
-        await login(email, password)
-      } catch (err: any) {
-        setError(err.message || "Login failed")
-        setLoading(false)
-      }
-    },
-    [email, password, login],
-  )
+    try {
+      await login(email, password)
+    } catch (err: any) {
+      setError(err.message || "Login failed")
+      setLoading(false)
+    }
+  }
 
 
 
