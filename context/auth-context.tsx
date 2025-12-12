@@ -62,12 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("user", JSON.stringify(data.user))
 
     // Route based on role
-    const roleRoutes = {
+    const roleRoutes: Record<string, string> = {
       admin: "/admin",
       cashier: "/cashier",
       chef: "/chef",
     }
-    router.push(roleRoutes[data.user.role])
+    router.push(roleRoutes[data.user.role] || "/login")
   }
 
   const logout = () => {
