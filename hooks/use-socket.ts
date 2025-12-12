@@ -29,7 +29,7 @@ export function useSocket({ events, onEvent }: UseSocketOptions) {
 
     // Listen to specific events
     events.forEach((event) => {
-      socket.on(event, (data) => {
+      socket.on(event, (data: any) => {
         if (onEvent) {
           onEvent(event, data)
         }
