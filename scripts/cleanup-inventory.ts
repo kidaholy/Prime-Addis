@@ -8,12 +8,13 @@ async function cleanupInventory() {
     await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/restaurant-management")
     console.log("Connected to MongoDB")
 
+    const db = mongoose.connection.db
+    if (!db) {
+      throw new Error("Database connection not established")
+    }
+
     // Drop the inventory collection if it exists
     try {
-      const db = mongoose.connection.db
-      if (!db) {
-        throw new Error("Database connection not established")
-      }
       await db.dropCollection("inventories")
       console.log("✅ Dropped inventory collection")
     } catch (error: any) {
