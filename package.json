@@ -78,7 +78,8 @@
     "zod": "3.25.76",
     "@tailwindcss/postcss": "^4.1.9",
     "postcss": "^8.5",
-    "tailwindcss": "^4.1.9"
+    "tailwindcss": "^4.1.9",
+    "typescript": "^5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -88,7 +89,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/socket.io": "^3.0.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5"
+    "tsx": "^4.21.0"
   }
 }
