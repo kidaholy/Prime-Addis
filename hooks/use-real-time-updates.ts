@@ -13,7 +13,7 @@ export function useRealTimeUpdates({
   interval = 1000, 
   enabled = true 
 }: UseRealTimeUpdatesOptions) {
-  const intervalRef = useRef<NodeJS.Timeout>()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (!enabled) return
