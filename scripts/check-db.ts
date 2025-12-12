@@ -12,14 +12,19 @@ async function checkDatabase() {
     console.log("✅ Successfully connected to MongoDB")
 
     // List all collections
-    const collections = await mongoose.connection.db.listCollections().toArray()
+    const db = mongoose.connection.db
+    if (!db) {
+      throw new Error("Database connection not established")
+    }
+    
+    const collections = await db.listCollections().toArray()
     console.log("📚 Available collections:", collections.map(c => c.name))
 
     // Check if collections exist and have data
     const stats = await Promise.all([
-      mongoose.connection.db.collection('orders').countDocuments(),
-      mongoose.connection.db.collection('users').countDocuments(),
-      mongoose.connection.db.collection('menuitems').countDocuments(),
+      db.collection('orders').countDocuments(),
+      db.collection('users').countDocuments(),
+      db.collection('menuitems').countDocuments(),
     ])
 
     console.log("📊 Collection stats:")
