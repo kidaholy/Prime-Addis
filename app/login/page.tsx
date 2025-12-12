@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
 import { HeaderThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
@@ -8,11 +8,24 @@ import Image from "next/image"
 import type React from "react"
 
 export default function LoginPage() {
+  const [mounted, setMounted] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+      </div>
+    )
+  }
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
