@@ -41,14 +41,19 @@ export function ParticleSystem() {
     const animateParticles = () => {
       setParticles(prev => 
         prev.map(particle => {
-          const newX = particle.x + particle.speedX
-          const newY = particle.y + particle.speedY
+          let nextX = particle.x + particle.speedX
+          let nextY = particle.y + particle.speedY
+          
+          // Wrap around screen boundaries
+          if (nextX > window.innerWidth) nextX = 0
+          if (nextX < 0) nextX = window.innerWidth
+          if (nextY > window.innerHeight) nextY = 0
+          if (nextY < 0) nextY = window.innerHeight
           
           return {
             ...particle,
-            // Wrap around screen
-            x: newX > window.innerWidth ? 0 : newX < 0 ? window.innerWidth : newX,
-            y: newY > window.innerHeight ? 0 : newY < 0 ? window.innerHeight : newY,
+            x: nextX,
+            y: nextY,
           }
         })
       )
