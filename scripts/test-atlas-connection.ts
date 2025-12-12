@@ -32,9 +32,9 @@ async function testAtlasConnection() {
 
     // Test a simple query
     const stats = await Promise.all([
-      mongoose.connection.db.collection('orders').countDocuments(),
-      mongoose.connection.db.collection('users').countDocuments(),
-      mongoose.connection.db.collection('menuitems').countDocuments(),
+      db.collection('orders').countDocuments(),
+      db.collection('users').countDocuments(),
+      db.collection('menuitems').countDocuments(),
     ])
 
     console.log("📊 Collection stats:")

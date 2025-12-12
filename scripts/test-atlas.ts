@@ -15,7 +15,11 @@ async function testAtlas() {
     console.log("✅ Successfully connected to MongoDB Atlas!")
     
     // Test a simple operation
-    const collections = await mongoose.connection.db.listCollections().toArray()
+    const db = mongoose.connection.db
+    if (!db) {
+      throw new Error("Database connection not established")
+    }
+    const collections = await db.listCollections().toArray()
     console.log(`📋 Found ${collections.length} collections:`)
     collections.forEach(col => console.log(`   - ${col.name}`))
     
