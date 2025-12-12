@@ -7,7 +7,14 @@ const nextConfig = {
   images: {
     // Enable image optimization in production
     unoptimized: process.env.NODE_ENV === "development",
-    domains: ['images.unsplash.com'], // Add any external image domains
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   // Production optimizations
   compress: true,

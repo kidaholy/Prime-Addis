@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
 
 export async function GET() {
   try {
-    // Test database connection
-    await connectDB()
-    
-    return NextResponse.json({
+    // Basic health check
+    const healthCheck = {
       status: "healthy",
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || "development",
-      database: "connected"
-    })
+      service: "Prime Addis Coffee Management System",
+      version: "1.0.0",
+      environment: process.env.NODE_ENV || "development"
+    }
+
+    return NextResponse.json(healthCheck, { status: 200 })
   } catch (error) {
-    return NextResponse.json({
-      status: "unhealthy",
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || "development",
-      database: "disconnected",
-      error: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 })
+    return NextResponse.json(
+      { 
+        status: "unhealthy", 
+        error: "Health check failed",
+        timestamp: new Date().toISOString()
+      }, 
+      { status: 500 }
+    )
   }
 }

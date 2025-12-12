@@ -3,8 +3,10 @@ services:
     name: prime-addis-coffee
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    region: oregon
+    buildCommand: npm ci && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,3 +16,5 @@ services:
         sync: false
       - key: NEXTAUTH_URL
         sync: false
+      - key: PORT
+        value: 10000
