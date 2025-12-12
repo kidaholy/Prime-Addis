@@ -25,7 +25,7 @@ async function cleanupInventory() {
     }
 
     // List all collections to verify
-    const collections = await mongoose.connection.db.listCollections().toArray()
+    const collections = await db.listCollections().toArray()
     console.log("\n📋 Remaining collections:")
     collections.forEach(col => {
       console.log(`   - ${col.name}`)
