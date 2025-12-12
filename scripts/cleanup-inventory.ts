@@ -10,7 +10,11 @@ async function cleanupInventory() {
 
     // Drop the inventory collection if it exists
     try {
-      await mongoose.connection.db.dropCollection("inventories")
+      const db = mongoose.connection.db
+      if (!db) {
+        throw new Error("Database connection not established")
+      }
+      await db.dropCollection("inventories")
       console.log("✅ Dropped inventory collection")
     } catch (error: any) {
       if (error.code === 26) {
