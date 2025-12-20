@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import jwt from "jsonwebtoken"
+import { verifyToken, type TokenPayload } from "@/lib/auth"
 import { getNotifications, addNotification as addNotif, markAsRead } from "@/lib/notifications"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+
 
 export async function GET(request: Request) {
   try {
@@ -12,8 +12,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    
+    const decoded = verifyToken(token)
+
     // Get notifications for the user's role
     const userNotifications = getNotifications(decoded.role, decoded.id)
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
-    jwt.verify(token, JWT_SECRET)
+    verifyToken(token)
 
     const body = await request.json()
     const { type, message, targetRole, targetUser } = body

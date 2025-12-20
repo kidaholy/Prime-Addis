@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server"
-import jwt from "jsonwebtoken"
+import { signToken } from "@/lib/auth"
 import bcrypt from "bcryptjs"
 import { connectDB } from "@/lib/db"
 import User from "@/lib/models/user"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+
 
 export async function POST(request: Request) {
   try {
     await connectDB()
-    
+
     let body
     try {
       body = await request.json()
@@ -38,9 +38,7 @@ export async function POST(request: Request) {
     }
 
     // Generate token
-    const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, {
-      expiresIn: "7d",
-    })
+    const token = signToken({ id: user._id, email: user.email, role: user.role })
 
     return NextResponse.json({
       token,

@@ -1,5 +1,5 @@
 import express, { type Request, type Response } from "express"
-import jwt from "jsonwebtoken"
+import { signToken } from "../../lib/auth"
 import User from "../../lib/models/user"
 
 const router = express.Router()
@@ -16,9 +16,7 @@ router.post("/register", async (req: Request, res: Response) => {
     const user = new User({ name, email, password, role: role || "cashier" })
     await user.save()
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || "secret", {
-      expiresIn: "24h",
-    })
+    const token = signToken({ id: user._id, email: user.email, role: user.role })
 
     res.json({ token, user: { id: user._id, name: user.name, role: user.role } })
   } catch (error) {
@@ -40,9 +38,7 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" })
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || "secret", {
-      expiresIn: "24h",
-    })
+    const token = signToken({ id: user._id, email: user.email, role: user.role })
 
     res.json({ token, user: { id: user._id, name: user.name, role: user.role } })
   } catch (error) {

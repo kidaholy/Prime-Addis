@@ -1,6 +1,6 @@
 import type { Server as SocketIOServer } from "socket.io"
 import type { Socket } from "socket.io"
-import jwt from "jsonwebtoken"
+import { verifyToken } from "../lib/auth"
 
 export function setupSocketHandlers(io: SocketIOServer) {
   // Middleware for socket authentication
@@ -11,8 +11,8 @@ export function setupSocketHandlers(io: SocketIOServer) {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any
-      socket.data.userId = decoded.userId
+      const decoded = verifyToken(token)
+      socket.data.userId = decoded.id
       socket.data.role = decoded.role
       next()
     } catch (error) {

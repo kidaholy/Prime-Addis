@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken"
+import { verifyToken } from "../../lib/auth"
 import type { Request, Response, NextFunction } from "express"
 
 declare global {
@@ -18,8 +18,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any
-    req.userId = decoded.userId
+    const decoded = verifyToken(token)
+    req.userId = decoded.id
     req.role = decoded.role
     next()
   } catch (error) {
