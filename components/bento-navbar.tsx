@@ -57,9 +57,8 @@ export function BentoNavbar() {
                         </button>
                     </div>
                 ) : (
-                    <Link href="/login" className="bg-[#2d5a41] text-[#e2e7d8] px-7 py-3 rounded-full flex items-center gap-3 font-bold cursor-pointer relative hover:bg-black transition-colors bubbly-button">
+                    <Link href="/login" className="bg-[#2d5a41] text-[#e2e7d8] px-7 py-3 rounded-full flex items-center gap-3 font-bold cursor-pointer hover:bg-black transition-colors bubbly-button">
                         LOGIN
-                        <span className="absolute -top-2 -right-2 bg-[#f5bc6b] text-white text-[11px] w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#e2e7d8] pulsate">!</span>
                     </Link>
                 )}
             </div>
