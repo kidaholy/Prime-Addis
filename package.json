@@ -15,7 +15,10 @@
     "test:users": "tsx scripts/test-users-api.ts",
     "test:menu": "tsx scripts/test-admin-menu.ts",
     "server": "tsx server/server.ts",
-    "server:dev": "tsx watch server/server.ts"
+    "server:dev": "tsx watch server/server.ts",
+    "images:add": "tsx scripts/add-images.ts",
+    "images:fix": "tsx scripts/fix-blank-images.ts",
+    "images:check": "tsx scripts/check-images.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -222,6 +222,7 @@ export default function CashierPOSPage() {
                               name={item.name}
                               price={item.price}
                               description={item.description}
+                              image={item.image}
                               category={item.category}
                               preparationTime={item.preparationTime}
                               onAddToCart={() => handleAddToCart(item)}
