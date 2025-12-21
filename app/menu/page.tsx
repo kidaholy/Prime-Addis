@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
+// import { SidebarNav } from "@/components/sidebar-nav" // Commented out
+// import { AuthHeader } from "@/components/auth-header" // Commented out
 import { CartSidebar } from "@/components/cart-sidebar"
 import { ParticleSystem } from "@/components/particle-system"
 import { AnimatedLoading } from "@/components/animated-loading"
@@ -160,102 +161,109 @@ export default function MenuPage() {
   if (user?.role === "cashier") {
     return (
       <ProtectedRoute requiredRoles={["cashier"]}>
-        <ParticleSystem />
-        <div className="flex flex-col md:flex-row relative z-10">
-          <SidebarNav />
-          <main className="flex-1 md:ml-64 md:mr-80">
-            <AuthHeader title="Menu" description="Browse and order items" />
-            
-            {/* Welcome banner with animations */}
-            <div className="mx-6 mt-6 p-6 bg-gradient-to-r from-accent/10 via-secondary/10 to-accent/10 rounded-xl border border-accent/20 animate-gradient-shift">
-              <h1 className="text-3xl font-bold text-center animate-typewriter mb-2">
-                ☕ Welcome to Prime Addis Coffee ☕
-              </h1>
-              <p className="text-center text-muted-foreground animate-slide-in-up">
-                Discover our amazing selection of premium coffee and delicious food!
-              </p>
-            </div>
+        <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+          <div className="max-w-7xl mx-auto">
+            <BentoNavbar />
 
-            <div className="p-6 menu-page-container">
-              {/* Loading State */}
-              {menuLoading && (
-                <AnimatedLoading message="Loading delicious menu items..." type="food" />
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              {/* Main Content Area */}
+              <div className="md:col-span-8 lg:col-span-9">
 
-              {/* Error State */}
-              {error && (
-                <div className="text-center py-12 animate-bounce-in">
-                  <div className="text-6xl mb-4 animate-wiggle">⚠️</div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2 animate-neon-flicker">Failed to Load Menu</h2>
-                  <p className="text-muted-foreground mb-4">{error}</p>
-                  <AnimatedButton
-                    onClick={() => window.location.reload()}
-                    variant="glow"
-                    size="lg"
-                  >
-                    🔄 Try Again
-                  </AnimatedButton>
-                </div>
-              )}
-
-              {/* Menu Content */}
-              {!menuLoading && !error && (
-                <div className="menu-content-safe-area">
-                  {/* Category Filter */}
-                  <div className="menu-category-filter">
-                    <div className="category-button-container">
-                      {categories.map((cat, index) => (
-                        <AnimatedButton
-                          key={cat}
-                          onClick={() => setCategoryFilter(cat)}
-                          variant={categoryFilter === cat ? "glow" : "secondary"}
-                          className={`capitalize animate-slide-in-down stagger-${Math.min(index + 1, 6)} ${
-                            categoryFilter === cat ? "animate-pulse-glow" : ""
-                          }`}
-                        >
-                          {cat === "all" ? "🌟 All" : `${getCategoryIcon(cat)} ${cat}`}
-                        </AnimatedButton>
-                      ))}
-                    </div>
+                {/* Welcome Banner */}
+                <div className="bg-[#f5bc6b] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group">
+                  <div className="relative z-10">
+                    <h1 className="text-4xl font-bold text-white mb-2 bubbly-text">Fresh Menu 🥐</h1>
+                    <p className="text-white/90 font-medium">Serve the best to our customers!</p>
                   </div>
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 text-9xl opacity-20 group-hover:scale-110 transition-transform duration-500">☕</div>
+                </div>
 
-                  {/* Empty State */}
-                  {filteredItems.length === 0 && (
-                    <div className="text-center py-12 animate-bounce-in">
-                      <div className="text-6xl mb-4 animate-float">🍽️</div>
-                      <h2 className="text-2xl font-bold text-foreground mb-2 animate-typewriter">No Menu Items</h2>
-                      <p className="text-muted-foreground animate-slide-in-up">No items available in this category</p>
+                {/* Menu Grid Container */}
+                <div className="bg-white rounded-[40px] p-6 custom-shadow min-h-[600px]">
+                  {/* Loading State */}
+                  {menuLoading && (
+                    <AnimatedLoading message="Loading delicious menu items..." type="food" />
+                  )}
+
+                  {/* Error State */}
+                  {error && (
+                    <div className="text-center py-12">
+                      <h2 className="text-2xl font-bold text-red-500 mb-2">Failed to Load Menu</h2>
+                      <p className="text-gray-500 mb-4">{error}</p>
+                      <AnimatedButton
+                        onClick={() => window.location.reload()}
+                        variant="glow"
+                        size="lg"
+                      >
+                        🔄 Try Again
+                      </AnimatedButton>
                     </div>
                   )}
 
-                  {/* Menu Grid */}
-                  {filteredItems.length > 0 && (
-                    <div className="menu-items-grid">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredItems.map((item, idx) => (
-                          <div key={item._id} className="menu-item-container">
+                  {!menuLoading && !error && (
+                    <div className="menu-content-safe-area">
+                      {/* Category Filter */}
+                      <div className="mb-8 overflow-x-auto pb-4 hide-scrollbar">
+                        <div className="flex gap-3">
+                          {categories.map((cat, index) => (
+                            <button
+                              key={cat}
+                              onClick={() => setCategoryFilter(cat)}
+                              className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all duration-300 ${categoryFilter === cat
+                                  ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                }`}
+                            >
+                              {cat === "all" ? "All Items" : `${getCategoryIcon(cat)} ${cat}`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Empty State */}
+                      {filteredItems.length === 0 && (
+                        <div className="text-center py-20">
+                          <div className="text-6xl mb-4 opacity-30">🍽️</div>
+                          <h2 className="text-2xl font-bold text-gray-400">No Items Found</h2>
+                        </div>
+                      )}
+
+                      {/* Menu Grid */}
+                      {filteredItems.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {filteredItems.map((item, idx) => (
                             <MenuItemCard
+                              key={item._id}
                               item={item}
                               onAddToCart={handleAddToCart}
                               isSelected={selectedItem?._id === item._id}
                               index={idx}
                             />
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* Cart Sidebar - Styled as Bento Card */}
+              <div className="md:col-span-4 lg:col-span-3 sticky top-4">
+                <div className="bg-white rounded-[40px] p-6 custom-shadow min-h-[500px] border border-gray-100">
+                  <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6 flex items-center gap-2">
+                    <span>🛒</span> Current Order
+                  </h2>
+                  <CartSidebar
+                    items={cartItems}
+                    onRemove={handleRemoveFromCart}
+                    onQuantityChange={handleQuantityChange}
+                    onCheckout={handleCheckout}
+                    isLoading={loading}
+                  />
+                </div>
+              </div>
             </div>
-          </main>
-          <CartSidebar
-            items={cartItems}
-            onRemove={handleRemoveFromCart}
-            onQuantityChange={handleQuantityChange}
-            onCheckout={handleCheckout}
-            isLoading={loading}
-          />
+          </div>
         </div>
       </ProtectedRoute>
     )
@@ -283,9 +291,8 @@ function MenuItemCard({
 }: { item: MenuItem; onAddToCart: (item: MenuItem) => void; isSelected: boolean; index: number }) {
   return (
     <div
-      className={`group card-base hover-lift cursor-pointer animate-bounce-in overflow-hidden relative menu-item-card ${
-        isSelected ? "animate-rainbow-glow" : ""
-      }`}
+      className={`group card-base hover-lift cursor-pointer animate-bounce-in overflow-hidden relative menu-item-card ${isSelected ? "animate-rainbow-glow" : ""
+        }`}
       style={{ animationDelay: `${index * 100}ms` }}
       onClick={() => onAddToCart(item)}
     >
@@ -321,10 +328,10 @@ function MenuItemCard({
             <div className="text-5xl opacity-50 animate-float">🍰</div>
           </div>
         )}
-        
+
         {/* Animated overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-accent/20 opacity-0 group-hover:opacity-100 transition-all duration-300" />
-        
+
         {/* Price badge with animation */}
         <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-2 py-1 rounded-full text-sm font-bold animate-heartbeat">
           {item.price} Br
@@ -354,7 +361,7 @@ function MenuItemCard({
             </div>
           )}
         </div>
-        
+
         {/* Availability indicator */}
         <div className="flex items-center gap-1 text-xs">
           <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>

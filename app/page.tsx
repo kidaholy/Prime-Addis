@@ -1,293 +1,159 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { HeaderThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
+import { Fredoka } from "next/font/google"
+import { ShoppingCart, ArrowRight, Star, TrendingUp, Clock } from "lucide-react"
+
+const fredoka = Fredoka({ subsets: ["latin"] })
 
 export default function WelcomePage() {
-  const [mounted, setMounted] = useState(false)
+    return (
+        <div className={`min-h-screen bg-[#e2e7d8] p-4 md:p-10 overflow-x-hidden ${fredoka.className}`}>
+            <div className="max-w-7xl mx-auto">
+                {/* Navbar */}
+                <nav className="flex justify-between items-center mb-10 px-4 py-2 bg-white/50 backdrop-blur-md rounded-full custom-shadow">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-[#f4a261] rounded-full flex items-center justify-center font-bold text-white text-2xl transition-transform duration-300 swirl-s select-none">P</div>
+                        <span className="font-bold text-2xl tracking-tight text-[#1a1a1a]">PRIME ADDIS</span>
+                    </div>
+                    <div className="hidden md:flex gap-12 text-[#4a4a4a] font-medium text-lg">
+                        <Link href="/dashboard" className="hover:text-black hover:scale-105 transition-all">Dashboard</Link>
+                        <Link href="/menu" className="hover:text-black hover:scale-105 transition-all">Menu</Link>
+                        <Link href="/inventory" className="hover:text-black hover:scale-105 transition-all">Inventory</Link>
+                        <Link href="/staff" className="hover:text-black hover:scale-105 transition-all">Staff</Link>
+                    </div>
+                    <Link href="/login" className="bg-[#2d5a41] text-[#e2e7d8] px-7 py-3 rounded-full flex items-center gap-3 font-bold cursor-pointer relative hover:bg-black transition-colors bubbly-button">
+                        LOGIN
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[11px] w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#e2e7d8] pulsate">!</span>
+                    </Link>
+                </nav>
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
-  if (!mounted) return null
+                    {/* Hero Card - Replaced Cookie Stack with Coffee Stack Idea or just text */}
+                    <div className="md:col-span-8 bg-[#f5bc6b] rounded-[60px] p-12 relative overflow-hidden flex flex-col justify-between min-h-[550px] custom-shadow card-hover-effect transition-all duration-300 group">
+                        <h1 className="text-white text-[80px] md:text-[150px] lg:text-[180px] leading-[0.8] bubbly-text opacity-90 pointer-events-none uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sweet-bg-gradient select-none">
+                            Coffee!
+                        </h1>
 
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Images */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-orange-800/10 to-yellow-900/20"></div>
-        <div 
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&h=1080&fit=crop&crop=center')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40"></div>
-      </div>
+                        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <div className="relative w-[300px] md:w-[450px] h-[300px] md:h-[450px] group-hover:scale-110 transition-transform duration-700 ease-out">
+                                    <Image
+                                        src="/coffee.png"
+                                        alt="Prime Coffee"
+                                        fill
+                                        className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+                                        priority
+                                    />
+                                </div>
 
-      {/* Navigation */}
-      <nav className="relative z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            <span className="text-2xl font-bold text-white brand-font">Prime Addis</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <HeaderThemeToggle />
-            <Link
-              href="/login"
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-3 rounded-full font-semibold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-[#2d5a41] text-white p-5 rounded-full border-[8px] border-[#f5bc6b] flex flex-col items-center custom-shadow bubbly-button pointer-events-auto scale-75 md:scale-100 hover:rotate-12 transition-transform">
+                                    <span className="text-sm uppercase font-semibold">Start</span>
+                                    <span className="text-3xl font-bold">Free</span>
+                                </div>
+                            </div>
+                        </div>
 
-      {/* Hero Section */}
-      <section className="relative z-10 min-h-screen flex items-center px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-          <div className="text-left order-2 lg:order-1">
-            <div className="inline-block bg-gradient-to-r from-amber-500/20 to-orange-600/20 backdrop-blur-sm border border-amber-500/30 rounded-full px-4 sm:px-6 py-2 mb-4 sm:mb-6">
-              <span className="text-amber-300 text-xs sm:text-sm font-semibold tracking-widest uppercase">
-                Premium Ethiopian Coffee Experience
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight brand-font">
-              Exceptional Coffee,
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500"> Perfectly Managed</span>
-            </h1>
-            <p className="text-gray-200 text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 leading-relaxed">
-              Experience the finest Ethiopian coffee culture with our comprehensive management system. 
-              From menu to kitchen operations—everything seamlessly integrated.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link
-                href="/login"
-                className="inline-block bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-2xl text-center"
-              >
-                Explore Our System
-              </Link>
-              <Link
-                href="/menu"
-                className="inline-block bg-white/10 backdrop-blur-sm text-white border border-white/20 px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-white/20 transition-all text-center"
-              >
-                View Menu
-              </Link>
-            </div>
-          </div>
+                        <div className="flex flex-col md:flex-row justify-between items-end gap-5 relative z-50">
+                            <p className="text-[#4a3a2a] max-w-[200px] leading-tight text-base font-semibold bg-white/20 backdrop-blur-sm p-3 rounded-2xl border border-white/20">
+                                Freshly roasted tech for your cafeteria.
+                            </p>
+                            <div className="flex items-center gap-4 bg-white/30 backdrop-blur-sm rounded-full px-6 py-3 border border-white/40 custom-shadow hover:scale-105 transition-transform duration-300 cursor-pointer">
+                                <span className="text-white font-bold text-2xl tracking-tighter">4.9 ⭐</span>
+                                <div className="flex -space-x-3">
+                                    <div className="w-12 h-12 rounded-full bg-white/60 border-2 border-white shadow-sm hover:scale-110 transition-transform duration-200"></div>
+                                    <div className="w-12 h-12 rounded-full bg-white/40 border-2 border-white shadow-sm hover:scale-110 transition-transform duration-200"></div>
+                                    <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-white shadow-sm hover:scale-110 transition-transform duration-200"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-          <div className="relative order-1 lg:order-2">
-            <div className="relative">
-              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-amber-500/20 to-orange-600/20 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl"></div>
-              <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&crop=faces"
-                  alt="Ethiopian Coffee Ceremony"
-                  width={600}
-                  height={400}
-                  className="w-full h-48 sm:h-64 lg:h-80 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 right-3 sm:right-6">
-                  <h3 className="text-white text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Authentic Ethiopian Coffee</h3>
-                  <p className="text-gray-200 text-sm sm:text-base">Traditional ceremony meets modern management</p>
+                    <div className="md:col-span-4 flex flex-col gap-6">
+
+                        {/* School -> System Card */}
+                        <div className="bg-[#93c5fd] rounded-[60px] p-10 relative overflow-hidden min-h-[300px] flex flex-col justify-between custom-shadow card-hover-effect transition-all duration-300 group school-card">
+                            <div>
+                                <h2 className="text-5xl font-bold bubbly-text text-[#1e3a8a] mb-2">SYSTEM</h2>
+                                <p className="text-[#1e3a8a]/80 text-base font-medium">Manage smart & deliciously</p>
+                            </div>
+
+                            <div className="flex items-center gap-4 relative z-10">
+                                <Link href="/features" className="bg-black text-[#f5bc6b] px-9 py-3.5 rounded-full font-bold uppercase text-sm tracking-widest bubbly-button">
+                                    Explore
+                                </Link>
+                                <div className="w-12 h-12 bg-[#f5bc6b] rounded-full flex items-center justify-center border-2 border-white text-3xl icon-bounce transition-transform duration-300 cursor-pointer">
+                                    <span className="text-white">📊</span>
+                                </div>
+                            </div>
+
+                            <div className="absolute -bottom-6 -right-6 w-48 h-56 bg-[#1e3a8a]/10 rounded-t-full flex items-end justify-center perspective-1000">
+                                <span className="text-9xl mb-4 transform translateZ(0) chef-image grayscale opacity-50">👨‍💻</span>
+                            </div>
+                        </div>
+
+                        {/* Everyday -> Daily Brew Card */}
+                        <div className="bg-[#f28e50] rounded-[60px] p-10 relative flex flex-col justify-between min-h-[340px] overflow-hidden custom-shadow card-hover-effect transition-all duration-300 group everyday-card">
+                            <h2 className="text-5xl font-bold bubbly-text text-[#2d1a12] uppercase leading-none relative z-10">Daily<br />Brew</h2>
+
+                            <div className="flex justify-center relative my-4">
+                                <div className="w-52 h-52 bg-white/20 blur-3xl absolute rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                                <div className="relative z-10 w-40 h-40">
+                                    <Image src="/coffee.png" alt="Coffee" fill className="object-contain drop-shadow-xl" />
+                                    <div className="absolute -top-3 -right-8 bg-[#2d5a41] text-white px-5 py-2 rounded-full font-bold border-4 border-[#f28e50] shadow-xl bubbly-button">HOT</div>
+                                </div>
+                            </div>
+
+                            <p className="text-[#2d1a12] text-base text-center font-medium leading-relaxed mt-auto relative z-10">
+                                Serve perfection in every cup.<br />Consistent quality.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Top Picks */}
+                    <div className="md:col-span-12 bg-white rounded-[60px] p-12 flex flex-col md:flex-row items-center gap-16 custom-shadow card-hover-effect transition-all duration-300">
+                        <div className="text-[64px] font-bold bubbly-text leading-[0.8] text-center md:text-left text-[#1a1a1a] flex-shrink-0">
+                            TOP-5<br />SELLERS
+                        </div>
+
+                        <div className="flex-1 w-full space-y-7">
+                            <div className="flex flex-col sm:flex-row items-center justify-between group cursor-pointer border-b border-gray-100 pb-5 hover:bg-gray-50 rounded-lg px-4 -mx-4 transition-all duration-200">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300 icon-bounce overflow-hidden relative border-2 border-white shadow-sm">
+                                        <Image src="https://images.unsplash.com/photo-1579306194872-64d3b7bac4c2?w=200&q=80" alt="Cake" fill className="object-cover" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xl text-[#1a1a1a]">Caramel Slice</h4>
+                                        <p className="text-sm text-gray-500 font-medium">Sweet caramel with a chocolate top</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-10 mt-4 sm:mt-0">
+                                    <span className="font-bold text-2xl text-[#1a1a1a]">ETB 120 <span className="text-[11px] text-gray-400 font-normal ml-1">each</span></span>
+                                    <div className="bg-[#2d5a41] text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl hover:bg-black transition-colors bubbly-button">+</div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center justify-between group cursor-pointer border-b border-gray-100 pb-5 hover:bg-gray-50 rounded-lg px-4 -mx-4 transition-all duration-200">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300 icon-bounce overflow-hidden relative border-2 border-white shadow-sm">
+                                        <Image src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&q=80" alt="Beans" fill className="object-cover" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xl text-[#1a1a1a]">Yirgacheffe Roast</h4>
+                                        <p className="text-sm text-gray-500 font-medium">Light bun with smooth floral filling</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-10 mt-4 sm:mt-0">
+                                    <span className="font-bold text-2xl text-[#1a1a1a]">ETB 85 <span className="text-[11px] text-gray-400 font-normal ml-1">each</span></span>
+                                    <div className="bg-[#2d5a41] text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl hover:bg-black transition-colors bubbly-button">+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-              </div>
             </div>
-
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-8">
-              <FeatureCard title="Fresh Roasted" subtitle="Daily" />
-              <FeatureCard title="100% Organic" subtitle="Certified" />
-              <FeatureCard title="Fast Service" subtitle="< 5 mins" />
-            </div>
-          </div>
         </div>
-      </section>
-
-      {/* Services Section */}
-      <section className="relative py-12 sm:py-16 lg:py-20 bg-black/40 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-4 brand-font">Our Management System</h2>
-            <p className="text-lg sm:text-xl text-gray-300">Complete coffee shop solution in one platform</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <ServiceCard
-              title="Point of Sale"
-              description="Lightning-fast checkout system with real-time order processing"
-              image="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop"
-            />
-            <ServiceCard
-              title="Chef Dashboard"
-              description="Streamlined order flow from counter to kitchen with live updates"
-              image="https://i.pinimg.com/736x/aa/0d/fc/aa0dfc30734c2833c12974ab8cab3347.jpg"
-            />
-            <ServiceCard
-              title="Menu Control"
-              description="Dynamic menu management with pricing and availability controls"
-              image="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Coffee Gallery Section */}
-      <section className="relative py-20">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1920&h=1080&fit=crop')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/80"></div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-5xl font-bold text-white mb-6 brand-font">Ethiopian Coffee Heritage</h2>
-              <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-                Prime Addis brings you authentic Ethiopian coffee culture with modern management technology. 
-                Experience the birthplace of coffee through our carefully curated menu and efficient operations.
-              </p>
-              <div className="grid grid-cols-2 gap-6">
-                <Feature text="Traditional Recipes" />
-                <Feature text="Modern Technology" />
-                <Feature text="Expert Baristas" />
-                <Feature text="Premium Beans" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=400&fit=crop&crop=faces"
-                    alt="Ethiopian Coffee Ceremony"
-                    width={300}
-                    height={400}
-                    className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-                <div className="relative overflow-hidden rounded-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=faces"
-                    alt="Ethiopian Coffee Culture"
-                    width={300}
-                    height={300}
-                    className="w-full h-32 object-cover hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              </div>
-              <div className="space-y-4 mt-8">
-                <div className="relative overflow-hidden rounded-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=300&h=300&fit=crop"
-                    alt="Ethiopian Coffee Beans"
-                    width={300}
-                    height={300}
-                    className="w-full h-32 object-cover hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-                <div className="relative overflow-hidden rounded-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=400&fit=crop"
-                    alt="Traditional Coffee Preparation"
-                    width={300}
-                    height={400}
-                    className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="relative py-20 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-5xl font-bold text-white mb-6 brand-font">Ready to Experience Prime Addis?</h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join us in revolutionizing coffee shop management with Ethiopian authenticity
-          </p>
-          <Link
-            href="/login"
-            className="inline-block bg-white text-orange-600 px-12 py-4 rounded-full text-xl font-bold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-2xl"
-          >
-            Start Your Journey
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="relative bg-black/60 backdrop-blur-sm border-t border-white/10 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-3 mb-4 md:mb-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
-              <span className="text-2xl font-bold text-white brand-font">Prime Addis</span>
-            </div>
-            <p className="text-gray-400">© 2025 Prime Addis Coffee. Authentic Ethiopian Coffee Experience.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
-}
-
-function ServiceCard({ title, description, image }: { title: string; description: string; image: string }) {
-  return (
-    <div className="group cursor-pointer">
-      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:border-amber-500/50 transition-all duration-300 hover:transform hover:scale-105">
-        <div className="relative h-40 sm:h-48 overflow-hidden">
-          <Image
-            src={image}
-            alt={title}
-            width={400}
-            height={300}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        </div>
-        <div className="p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3 group-hover:text-amber-300 transition-colors">{title}</h3>
-          <p className="text-sm sm:text-base text-gray-300 group-hover:text-white transition-colors">{description}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Feature({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-3 group">
-      <div className="w-3 h-3 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex-shrink-0 group-hover:scale-125 transition-transform"></div>
-      <span className="text-gray-200 group-hover:text-white transition-colors">{text}</span>
-    </div>
-  )
-}
-
-function FeatureCard({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-4 border border-white/20 hover:border-amber-500/50 transition-all hover:transform hover:scale-105">
-      <div className="text-center">
-        <div className="text-sm sm:text-lg lg:text-2xl font-bold text-white mb-1">{title}</div>
-        <div className="text-xs sm:text-sm text-amber-300">{subtitle}</div>
-      </div>
-    </div>
-  )
+    )
 }

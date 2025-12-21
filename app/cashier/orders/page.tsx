@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 
 interface OrderItem {
@@ -32,51 +31,22 @@ export default function CashierOrdersPage() {
 
   useEffect(() => {
     fetchOrders()
+    const handleRefresh = () => fetchOrders()
+    window.addEventListener('focus', handleRefresh)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') handleRefresh()
+    })
+    return () => {
+      window.removeEventListener('focus', handleRefresh)
+    }
   }, [token])
-
-  // Add visibility change listener for immediate refresh when tab becomes active
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchOrders()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
-
-  // Add focus listener for immediate refresh when window gets focus
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchOrders()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [])
-
-  // Add localStorage listener for cross-page updates
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') {
-        fetchOrders()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
 
   const fetchOrders = async () => {
     try {
       const response = await fetch("/api/orders", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
-      }
+      if (response.ok) setOrders(await response.json())
     } catch (err) {
       console.error("Failed to load orders")
     } finally {
@@ -93,148 +63,121 @@ export default function CashierOrdersPage() {
     revenue: orders.filter((o) => o.status === "completed").reduce((sum, o) => sum + o.totalAmount, 0),
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-[#e2e7d8] text-[#2d5a41]'
+      case 'pending': return 'bg-[#f5bc6b] text-[#1a1a1a]'
+      case 'cancelled': return 'bg-red-50 text-red-500'
+      default: return 'bg-gray-100 text-gray-400'
+    }
+  }
+
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="min-h-screen bg-background">
-        <SidebarNav />
-        <main className="md:ml-64">
-          <AuthHeader title="Order History" description="View all cashier orders" />
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
 
-          <div className="p-2.5 sm:p-4 lg:p-6">
-            {/* Statistics - Mobile Optimized */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
-              <div className="card-base bg-secondary/10 border-2 border-secondary p-2 sm:p-3">
-                <p className="text-secondary font-semibold text-xs sm:text-sm">Total Orders</p>
-                <p className="text-xl sm:text-3xl font-bold text-secondary mt-1">{stats.total}</p>
-              </div>
-              <div className="card-base bg-warning/10 border-2 border-warning p-2 sm:p-3">
-                <p className="text-warning font-semibold text-xs sm:text-sm">Pending</p>
-                <p className="text-xl sm:text-3xl font-bold text-warning mt-1">{stats.pending}</p>
-              </div>
-              <div className="card-base bg-success/10 border-2 border-success p-2 sm:p-3">
-                <p className="text-success font-semibold text-xs sm:text-sm">Completed</p>
-                <p className="text-xl sm:text-3xl font-bold text-success mt-1">{stats.completed}</p>
-              </div>
-              <div className="card-base bg-primary/10 border-2 border-primary p-2 sm:p-3">
-                <p className="text-primary font-semibold text-xs sm:text-sm">Revenue</p>
-                <p className="text-lg sm:text-2xl font-bold text-primary mt-1">{stats.revenue.toFixed(2)} Br</p>
-              </div>
-            </div>
-
-            {/* Filter Buttons - Mobile Optimized */}
-            <div className="grid grid-cols-2 sm:flex gap-2 mb-4">
-              {["all", "pending", "completed", "cancelled"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilterStatus(status as typeof filterStatus)}
-                  className={`px-2 sm:px-4 py-2 rounded-lg transition-colors capitalize text-xs sm:text-sm font-medium ${
-                    filterStatus === status
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-border hover:border-primary"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-
-            {/* Orders List - Mobile Optimized */}
-            {loading ? (
-              <div className="flex items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
-                  <p className="text-sm sm:text-base text-muted-foreground">Loading orders...</p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Sidebar Stats */}
+            <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-4">
+              <div className="bg-white rounded-[40px] p-8 custom-shadow">
+                <h2 className="text-2xl font-bold mb-6 bubbly-text">Orders</h2>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-[30px] p-5 text-center">
+                    <div className="text-4xl font-black text-[#2d5a41] mb-1">{stats.total}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Managed</div>
+                  </div>
+                  <div className="bg-[#f5bc6b] rounded-[30px] p-5 text-center">
+                    <div className="text-4xl font-black text-white mb-1">{stats.pending}</div>
+                    <div className="text-[10px] font-bold text-[#1a1a1a]/40 uppercase tracking-widest">Awaiting Prep</div>
+                  </div>
                 </div>
               </div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="card-base text-center py-8 sm:py-12">
-                <div className="text-4xl sm:text-6xl mb-3">📋</div>
-                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Orders Found</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {filterStatus === "all" ? "No orders have been placed yet" : `No ${filterStatus} orders found`}
-                </p>
+
+              <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow text-white overflow-hidden relative group">
+                <div className="relative z-10">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1 opacity-60">Daily Revenue</p>
+                  <h3 className="text-3xl font-black">{stats.revenue.toFixed(0)} Br</h3>
+                </div>
+                <div className="absolute -bottom-4 -right-4 text-7xl opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-500">💰</div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredOrders.map((order) => (
-                  <div key={order._id} className="card-base hover-lift p-3">
-                    {/* Mobile-Optimized Order Card */}
-                    <div className="flex flex-col gap-3">
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-mono text-sm sm:text-base font-bold text-foreground">
-                            #{order.orderNumber}
-                          </h3>
-                          <span className="text-xs text-muted-foreground">
-                            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+            </div>
+
+            {/* Main Content */}
+            <div className="lg:col-span-9 space-y-6">
+              <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[600px]">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                  <h3 className="text-2xl font-bold bubbly-text">Sales History</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {["all", "pending", "completed", "cancelled"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setFilterStatus(s as any)}
+                        className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${filterStatus === s
+                            ? "bg-[#2d5a41] text-white border-[#2d5a41] shadow-lg"
+                            : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
+                          }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-32">
+                    <div className="text-6xl animate-pulse mb-4">🥐</div>
+                    <p className="text-gray-400 font-bold">Unboxing Orders...</p>
+                  </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="text-center py-32">
+                    <div className="text-6xl mb-4 opacity-20">📥</div>
+                    <p className="text-gray-400 font-bold uppercase tracking-widest">No matching orders</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredOrders.map((o) => (
+                      <div key={o._id} className="bg-gray-50 rounded-[35px] p-6 hover:shadow-xl transition-all group border-2 border-transparent hover:border-[#2d5a41]/5">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <div className="text-[10px] font-black text-gray-300 uppercase tracking-[3px] mb-1">ID #{o.orderNumber.slice(-5)}</div>
+                            <div className="text-lg font-black text-gray-800">{o.totalAmount.toFixed(0)} Br</div>
+                          </div>
+                          <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${getStatusColor(o.status)} shadow-sm`}>
+                            {o.status}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold capitalize ${getStatusColor(order.status)}`}
-                          >
-                            {order.status}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Items Row */}
-                      <div className="border-t pt-2">
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {order.items.slice(0, 3).map((item, idx) => (
-                            <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
-                              {item.quantity}x {item.name}
-                            </span>
+
+                        <div className="space-y-1.5 mb-6">
+                          {o.items.slice(0, 2).map((item, idx) => (
+                            <div key={idx} className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-1.5">
+                              <span className="text-xs font-bold text-gray-600 truncate max-w-[140px]">{item.name}</span>
+                              <span className="text-[10px] font-black text-[#2d5a41]">x{item.quantity}</span>
+                            </div>
                           ))}
-                          {order.items.length > 3 && (
-                            <span className="text-xs text-muted-foreground px-2 py-1">
-                              +{order.items.length - 3} more
-                            </span>
+                          {o.items.length > 2 && (
+                            <div className="text-[10px] font-bold text-gray-300 pl-2">+{o.items.length - 2} more snacks</div>
                           )}
                         </div>
-                      </div>
-                      
-                      {/* Details Row */}
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-4">
-                          <span className="font-semibold text-accent text-base">
-                            {order.totalAmount.toFixed(2)} Br
-                          </span>
-                          <span className="text-muted-foreground capitalize">
-                            {order.paymentMethod}
-                          </span>
+
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                          <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                            <span>🕒</span> {new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          <div className="text-[10px] font-black text-[#2d5a41] uppercase tracking-widest bg-[#e2e7d8]/30 px-3 py-1 rounded-lg">
+                            {o.paymentMethod || 'cash'}
+                          </div>
                         </div>
-                        <span className="text-muted-foreground text-xs">
-                          {new Date(order.createdAt).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </ProtectedRoute>
   )
-}
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case "pending":
-      return "bg-warning/20 text-warning"
-    case "completed":
-      return "bg-success/20 text-success"
-    case "cancelled":
-      return "bg-danger/20 text-danger"
-    default:
-      return "bg-muted text-muted-foreground"
-  }
 }

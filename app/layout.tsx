@@ -1,14 +1,13 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Fredoka } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AuthProvider } from "@/context/auth-context"
 import { ThemeProvider } from "@/context/theme-context"
 import { NotificationCenter } from "@/components/notification-center"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const fredoka = Fredoka({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Prime Addis Coffee - Management System",
@@ -40,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased" suppressHydrationWarning>
+      <body className={`${fredoka.className} antialiased bg-[#e2e7d8] overflow-x-hidden`} suppressHydrationWarning>
         <ThemeProvider>
           <AuthProvider>
             <NotificationCenter />

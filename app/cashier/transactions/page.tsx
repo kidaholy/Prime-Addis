@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 
 interface Order {
@@ -30,8 +29,7 @@ export default function TransactionsPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
+        setOrders(await response.json())
       }
     } catch (err) {
       console.error("Failed to load orders")
@@ -41,97 +39,70 @@ export default function TransactionsPage() {
   }
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0)
+  const avgTransaction = totalRevenue / (orders.length || 1)
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="min-h-screen bg-background">
-        <SidebarNav />
-        <main className="md:ml-64">
-          <AuthHeader title="Transactions" description="View all orders and transactions" />
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
 
-          <div className="p-2.5 sm:p-4 lg:p-6">
-            {/* Stats - Mobile Optimized */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-              <div className="card-base p-3">
-                <p className="text-muted-foreground text-xs sm:text-sm">Total Orders</p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary mt-1">{orders.length}</p>
-              </div>
-              <div className="card-base p-3">
-                <p className="text-muted-foreground text-xs sm:text-sm">Total Revenue</p>
-                <p className="text-2xl sm:text-3xl font-bold text-success mt-1">{totalRevenue.toFixed(2)} Br</p>
-              </div>
-              <div className="card-base p-3">
-                <p className="text-muted-foreground text-xs sm:text-sm">Avg Transaction</p>
-                <p className="text-2xl sm:text-3xl font-bold text-info mt-1">{(totalRevenue / (orders.length || 1)).toFixed(2)} Br</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#2d5a41]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Sales</p>
+              <h3 className="text-3xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} Br</h3>
             </div>
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Volume</p>
+              <h3 className="text-3xl font-black text-[#1a1a1a]">{orders.length}</h3>
+            </div>
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#93c5fd]">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Average Ticket</p>
+              <h3 className="text-3xl font-black text-blue-800">{avgTransaction.toFixed(0)} Br</h3>
+            </div>
+          </div>
 
-            {/* Transactions List - Mobile Optimized */}
+          <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[500px]">
+            <h3 className="text-2xl font-bold mb-8 bubbly-text">Transaction Log</h3>
+
             {loading ? (
-              <div className="flex items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
-                  <p className="text-sm sm:text-base text-muted-foreground">Loading transactions...</p>
-                </div>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="card-base text-center py-8 sm:py-12">
-                <div className="text-4xl sm:text-6xl mb-3">💳</div>
-                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Transactions Found</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">No transactions have been processed yet</p>
+              <div className="flex flex-col items-center justify-center py-32">
+                <div className="text-6xl animate-bounce mb-4">💳</div>
+                <p className="text-gray-400 font-bold">Syncing Ledger...</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {orders.map((order) => (
-                  <div key={order._id} className="card-base hover-lift p-3">
-                    {/* Mobile-Optimized Transaction Card */}
-                    <div className="flex flex-col gap-2">
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-mono text-sm sm:text-base font-bold text-foreground">
-                          #{order.orderNumber}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              order.status === "completed" ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              order.paymentStatus === "paid"
-                                ? "bg-success/20 text-success"
-                                : "bg-warning/20 text-warning"
-                            }`}
-                          >
-                            {order.paymentStatus || "pending"}
-                          </span>
-                        </div>
+              <div className="space-y-4">
+                {orders.map((o) => (
+                  <div key={o._id} className="bg-gray-50 rounded-[30px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#e2e7d8]/20 transition-colors border border-transparent hover:border-[#2d5a41]/10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl custom-shadow">🧾</div>
+                      <div>
+                        <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">#{o.orderNumber}</div>
+                        <div className="text-lg font-bold text-gray-800">{o.totalAmount.toFixed(2)} Br</div>
                       </div>
-                      
-                      {/* Details Row */}
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-accent text-lg sm:text-xl">
-                          {order.totalAmount.toFixed(2)} Br
-                        </span>
-                        <span className="text-muted-foreground text-xs sm:text-sm">
-                          {new Date(order.createdAt).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.status === 'completed' ? 'bg-[#e2e7d8] text-[#2d5a41]' : 'bg-[#f5bc6b] text-white'
+                        }`}>
+                        {o.status}
+                      </span>
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.paymentStatus === 'paid' ? 'bg-[#93c5fd] text-white' : 'bg-gray-100 text-gray-400'
+                        }`}>
+                        {o.paymentStatus || 'pending'}
+                      </span>
+                    </div>
+
+                    <div className="text-[10px] font-bold text-gray-400 text-right">
+                      <div>{new Date(o.createdAt).toLocaleDateString()}</div>
+                      <div className="opacity-60">{new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </main>
+        </div>
       </div>
     </ProtectedRoute>
   )

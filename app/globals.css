@@ -2970,3 +2970,57 @@ orce horizontal sliding categories on ALL screen sizes */
     max-height: 40px !important;
   }
 }
+
+/* Swirlzy Bento Enhanced Styles */
+@layer components {
+  .bubbly-text { font-weight: 700; letter-spacing: -0.02em; }
+  .custom-shadow { box-shadow: 0 25px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08); }
+  
+  .card-hover-effect { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .card-hover-effect:hover {
+      transform: translateY(-8px) rotateZ(-1deg);
+      box-shadow: 0 35px 60px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .bubbly-button { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .bubbly-button:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  
+  .pulsate { animation: pulsate 1.5s infinite ease-in-out; }
+  
+  .sweet-bg-gradient {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+  }
+  
+  .swirl-s:hover { transform: rotate(360deg); }
+  
+  .icon-bounce:hover { animation: bounce-custom 0.6s ease-in-out; }
+  
+  .cookie-layer { transition: transform 0.3s ease-out; }
+  .cookie-stack:hover .cookie-layer:nth-child(1) { transform: translateY(-10px) rotate(-15deg); }
+  .cookie-stack:hover .cookie-layer:nth-child(2) { transform: translateY(-0px) rotate(-5deg); }
+  .cookie-stack:hover .cookie-layer:nth-child(3) { transform: translateY(10px) rotate(5deg); }
+  
+  .chef-image { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .school-card:hover .chef-image { transform: translateY(-20px) scale(1.05); }
+  
+  .tart-image { transition: transform 0.4s ease-out; }
+  .everyday-card:hover .tart-image { transform: scale(1.1) rotate(5deg); }
+}
+
+@keyframes pulsate {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce-custom {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}

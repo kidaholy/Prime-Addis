@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { CartSidebar } from "@/components/cart-sidebar"
 import { MenuItemCard } from "@/components/menu-item-card"
 import { OrderAnimation } from "@/components/order-animation"
@@ -75,7 +74,6 @@ export default function CashierPOSPage() {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'menuUpdated') {
-        // Refetch menu items when menu is updated
         const fetchMenuItems = async () => {
           if (!token) return
           try {
@@ -148,10 +146,8 @@ export default function CashierPOSPage() {
         setOrderNumber(data.orderNumber)
         setShowOrderAnimation(true)
 
-        // Trigger immediate refresh on other pages
         localStorage.setItem('newOrderCreated', Date.now().toString())
 
-        // Clear cart after animation
         setTimeout(() => {
           setCartItems([])
           setShowOrderAnimation(false)
@@ -170,149 +166,108 @@ export default function CashierPOSPage() {
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="flex flex-col md:flex-row">
-        <SidebarNav />
-        <main className="flex-1 md:ml-64 md:mr-80">
-          <AuthHeader title="POS System" description="Browse menu and take orders" />
-          
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
 
-
-          <div className="p-6 pos-container">
-            {/* Loading State */}
-            {menuLoading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading menu items...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚠️</div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Failed to Load Menu</h2>
-                <p className="text-muted-foreground mb-4">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="btn-primary"
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {/* Menu Content */}
-            {!menuLoading && !error && (
-              <div className="pos-menu-section">
-                {/* Category Filter */}
-                <div 
-                  className="cashier-category-filter-static"
-                  style={{
-                    position: 'relative',
-                    zIndex: 10,
-                    background: 'transparent',
-                    marginBottom: '1rem',
-                    padding: '0.5rem 0',
-                    maxHeight: '60px',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <div 
-                    className="cashier-category-buttons"
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      flexWrap: 'nowrap',
-                      overflowX: 'auto',
-                      overflowY: 'hidden',
-                      gap: '0.5rem',
-                      padding: '0',
-                      margin: '0',
-                      scrollbarWidth: 'thin'
-                    }}
-                  >
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setCategoryFilter(cat)}
-                        className={`transition-all capitalize font-semibold ${
-                          categoryFilter === cat
-                            ? "bg-accent text-accent-foreground shadow-lg"
-                            : "bg-card border border-border hover:border-accent text-foreground"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-2">
+            {/* POS Main Area */}
+            <div className="lg:col-span-8 flex flex-col gap-6">
+              {/* Category Bar Card */}
+              <div className="bg-white rounded-[40px] p-6 custom-shadow overflow-hidden">
+                <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all duration-300 ${categoryFilter === cat
+                        ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                         }`}
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          fontSize: '0.8rem',
-                          borderRadius: '1.5rem',
-                          minHeight: '36px',
-                          maxHeight: '36px',
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                          minWidth: 'fit-content',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
+                    >
+                      {cat === "all" ? "All Items" : cat}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {/* Empty State */}
-                {filteredItems.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🍽️</div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">No Menu Items</h2>
-                    <p className="text-muted-foreground">No items available in this category</p>
+              {/* Menu Grid Card */}
+              <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[600px]">
+                {menuLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="text-5xl animate-bounce mb-4">🥐</div>
+                    <p className="text-gray-400 font-bold">Loading Menu...</p>
                   </div>
-                )}
-
-                {/* Menu Grid */}
-                {filteredItems.length > 0 && (
-                  <div 
-                    className="cashier-menu-grid-static"
-                    style={{
-                      position: 'relative',
-                      zIndex: 5,
-                      marginTop: '0.1rem',
-                      minHeight: 'calc(100vh - 300px)'
-                    }}
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredItems.map((item, idx) => (
-                        <div key={item._id} className="cashier-menu-item">
-                          <MenuItemCard
-                            name={item.name}
-                            price={item.price}
-                            description={item.description}
-                            category={item.category}
-                            preparationTime={item.preparationTime}
-                            onAddToCart={() => handleAddToCart(item)}
-                            index={idx}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                ) : error ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4">⚠️</div>
+                    <h2 className="text-2xl font-bold text-red-500 mb-2">Ops! Failed to Load</h2>
+                    <p className="text-gray-500 mb-6">{error}</p>
+                    <button onClick={() => window.location.reload()} className="bg-[#2d5a41] text-white px-8 py-3 rounded-full font-bold bubbly-button">
+                      Retry
+                    </button>
                   </div>
+                ) : (
+                  <>
+                    {filteredItems.length === 0 ? (
+                      <div className="text-center py-20">
+                        <div className="text-6xl mb-4 opacity-30">🍽️</div>
+                        <h2 className="text-2xl font-bold text-gray-400 border-none outline-none">No Items Found</h2>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {filteredItems.map((item, idx) => (
+                          <div key={item._id} className="transform transition-transform hover:scale-[1.02]">
+                            <MenuItemCard
+                              name={item.name}
+                              price={item.price}
+                              description={item.description}
+                              category={item.category}
+                              preparationTime={item.preparationTime}
+                              onAddToCart={() => handleAddToCart(item)}
+                              index={idx}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-            )}
+            </div>
+
+            {/* Cart Section - Styled as Side Bento Card */}
+            <div className="lg:col-span-4 sticky top-4">
+              <div className="bg-white rounded-[40px] p-6 custom-shadow border-4 border-[#2d5a41]/5 min-h-[600px] flex flex-col">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-3xl">🛒</span>
+                  <h2 className="text-2xl font-bold text-gray-800 bubbly-text">Active Cart</h2>
+                </div>
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  <CartSidebar
+                    items={cartItems}
+                    onRemove={handleRemoveFromCart}
+                    onQuantityChange={handleQuantityChange}
+                    onCheckout={handleCheckout}
+                    isLoading={loading}
+                    isEmbedded={true} // New prop to handle embedding styling
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </main>
-        <CartSidebar
-          items={cartItems}
-          onRemove={handleRemoveFromCart}
-          onQuantityChange={handleQuantityChange}
-          onCheckout={handleCheckout}
-          isLoading={loading}
-        />
+        </div>
 
-        {/* Order Animation */}
-        <OrderAnimation orderNumber={orderNumber} totalItems={cartItems.length} isVisible={showOrderAnimation} />
-
+        {/* Order Animation Layer */}
+        {showOrderAnimation && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-[50px] p-10 custom-shadow max-w-md w-full text-center transform animate-bounce-custom">
+              <OrderAnimation orderNumber={orderNumber} totalItems={cartItems.length} isVisible={showOrderAnimation} />
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   )
 }
+

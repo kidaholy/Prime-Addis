@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 
 interface DashboardStats {
@@ -68,119 +67,125 @@ export default function AdminDashboardPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-background">
-        <SidebarNav />
-        <main className="md:ml-64">
-          <AuthHeader title="Dashboard" description="System overview and analytics" />
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
 
-          <div className="p-2.5 sm:p-4 lg:p-6 space-y-3 sm:space-y-6">
-            {/* Key Metrics - Optimized for 412px */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <StatCard label="Total Orders" value={stats.totalOrders} icon="📋" color="primary" />
-              <StatCard label="Revenue" value={`${stats.totalRevenue.toFixed(2)} Br`} icon="💰" color="success" />
-              <StatCard label="Avg Order" value={`${stats.averageOrderValue.toFixed(2)} Br`} icon="🧮" color="info" />
-              <StatCard label="Low Stock" value={stats.lowStockItems} icon="⚠️" color="warning" />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
 
-            {/* Secondary Metrics */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <StatCard label="Pending" value={stats.pendingOrders} icon="⏳" color="warning" />
-              <StatCard label="Completed" value={stats.completedOrders} icon="✅" color="success" />
-              <StatCard
-                label="Inventory Value"
-                value={`${stats.inventoryValue.toFixed(2)} Br`}
-                icon="📦"
-                color="info"
-              />
-              <StatCard label="Customers" value={stats.totalCustomers} icon="👥" color="primary" />
-            </div>
+            {/* Left Column: Welcome + Stats */}
+            <div className="md:col-span-12 lg:col-span-8">
+              {/* Welcome Card */}
+              <div className="bg-[#2d5a41] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group text-[#e2e7d8]">
+                <div className="relative z-10">
+                  <h1 className="text-4xl font-bold mb-2 bubbly-text">Admin HQ 🚀</h1>
+                  <p className="opacity-90 font-medium">System overview and analytics.</p>
+                </div>
+                <div className="absolute right-[-20px] bottom-[-20px] w-48 h-48 bg-[#f5bc6b] rounded-full opacity-20 group-hover:scale-125 transition-transform duration-500"></div>
+              </div>
 
-            {/* Overview Sections */}
-            <div className="space-y-3 sm:space-y-4">
-              <div className="card-base">
-                <h2 className="text-lg font-bold text-foreground mb-4">Quick Stats</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-primary/10 rounded border border-border">
-                    <span className="text-muted-foreground">System Status</span>
-                    <span className="px-3 py-1 bg-success/20 text-success rounded text-sm font-semibold">Active</span>
+              {/* Primary Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Orders" value={stats.totalOrders} icon="📋" color="white" />
+                <StatCard label="Revenue" value={`${stats.totalRevenue.toFixed(0)} Br`} icon="💰" color="blue" />
+                <StatCard label="Avg Order" value={`${stats.averageOrderValue.toFixed(0)} Br`} icon="🧮" color="orange" />
+                <StatCard label="Customers" value={stats.totalCustomers} icon="👥" color="white" />
+              </div>
+
+              {/* Detailed Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-[40px] p-6 custom-shadow">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span className="text-2xl">⚠️</span> Alerts
+                  </h2>
+                  <div className="space-y-3">
+                    {stats.lowStockItems > 0 ? (
+                      <AlertItem type="warning" text={`${stats.lowStockItems} items low stock`} subtext="Restock required" />
+                    ) : (
+                      <AlertItem type="success" text="Stock levels healthy" subtext="No immediate action" />
+                    )}
+                    {stats.pendingOrders > 5 ? (
+                      <AlertItem type="info" text={`${stats.pendingOrders} pending orders`} subtext="Kitchen busy" />
+                    ) : (
+                      <AlertItem type="success" text="Order queue optimal" subtext="Kitchen running smooth" />
+                    )}
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-primary/10 rounded border border-border">
-                    <span className="text-muted-foreground">Database</span>
-                    <span className="px-3 py-1 bg-success/20 text-success rounded text-sm font-semibold">
-                      Connected
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-primary/10 rounded border border-border">
-                    <span className="text-muted-foreground">API Status</span>
-                    <span className="px-3 py-1 bg-success/20 text-success rounded text-sm font-semibold">Online</span>
+                </div>
+
+                <div className="bg-white rounded-[40px] p-6 custom-shadow">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span className="text-2xl">⚡</span> System Status
+                  </h2>
+                  <div className="space-y-3">
+                    <StatusItem label="Database" status="Connected" />
+                    <StatusItem label="API Gateway" status="Online" />
+                    <StatusItem label="Realtime Sync" status="Active" />
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="card-base">
-                <h2 className="text-lg font-bold text-foreground mb-4">Alerts</h2>
-                <div className="space-y-3">
-                  {stats.lowStockItems > 0 && (
-                    <div className="flex gap-3 p-3 bg-warning/10 border border-warning/30 rounded">
-                      <span className="text-xl">⚠️</span>
-                      <div>
-                        <p className="text-sm font-semibold text-warning">{stats.lowStockItems} items low on stock</p>
-                        <p className="text-xs text-muted-foreground">Restock soon</p>
-                      </div>
-                    </div>
-                  )}
-                  {stats.pendingOrders > 5 && (
-                    <div className="flex gap-3 p-3 bg-info/10 border border-info/30 rounded">
-                      <span className="text-xl">ℹ️</span>
-                      <div>
-                        <p className="text-sm font-semibold text-info">{stats.pendingOrders} pending orders</p>
-                        <p className="text-xs text-muted-foreground">Kitchen working on them</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex gap-3 p-3 bg-success/10 border border-success/30 rounded">
-                    <span className="text-xl">✅</span>
-                    <div>
-                      <p className="text-sm font-semibold text-success">All systems operational</p>
-                      <p className="text-xs text-muted-foreground">No critical issues</p>
-                    </div>
-                  </div>
-                </div>
+            {/* Right Column: Secondary Stats */}
+            <div className="md:col-span-12 lg:col-span-4 space-y-6">
+              <div className="bg-white rounded-[40px] p-6 custom-shadow relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-100 rounded-bl-[40px] -mr-4 -mt-4 opacity-50"></div>
+                <h2 className="text-xl font-bold mb-4">Pending</h2>
+                <div className="text-5xl font-bold text-[#f5bc6b] mb-2">{stats.pendingOrders}</div>
+                <p className="text-gray-500">Orders to be served</p>
+              </div>
+
+              <div className="bg-white rounded-[40px] p-6 custom-shadow">
+                <h2 className="text-xl font-bold mb-4">Completed</h2>
+                <div className="text-5xl font-bold text-[#2d5a41] mb-2">{stats.completedOrders}</div>
+                <p className="text-gray-500">Orders served today</p>
               </div>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </ProtectedRoute>
   )
 }
 
-interface StatCardProps {
-  label: string
-  value: string | number
-  icon: string
-  color: "primary" | "success" | "warning" | "info"
-}
-
-function StatCard({ label, value, icon, color }: StatCardProps) {
-  const colorClass = {
-    primary: "text-foreground bg-primary/10 border-primary/30",
-    success: "text-success bg-success/10 border-success/30",
-    warning: "text-warning bg-warning/10 border-warning/30",
-    info: "text-info bg-info/10 border-info/30",
-  }[color]
+function AlertItem({ type, text, subtext }: { type: 'warning' | 'info' | 'success', text: string, subtext: string }) {
+  const colors = {
+    warning: "bg-orange-100 text-orange-700 border-orange-200",
+    info: "bg-blue-100 text-blue-700 border-blue-200",
+    success: "bg-green-100 text-green-700 border-green-200"
+  }
 
   return (
-    <div
-      className={`card-base border ${colorClass} hover:shadow-lg transition-all transform hover:-translate-y-1 animate-slide-in-up`}
-      style={{ animationDelay: `${Math.random() * 200}ms` }}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-muted-foreground text-sm">{label}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
-        </div>
-        <div className="text-4xl opacity-40">{icon}</div>
+    <div className={`p-4 rounded-2xl border ${colors[type]} flex justify-between items-center`}>
+      <div>
+        <p className="font-bold text-sm">{text}</p>
+        <p className="text-xs opacity-80">{subtext}</p>
+      </div>
+    </div>
+  )
+}
+
+function StatusItem({ label, status }: { label: string, status: string }) {
+  return (
+    <div className="flex justify-between items-center p-3 rounded-2xl bg-gray-50">
+      <span className="font-medium text-gray-600">{label}</span>
+      <span className="px-3 py-1 bg-[#2d5a41] text-[#e2e7d8] text-xs font-bold rounded-full">{status}</span>
+    </div>
+  )
+}
+
+function StatCard({ label, value, icon, color }: { label: string, value: string | number, icon: string, color: 'white' | 'blue' | 'orange' }) {
+  const styles = {
+    white: "bg-white text-[#1a1a1a]",
+    blue: "bg-[#93c5fd] text-[#1a1a1a]",
+    orange: "bg-[#f5bc6b] text-[#1a1a1a]"
+  }
+
+  return (
+    <div className={`rounded-[30px] p-5 custom-shadow flex flex-col justify-between h-32 ${styles[color]} transition-transform hover:scale-105`}>
+      <div className="text-3xl">{icon}</div>
+      <div>
+        <p className="text-2xl font-bold leading-none mb-1">{value}</p>
+        <p className="text-xs uppercase font-bold tracking-wider opacity-70">{label}</p>
       </div>
     </div>
   )

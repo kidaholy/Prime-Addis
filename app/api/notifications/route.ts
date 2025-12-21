@@ -9,15 +9,20 @@ export async function GET(request: Request) {
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
 
     if (!token) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+      // Return empty notifications array instead of error for unauthenticated users
+      return NextResponse.json([])
     }
 
-    const decoded = verifyToken(token)
-
-    // Get notifications for the user's role
-    const userNotifications = getNotifications(decoded.role, decoded.id)
-
-    return NextResponse.json(userNotifications)
+    try {
+      const decoded = verifyToken(token)
+      // Get notifications for the user's role
+      const userNotifications = getNotifications(decoded.role, decoded.id)
+      return NextResponse.json(userNotifications)
+    } catch (jwtError: any) {
+      // If JWT is invalid (like old token with different secret), return empty array
+      console.log("JWT verification failed, returning empty notifications:", jwtError.message)
+      return NextResponse.json([])
+    }
   } catch (error: any) {
     console.error("Get notifications error:", error)
     return NextResponse.json({ message: error.message || "Failed to get notifications" }, { status: 500 })

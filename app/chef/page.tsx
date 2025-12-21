@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 
 interface OrderItem {
@@ -99,9 +98,9 @@ export default function KitchenDisplayPage() {
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       // Optimistic update - immediately update the UI
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order._id === orderId 
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId
             ? { ...order, status: newStatus as any }
             : order
         )
@@ -119,7 +118,7 @@ export default function KitchenDisplayPage() {
       if (response.ok) {
         // Immediate refresh to ensure data consistency
         fetchOrders()
-        
+
         // Trigger refresh on other pages by setting a flag in localStorage
         localStorage.setItem('orderUpdated', Date.now().toString())
       } else {
@@ -139,130 +138,105 @@ export default function KitchenDisplayPage() {
 
   return (
     <ProtectedRoute requiredRoles={["chef"]}>
-      <div className="min-h-screen bg-background">
-        <SidebarNav />
-        <main className="md:ml-64">
-          <AuthHeader title="Kitchen Display System" description="Monitor and manage orders" />
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
+
+          <div className="mb-6 flex justify-between items-center text-[#2d5a41]">
+            <h1 className="text-3xl font-bold bubbly-text">Kitchen Display 👨‍🍳</h1>
+            <div className="flex gap-4">
+              <Badge count={pendingOrders.length} label="Pending" color="warning" />
+              <Badge count={preparingOrders.length} label="Prep" color="info" />
+              <Badge count={readyOrders.length} label="Ready" color="success" />
+            </div>
+          </div>
 
           {newOrderAlert && (
-            <div className="mx-2 sm:mx-4 mt-3 sm:mt-4 p-2.5 sm:p-3 bg-accent text-accent-foreground rounded-lg shadow-2xl animate-pulse flex items-center justify-between border-2 border-accent">
-              <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-2xl animate-bounce-gentle">🔔</span>
+            <div className="mb-6 p-4 bg-[#f5bc6b] text-white rounded-[20px] shadow-2xl animate-pulse flex items-center justify-between border-4 border-white custom-shadow transform scale-105 transition-transform">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl animate-bounce">🔔</span>
                 <div>
-                  <p className="font-bold text-xs sm:text-sm">New Order!</p>
-                  <p className="text-xs opacity-90 hidden sm:block">Check pending orders</p>
+                  <p className="font-bold text-lg">New Order Incoming!</p>
+                  <p className="text-sm opacity-90">Check your queue immediately</p>
                 </div>
               </div>
-              <button onClick={() => setNewOrderAlert(false)} className="text-base sm:text-lg hover:opacity-75 transition-opacity">
+              <button onClick={() => setNewOrderAlert(false)} className="text-2xl font-bold hover:opacity-75">
                 ✕
               </button>
             </div>
           )}
 
-          <div className="p-2.5 sm:p-4 lg:p-6">
-            {/* Order Statistics - Mobile Optimized */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
-              <StatCard label="Pending" count={pendingOrders.length} color="warning" emoji="⏳" />
-              <StatCard label="Preparing" count={preparingOrders.length} color="info" emoji="👨‍🍳" />
-              <StatCard label="Ready" count={readyOrders.length} color="success" emoji="✓" />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <div className="text-6xl animate-bounce mb-4">🍳</div>
+              <h2 className="text-2xl font-bold text-gray-400">Loading Kitchen Data...</h2>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Pending Column */}
+              <BentoColumn
+                title="Pending"
+                icon="⏳"
+                color="bg-orange-50 border-orange-100"
+                headerColor="text-orange-600"
+              >
+                {pendingOrders.map(order => (
+                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="preparing" accentColor="orange" />
+                ))}
+              </BentoColumn>
 
-            {/* Orders Layout - Mobile Optimized */}
-            {loading ? (
-              <div className="text-center py-8 sm:py-12">
-                <div className="text-2xl sm:text-4xl mb-3 animate-bounce">⏳</div>
-                <p className="text-muted-foreground text-sm sm:text-base">Loading orders...</p>
-              </div>
-            ) : (
-              <div className="space-y-4 sm:space-y-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
-                {/* Pending Orders */}
-                <OrderColumn
-                  title="Pending Orders"
-                  orders={pendingOrders}
-                  onStatusChange={handleStatusChange}
-                  nextStatus="preparing"
-                  statusColor="warning"
-                />
+              {/* Preparing Column */}
+              <BentoColumn
+                title="Preparing"
+                icon="🔥"
+                color="bg-blue-50 border-blue-100"
+                headerColor="text-blue-600"
+              >
+                {preparingOrders.map(order => (
+                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="ready" accentColor="blue" />
+                ))}
+              </BentoColumn>
 
-                {/* Preparing Orders */}
-                <OrderColumn
-                  title="Preparing"
-                  orders={preparingOrders}
-                  onStatusChange={handleStatusChange}
-                  nextStatus="ready"
-                  statusColor="info"
-                />
-
-                {/* Ready for Pickup */}
-                <OrderColumn
-                  title="Ready for Pickup"
-                  orders={readyOrders}
-                  onStatusChange={handleStatusChange}
-                  nextStatus="completed"
-                  statusColor="success"
-                />
-              </div>
-            )}
-          </div>
-        </main>
+              {/* Ready Column */}
+              <BentoColumn
+                title="Ready for Pickup"
+                icon="✅"
+                color="bg-green-50 border-green-100"
+                headerColor="text-green-600"
+              >
+                {readyOrders.map(order => (
+                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="completed" accentColor="green" />
+                ))}
+              </BentoColumn>
+            </div>
+          )}
+        </div>
       </div>
     </ProtectedRoute>
   )
 }
 
-interface StatCardProps {
-  label: string
-  count: number
-  color: "warning" | "info" | "success"
-  emoji: string
-}
-
-function StatCard({ label, count, color, emoji }: StatCardProps) {
-  const colorClass = {
-    warning: "bg-warning/10 border-warning text-warning",
-    info: "bg-info/10 border-info text-info",
-    success: "bg-success/10 border-success text-success",
-  }[color]
-
+function Badge({ count, label, color }: { count: number, label: string, color: 'warning' | 'info' | 'success' }) {
+  const colors = {
+    warning: "bg-orange-100 text-orange-700",
+    info: "bg-blue-100 text-blue-700",
+    success: "bg-green-100 text-green-700"
+  }
   return (
-    <div className={`card-base border-2 ${colorClass} p-2 sm:p-3`}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-center sm:text-left">
-          <p className="text-xs font-semibold opacity-75 truncate">{label}</p>
-          <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1">{count}</p>
-        </div>
-        <div className="text-lg sm:text-2xl lg:text-3xl opacity-40 self-center sm:self-auto mt-1 sm:mt-0">{emoji}</div>
-      </div>
+    <div className={`px-4 py-2 rounded-full font-bold text-sm ${colors[color]} border-2 border-white shadow-sm`}>
+      {label}: {count}
     </div>
   )
 }
 
-interface OrderColumnProps {
-  title: string
-  orders: Order[]
-  onStatusChange: (orderId: string, newStatus: string) => void
-  nextStatus: string
-  statusColor: "warning" | "info" | "success"
-}
-
-function OrderColumn({ title, orders, onStatusChange, nextStatus, statusColor }: OrderColumnProps) {
+function BentoColumn({ title, icon, children, color, headerColor }: { title: string, icon: string, children: React.ReactNode, color: string, headerColor: string }) {
   return (
-    <div className="space-y-2 sm:space-y-3">
-      <h2 className={`text-sm sm:text-base font-bold ${getColorClass(statusColor)} flex items-center gap-2`}>
-        <span className="w-3 h-3 rounded-full bg-current opacity-50"></span>
-        {title} ({orders.length})
+    <div className={`rounded-[35px] custom-shadow p-5 min-h-[600px] flex flex-col ${color} border-2`}>
+      <h2 className={`text-xl font-bold mb-4 flex items-center gap-2 ${headerColor} pl-2`}>
+        <span>{icon}</span> {title}
       </h2>
-      <div className="space-y-2 max-h-[40vh] sm:max-h-[50vh] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
-        {orders.length === 0 ? (
-          <div className="text-center py-6 sm:py-8 bg-card/50 rounded-lg border-2 border-dashed border-border">
-            <div className="text-xl sm:text-2xl mb-2 opacity-30">✓</div>
-            <p className="text-muted-foreground text-xs">No orders</p>
-          </div>
-        ) : (
-          orders.map((order) => (
-            <OrderCard key={order._id} order={order} onStatusChange={onStatusChange} nextStatus={nextStatus} />
-          ))
-        )}
+      <div className="space-y-4 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+        {children}
       </div>
     </div>
   )
@@ -272,73 +246,63 @@ interface OrderCardProps {
   order: Order
   onStatusChange: (orderId: string, newStatus: string) => void
   nextStatus: string
+  accentColor: "orange" | "blue" | "green"
 }
 
-function OrderCard({ order, onStatusChange, nextStatus }: OrderCardProps) {
+function OrderCard({ order, onStatusChange, nextStatus, accentColor }: OrderCardProps) {
   const createdTime = new Date(order.createdAt)
   const elapsedMinutes = Math.floor((Date.now() - createdTime.getTime()) / 60000)
 
+  const accents = {
+    orange: "border-l-orange-500 hover:shadow-orange-100",
+    blue: "border-l-blue-500 hover:shadow-blue-100",
+    green: "border-l-green-500 hover:shadow-green-100"
+  }
+
+  const btnInfo = {
+    pending: { text: "Start Prep", bg: "bg-blue-500 hover:bg-blue-600" },
+    preparing: { text: "Mark Ready", bg: "bg-green-500 hover:bg-green-600" },
+    ready: { text: "Complete", bg: "bg-gray-800 hover:bg-black" }
+  }
+
+  // Determine button style based on current status (which implies next action)
+  // Logic: if current is pending -> action is Start (blue)
+  // if current is preparing -> action is Ready (green)
+  // if current is ready -> action is Complete (dark)
+  const btnStyle = order.status === 'pending' ? btnInfo.pending :
+    order.status === 'preparing' ? btnInfo.preparing : btnInfo.ready
+
   return (
-    <div className="card-base border-l-4 border-accent hover:shadow-lg transition-all animate-slide-in-up p-3">
-      <div className="flex justify-between items-start mb-2 sm:mb-3">
+    <div className={`bg-white rounded-[25px] p-5 border-l-[6px] shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 ${accents[accentColor]}`}>
+      <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-bold text-base sm:text-lg text-accent"># {order.orderNumber}</h3>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-            <span>⏱</span> {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : "Just now"}
+          <h3 className="font-bold text-lg text-gray-800">#{order.orderNumber}</h3>
+          <p className="text-xs text-gray-500 font-medium">
+            ⏱ {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : "Just now"}
           </p>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${getStatusBadgeClass(order.status)}`}>
-          {order.status}
-        </span>
+        {order.notes && (
+          <span className="text-xl animate-pulse" title={order.notes}>📝</span>
+        )}
       </div>
 
-      <div className="space-y-1.5 mb-2 sm:mb-3">
+      <div className="space-y-2 mb-4 bg-gray-50 p-3 rounded-2xl">
         {order.items.map((item, idx) => (
-          <div key={idx} className="flex justify-between items-center bg-primary/10 p-2 rounded-lg">
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground text-xs sm:text-sm truncate">{item.name}</p>
-              {item.specialInstructions && (
-                <p className="text-xs text-muted-foreground italic mt-0.5 line-clamp-1">{item.specialInstructions}</p>
-              )}
-            </div>
-            <span className="ml-2 px-2 py-1 bg-accent text-accent-foreground rounded-full font-bold text-xs flex-shrink-0">
-              x{item.quantity}
+          <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-100 last:border-0 pb-1 last:pb-0">
+            <span className="font-medium text-gray-700">{item.name}</span>
+            <span className="font-bold bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">
+              {item.quantity}
             </span>
           </div>
         ))}
       </div>
 
-      {order.notes && (
-        <p className="text-xs text-muted-foreground mb-2 sm:mb-3 p-2 bg-warning/10 rounded-lg border border-warning/30 italic line-clamp-2">
-          Note: {order.notes}
-        </p>
-      )}
-
       <button
         onClick={() => onStatusChange(order._id, nextStatus)}
-        className="w-full bg-accent text-accent-foreground py-2 rounded-lg font-bold hover:opacity-90 transition-all capitalize text-xs sm:text-sm"
+        className={`w-full text-white py-3 rounded-xl font-bold transition-colors shadow-md ${btnStyle.bg}`}
       >
-        Mark as {nextStatus}
+        {btnStyle.text}
       </button>
     </div>
   )
-}
-
-function getColorClass(color: string): string {
-  const colors: Record<string, string> = {
-    warning: "text-warning",
-    info: "text-info",
-    success: "text-success",
-  }
-  return colors[color] || "text-foreground"
-}
-
-function getStatusBadgeClass(status: string): string {
-  const classes: Record<string, string> = {
-    pending: "bg-warning/20 text-warning",
-    preparing: "bg-info/20 text-info",
-    ready: "bg-success/20 text-success",
-    completed: "bg-success/20 text-success",
-  }
-  return classes[status] || "bg-muted text-muted-foreground"
 }

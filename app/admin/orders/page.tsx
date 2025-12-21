@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { AuthHeader } from "@/components/auth-header"
+import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 
 interface Order {
@@ -24,43 +23,16 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders()
-    // Reduced interval to 1 second for immediate updates
-    const interval = setInterval(fetchOrders, 1000)
+    const interval = setInterval(fetchOrders, 3000)
     return () => clearInterval(interval)
   }, [])
 
-  // Add visibility change listener for immediate refresh when tab becomes active
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchOrders()
-      }
+      if (!document.hidden) fetchOrders()
     }
-
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
-
-  // Add focus listener for immediate refresh when window gets focus
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchOrders()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [])
-
-  // Add localStorage listener for cross-page updates
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') {
-        fetchOrders()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   const fetchOrders = async () => {
@@ -84,130 +56,136 @@ export default function AdminOrdersPage() {
     return order.status === filter
   })
 
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-warning/20 text-warning"
+        return { color: "bg-[#f5bc6b]/20 text-[#1a1a1a]", label: "Pending", icon: "🕒" }
       case "preparing":
-        return "bg-info/20 text-info"
+        return { color: "bg-[#93c5fd]/20 text-blue-700", label: "Cooking", icon: "🍳" }
       case "ready":
-        return "bg-success/20 text-success"
+        return { color: "bg-[#e2e7d8] text-[#2d5a41]", label: "Ready", icon: "✅" }
       case "completed":
-        return "bg-muted text-muted-foreground"
+        return { color: "bg-gray-100 text-gray-500", label: "Served", icon: "🍽️" }
       case "cancelled":
-        return "bg-danger/20 text-danger"
+        return { color: "bg-red-50 text-red-500", label: "Cancelled", icon: "✕" }
       default:
-        return "bg-muted text-muted-foreground"
+        return { color: "bg-gray-100 text-gray-500", label: status, icon: "•" }
     }
+  }
+
+  const stats = {
+    all: orders.length,
+    pending: orders.filter(o => o.status === "pending").length,
+    preparing: orders.filter(o => o.status === "preparing").length,
+    ready: orders.filter(o => o.status === "ready").length
   }
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-background">
-        <SidebarNav />
-        <main className="md:ml-64">
-          <AuthHeader title="Orders" description="View and manage all orders" />
+      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto">
+          <BentoNavbar />
 
-          <div className="p-2.5 sm:p-4 lg:p-6">
-            {/* Filter Buttons - Optimized for Mobile */}
-            <div className="grid grid-cols-2 sm:flex gap-2 mb-4">
-              <button
-                onClick={() => setFilter("all")}
-                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                  filter === "all" ? "bg-primary text-white" : "bg-card hover:bg-muted"
-                }`}
-              >
-                All ({orders.length})
-              </button>
-              <button
-                onClick={() => setFilter("pending")}
-                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                  filter === "pending" ? "bg-warning text-white" : "bg-card hover:bg-muted"
-                }`}
-              >
-                Pending ({orders.filter((o) => o.status === "pending").length})
-              </button>
-              <button
-                onClick={() => setFilter("preparing")}
-                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                  filter === "preparing" ? "bg-info text-white" : "bg-card hover:bg-muted"
-                }`}
-              >
-                Preparing ({orders.filter((o) => o.status === "preparing").length})
-              </button>
-              <button
-                onClick={() => setFilter("completed")}
-                className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                  filter === "completed" ? "bg-success text-white" : "bg-card hover:bg-muted"
-                }`}
-              >
-                Completed ({orders.filter((o) => o.status === "completed").length})
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-8 sm:py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-accent mx-auto mb-3"></div>
-                  <p className="text-sm sm:text-base text-muted-foreground">Loading orders...</p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Sidebar - Filters & Stats */}
+            <div className="lg:col-span-3 flex flex-col gap-6 sticky top-4">
+              <div className="bg-white rounded-[40px] p-8 custom-shadow">
+                <h2 className="text-2xl font-bold mb-6 bubbly-text">Orders</h2>
+                <div className="space-y-3">
+                  {[
+                    { id: "all", label: "All Orders", count: stats.all, emoji: "📋" },
+                    { id: "pending", label: "Pending", count: stats.pending, emoji: "🕒" },
+                    { id: "preparing", label: "Preparing", count: stats.preparing, emoji: "🔥" },
+                    { id: "ready", label: "Ready", count: stats.ready, emoji: "✅" }
+                  ].map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => setFilter(item.id)}
+                      className={`w-full flex items-center justify-between p-4 rounded-[25px] font-bold transition-all duration-300 ${filter === item.id
+                          ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                          : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                        }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="text-xl">{item.emoji}</span>
+                        {item.label}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs ${filter === item.id ? "bg-white/20" : "bg-gray-200 text-gray-500"}`}>
+                        {item.count}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="card-base text-center py-8 sm:py-12">
-                <div className="text-4xl sm:text-6xl mb-3">📋</div>
-                <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">No Orders Found</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {filter === "all" ? "No orders have been placed yet" : `No ${filter} orders found`}
-                </p>
+
+              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
+                <div className="relative z-10">
+                  <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">Need Insights?</h3>
+                  <p className="text-sm font-medium text-[#1a1a1a]/70">Check out the daily reports section.</p>
+                </div>
+                <div className="absolute -bottom-6 -right-6 text-8xl opacity-20 transform group-hover:rotate-12 transition-transform duration-500">📊</div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredOrders.map((order) => (
-                  <div key={order._id} className="card-base p-3 sm:p-4">
-                    {/* Header - Mobile Optimized */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base sm:text-lg font-bold truncate">Order #{order.orderNumber}</h3>
-                        {order.customerName && (
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{order.customerName}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs sm:text-sm font-semibold self-start ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </div>
+            </div>
 
-                    {/* Items - Mobile Optimized */}
-                    <div className="space-y-1.5 mb-3">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-start text-xs sm:text-sm gap-2">
-                          <span className="flex-1 min-w-0">
-                            <span className="font-medium">{item.quantity}x</span>{" "}
-                            <span className="truncate">{item.name}</span>
-                          </span>
-                          <span className="font-semibold text-accent flex-shrink-0">
-                            {item.price.toFixed(2)} Br
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Total - Mobile Optimized */}
-                    <div className="border-t pt-2 flex justify-between items-center">
-                      <span className="font-bold text-sm sm:text-lg text-foreground">
-                        Total: <span className="text-accent">{order.totalAmount.toFixed(2)} Br</span>
-                      </span>
-                    </div>
+            {/* Main Content - Order List */}
+            <div className="lg:col-span-9">
+              <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[700px]">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-32">
+                    <div className="text-6xl animate-bounce mb-4">🍩</div>
+                    <p className="text-gray-400 font-bold">Scanning Orders...</p>
                   </div>
-                ))}
+                ) : filteredOrders.length === 0 ? (
+                  <div className="text-center py-32">
+                    <div className="text-8xl mb-6 opacity-20">🍃</div>
+                    <h3 className="text-2xl font-bold text-gray-400">Quiet for now...</h3>
+                    <p className="text-gray-400">No {filter !== 'all' ? filter : ''} orders found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {filteredOrders.map((order) => {
+                      const status = getStatusConfig(order.status)
+                      return (
+                        <div key={order._id} className="bg-gray-50 rounded-[40px] p-6 border-2 border-transparent hover:border-[#2d5a41]/10 hover:shadow-xl transition-all flex flex-col group animate-slide-in-up">
+                          <div className="flex justify-between items-start mb-6">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-800">#{order.orderNumber}</h3>
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            <span className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold ${status.color}`}>
+                              <span>{status.icon}</span>
+                              {status.label}
+                            </span>
+                          </div>
+
+                          <div className="flex-1 space-y-3 mb-6 bg-white/50 rounded-[30px] p-5">
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600 font-bold">
+                                  <span className="text-[#2d5a41]">{item.quantity}×</span> {item.name}
+                                </span>
+                                <span className="font-bold text-gray-400">{(item.price * item.quantity).toFixed(0)} Br</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-between items-center pt-2">
+                            <div className="text-sm font-bold text-gray-400">Total Amount</div>
+                            <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} Br</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </ProtectedRoute>
   )
 }
+
