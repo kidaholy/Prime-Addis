@@ -20,6 +20,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -48,6 +50,70 @@ export default function AdminOrdersPage() {
       console.error("Failed to fetch orders:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
+    if (!confirm(`Are you sure you want to delete Order #${orderNumber}? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeleting(orderId)
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        // Remove order from local state
+        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId))
+        console.log(`Order #${orderNumber} deleted successfully`)
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete order: ${error.message}`)
+      }
+    } catch (error) {
+      console.error("Failed to delete order:", error)
+      alert("Failed to delete order. Please try again.")
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const handleBulkDeleteOrders = async () => {
+    if (!confirm(`Are you sure you want to delete ALL ${orders.length} orders? This action cannot be undone and will clear your entire order history.`)) {
+      return
+    }
+
+    if (!confirm("This is your final warning! All order data will be permanently lost. Are you absolutely sure?")) {
+      return
+    }
+
+    setBulkDeleting(true)
+    try {
+      const response = await fetch("/api/orders/bulk-delete", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setOrders([])
+        alert(`Successfully deleted ${result.deletedCount} orders`)
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete orders: ${error.message}`)
+      }
+    } catch (error) {
+      console.error("Failed to bulk delete orders:", error)
+      alert("Failed to delete orders. Please try again.")
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -130,6 +196,35 @@ export default function AdminOrdersPage() {
             {/* Main Content - Order List */}
             <div className="lg:col-span-9">
               <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[700px]">
+                {/* Header with Bulk Delete Button */}
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold bubbly-text">Order Management</h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {filteredOrders.length} {filter !== 'all' ? filter : ''} orders
+                    </p>
+                  </div>
+                  
+                  {orders.length > 0 && (
+                    <button
+                      onClick={handleBulkDeleteOrders}
+                      disabled={bulkDeleting}
+                      className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center gap-2"
+                    >
+                      {bulkDeleting ? (
+                        <>
+                          <span className="animate-spin">⏳</span>
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <span>🗑️</span>
+                          Delete All Orders
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-32">
                     <div className="text-6xl animate-bounce mb-4">🍩</div>
@@ -173,7 +268,21 @@ export default function AdminOrdersPage() {
 
                           <div className="flex justify-between items-center pt-2">
                             <div className="text-sm font-bold text-gray-400">Total Amount</div>
-                            <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} Br</div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} Br</div>
+                              <button
+                                onClick={() => handleDeleteOrder(order._id, order.orderNumber)}
+                                disabled={deleting === order._id}
+                                className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white p-2 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none"
+                                title="Delete Order"
+                              >
+                                {deleting === order._id ? (
+                                  <span className="animate-spin text-sm">⏳</span>
+                                ) : (
+                                  <span className="text-sm">🗑️</span>
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )
