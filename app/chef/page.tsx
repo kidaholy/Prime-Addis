@@ -17,7 +17,7 @@ interface Order {
   _id: string
   orderNumber: string
   items: OrderItem[]
-  status: "pending" | "preparing" | "ready" | "completed"
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled"
   notes?: string
   createdAt: string
   updatedAt: string
@@ -78,7 +78,9 @@ export default function KitchenDisplayPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        const activeOrders = data.filter((order: Order) => order.status !== "completed")
+        const activeOrders = data.filter((order: Order) => 
+          order.status !== "completed" && order.status !== "cancelled"
+        )
 
         if (previousOrderCount > 0 && activeOrders.length > previousOrderCount) {
           setNewOrderAlert(true)
@@ -92,6 +94,45 @@ export default function KitchenDisplayPage() {
       console.error("Failed to load orders")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      // Optimistic update - immediately update the UI
+      setOrders(prevOrders =>
+        prevOrders.filter(order => order._id !== orderId)
+      )
+
+      const response = await fetch(`/api/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "cancelled" }),
+      })
+
+      if (response.ok) {
+        // Immediate refresh to ensure data consistency
+        fetchOrders()
+
+        // Trigger refresh on other pages by setting a flag in localStorage
+        localStorage.setItem('orderUpdated', Date.now().toString())
+      } else {
+        // Revert optimistic update on failure
+        fetchOrders()
+        alert("Failed to cancel order. Please try again.")
+      }
+    } catch (err) {
+      console.error("Failed to cancel order")
+      // Revert optimistic update on error
+      fetchOrders()
+      alert("Failed to cancel order. Please try again.")
     }
   }
 
@@ -181,7 +222,14 @@ export default function KitchenDisplayPage() {
                 headerColor="text-orange-600"
               >
                 {pendingOrders.map(order => (
-                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="preparing" accentColor="orange" />
+                  <OrderCard 
+                    key={order._id} 
+                    order={order} 
+                    onStatusChange={handleStatusChange} 
+                    onCancelOrder={handleCancelOrder}
+                    nextStatus="preparing" 
+                    accentColor="orange" 
+                  />
                 ))}
               </BentoColumn>
 
@@ -193,7 +241,14 @@ export default function KitchenDisplayPage() {
                 headerColor="text-blue-600"
               >
                 {preparingOrders.map(order => (
-                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="ready" accentColor="blue" />
+                  <OrderCard 
+                    key={order._id} 
+                    order={order} 
+                    onStatusChange={handleStatusChange} 
+                    onCancelOrder={handleCancelOrder}
+                    nextStatus="ready" 
+                    accentColor="blue" 
+                  />
                 ))}
               </BentoColumn>
 
@@ -205,7 +260,14 @@ export default function KitchenDisplayPage() {
                 headerColor="text-green-600"
               >
                 {readyOrders.map(order => (
-                  <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} nextStatus="completed" accentColor="green" />
+                  <OrderCard 
+                    key={order._id} 
+                    order={order} 
+                    onStatusChange={handleStatusChange} 
+                    onCancelOrder={handleCancelOrder}
+                    nextStatus="completed" 
+                    accentColor="green" 
+                  />
                 ))}
               </BentoColumn>
             </div>
@@ -245,11 +307,12 @@ function BentoColumn({ title, icon, children, color, headerColor }: { title: str
 interface OrderCardProps {
   order: Order
   onStatusChange: (orderId: string, newStatus: string) => void
+  onCancelOrder: (orderId: string) => void
   nextStatus: string
   accentColor: "orange" | "blue" | "green"
 }
 
-function OrderCard({ order, onStatusChange, nextStatus, accentColor }: OrderCardProps) {
+function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentColor }: OrderCardProps) {
   const createdTime = new Date(order.createdAt)
   const elapsedMinutes = Math.floor((Date.now() - createdTime.getTime()) / 60000)
 
@@ -297,12 +360,24 @@ function OrderCard({ order, onStatusChange, nextStatus, accentColor }: OrderCard
         ))}
       </div>
 
-      <button
-        onClick={() => onStatusChange(order._id, nextStatus)}
-        className={`w-full text-white py-3 rounded-xl font-bold transition-colors shadow-md ${btnStyle.bg}`}
-      >
-        {btnStyle.text}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onStatusChange(order._id, nextStatus)}
+          className={`flex-1 text-white py-3 rounded-xl font-bold transition-colors shadow-md ${btnStyle.bg}`}
+        >
+          {btnStyle.text}
+        </button>
+        
+        {order.status === 'pending' && (
+          <button
+            onClick={() => onCancelOrder(order._id)}
+            className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors shadow-md"
+            title="Cancel Order"
+          >
+            ❌
+          </button>
+        )}
+      </div>
     </div>
   )
 }

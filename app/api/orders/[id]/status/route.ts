@@ -35,20 +35,22 @@ export async function PUT(request: Request, context: any) {
       const statusMessages = {
         preparing: `👨‍🍳 Order #${order.orderNumber} is now being prepared`,
         ready: `🔔 Order #${order.orderNumber} is ready for pickup!`,
-        completed: `✅ Order #${order.orderNumber} has been completed`
+        completed: `✅ Order #${order.orderNumber} has been completed`,
+        cancelled: `❌ Order #${order.orderNumber} has been cancelled by the kitchen`
       }
 
       const statusEmojis = {
         preparing: "👨‍🍳",
         ready: "🔔", 
-        completed: "✅"
+        completed: "✅",
+        cancelled: "❌"
       }
 
       if (statusMessages[status as keyof typeof statusMessages]) {
-        // Notify cashiers about ready orders
-        if (status === "ready") {
+        // Notify cashiers about ready orders and cancellations
+        if (status === "ready" || status === "cancelled") {
           addNotification(
-            "success",
+            status === "ready" ? "success" : "warning",
             statusMessages[status as keyof typeof statusMessages],
             "cashier"
           )
@@ -56,7 +58,7 @@ export async function PUT(request: Request, context: any) {
         
         // Notify admin about all status changes
         addNotification(
-          "info",
+          status === "cancelled" ? "warning" : "info",
           statusMessages[status as keyof typeof statusMessages],
           "admin"
         )
