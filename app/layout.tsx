@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AuthProvider } from "@/context/auth-context"
 import { ThemeProvider } from "@/context/theme-context"
+import { SettingsProvider } from "@/context/settings-context"
 import { NotificationCenter } from "@/components/notification-center"
 
 const fredoka = Fredoka({ subsets: ["latin"] })
@@ -41,10 +42,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${fredoka.className} antialiased bg-[#e2e7d8] overflow-x-hidden`} suppressHydrationWarning>
         <ThemeProvider>
-          <AuthProvider>
-            <NotificationCenter />
-            {children}
-          </AuthProvider>
+          <SettingsProvider>
+            <AuthProvider>
+              <NotificationCenter />
+              {children}
+            </AuthProvider>
+          </SettingsProvider>
         </ThemeProvider>
         <Analytics />
       </body>

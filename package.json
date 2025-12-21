@@ -20,7 +20,9 @@
     "images:fix": "tsx scripts/fix-blank-images.ts",
     "images:check": "tsx scripts/check-images.ts",
     "orders:test": "tsx scripts/test-orders.ts",
-    "orders:clear": "tsx scripts/clear-orders.ts"
+    "orders:clear": "tsx scripts/clear-orders.ts",
+    "settings:init": "tsx scripts/init-settings.ts",
+    "settings:test": "tsx scripts/test-image-upload.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

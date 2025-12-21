@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { SidebarThemeToggle } from "@/components/theme-toggle"
+import { Logo } from "@/components/logo"
 import { useState, useEffect } from "react"
 
 export function SidebarNav() {
@@ -18,6 +19,7 @@ export function SidebarNav() {
       { label: "Orders", href: "/admin/orders", icon: "📋" },
       { label: "Users", href: "/admin/users", icon: "👥" },
       { label: "Reports", href: "/admin/reports", icon: "📈" },
+      { label: "Settings", href: "/admin/settings", icon: "⚙️" },
     ],
     cashier: [
       { label: "POS System", href: "/cashier", icon: "💳" },
@@ -81,11 +83,7 @@ export function SidebarNav() {
             href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <span className="text-lg">☕</span>
-            <div>
-              <h1 className="text-sm font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
-              <p className="text-xs text-sidebar-foreground/70">Coffee Management</p>
-            </div>
+            <Logo size="sm" showText={true} />
           </Link>
 
           <div className="flex items-center gap-1.5">
@@ -125,11 +123,7 @@ export function SidebarNav() {
                 className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
                 onClick={handleMobileMenuItemClick}
               >
-                <span className="text-xl">☕</span>
-                <div>
-                  <h1 className="text-base font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
-                  <p className="text-sm text-sidebar-foreground/70">Coffee Management</p>
-                </div>
+                <Logo size="md" showText={true} />
               </Link>
             </div>
 
@@ -194,11 +188,7 @@ export function SidebarNav() {
             href={user?.role === "admin" ? "/admin" : user?.role === "cashier" ? "/cashier" : "/chef"}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <span className="text-2xl">☕</span>
-            <div>
-              <h1 className="text-lg font-bold brand-font text-sidebar-foreground">Prime Addis</h1>
-              <p className="text-xs text-sidebar-foreground/70">Coffee Management</p>
-            </div>
+            <Logo size="lg" showText={true} />
           </Link>
         </div>
 

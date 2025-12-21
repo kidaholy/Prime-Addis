@@ -4,19 +4,22 @@ import Link from "next/link"
 import Image from "next/image"
 import { Fredoka } from "next/font/google"
 import { ShoppingCart, ArrowRight, Star, TrendingUp, Clock } from "lucide-react"
+import { Logo } from "@/components/logo"
+import { useSettings } from "@/context/settings-context"
 
 const fredoka = Fredoka({ subsets: ["latin"] })
 
 export default function WelcomePage() {
+    const { settings } = useSettings()
+    
     return (
         <div className={`min-h-screen bg-[#e2e7d8] p-4 md:p-10 overflow-x-hidden ${fredoka.className}`}>
             <div className="max-w-7xl mx-auto">
                 {/* Navbar */}
                 <nav className="flex justify-between items-center mb-10 px-4 py-2 bg-white/50 backdrop-blur-md rounded-full custom-shadow">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#f4a261] rounded-full flex items-center justify-center font-bold text-white text-2xl transition-transform duration-300 swirl-s select-none">P</div>
-                        <span className="font-bold text-2xl tracking-tight text-[#1a1a1a]">PRIME ADDIS</span>
-                    </div>
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <Logo size="md" showText={true} textColor="text-[#1a1a1a]" />
+                    </Link>
                     <Link href="/login" className="bg-[#2d5a41] text-[#e2e7d8] px-7 py-3 rounded-full flex items-center gap-3 font-bold cursor-pointer hover:bg-black transition-colors bubbly-button">
                         LOGIN
                     </Link>
@@ -99,7 +102,7 @@ export default function WelcomePage() {
                     <div className="md:col-span-12 bg-white rounded-[60px] p-12 flex flex-col items-center gap-8 custom-shadow card-hover-effect transition-all duration-300">
                         <div className="text-center">
                             <h2 className="text-4xl md:text-6xl font-bold bubbly-text text-[#1a1a1a] mb-4">
-                                Welcome to Prime Addis
+                                Welcome to {settings.app_name}
                             </h2>
                             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                                 Your complete coffee shop management solution. Streamline operations, manage inventory, and serve excellence.

@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
+import { Logo } from "@/components/logo"
 
 export function BentoNavbar() {
     const pathname = usePathname()
@@ -17,7 +18,8 @@ export function BentoNavbar() {
         { label: "Overview", href: "/admin" },
         { label: "Menu", href: "/admin/menu" },
         { label: "Orders", href: "/admin/orders" },
-        { label: "Reports", href: "/admin/reports" }
+        { label: "Reports", href: "/admin/reports" },
+        { label: "Settings", href: "/admin/settings" }
     ]
 
     const cashierLinks = [
@@ -38,8 +40,7 @@ export function BentoNavbar() {
     return (
         <nav className="flex justify-between items-center mb-10 px-6 py-3 bg-white/70 backdrop-blur-xl rounded-full custom-shadow border border-white/50">
             <Link href="/" className="flex items-center gap-3 group">
-                <div className="w-12 h-12 bg-[#f4a261] rounded-full flex items-center justify-center font-bold text-white text-2xl transition-transform duration-300 swirl-s select-none group-hover:rotate-12">P</div>
-                <span className="font-bold text-xl tracking-tight text-[#1a1a1a] hidden sm:block">PRIME ADDIS</span>
+                <Logo size="md" showText={true} />
             </Link>
 
             <div className="hidden lg:flex gap-8 font-bold text-sm uppercase tracking-wider">

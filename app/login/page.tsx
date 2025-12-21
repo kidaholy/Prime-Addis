@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
+import { useSettings } from "@/context/settings-context"
+import { Logo } from "@/components/logo"
 import Link from "next/link"
 import Image from "next/image"
 import type React from "react"
@@ -13,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { settings } = useSettings()
 
   useEffect(() => {
     setMounted(true)
@@ -53,8 +56,7 @@ export default function LoginPage() {
         <div className="bg-[#2d5a41] rounded-[50px] p-10 flex flex-col justify-between text-[#e2e7d8] custom-shadow relative overflow-hidden min-h-[500px] group">
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-14 h-14 bg-[#f4a261] rounded-full flex items-center justify-center font-bold text-white text-3xl swirl-s">P</div>
-              <span className="font-bold text-3xl tracking-tight">PRIME ADDIS</span>
+              <Logo size="lg" showText={true} textColor="text-[#e2e7d8]" />
             </div>
             <h1 className="text-5xl font-bold mb-4 leading-tight bubbly-text">
               Manage <br /> <span className="text-[#f5bc6b]">Deliciously.</span>
@@ -64,21 +66,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="relative z-10 mt-10">
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-[30px] border border-white/10 hover:bg-white/20 transition-all cursor-crosshair">
-              <div className="flex -space-x-4 mb-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-gray-200 border-2 border-[#2d5a41] flex items-center justify-center text-xs font-bold text-black overflow-hidden relative">
-                    <Image src={`https://i.pravatar.cc/150?img=${i + 10}`} alt="User" fill className="object-cover" />
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full bg-[#f5bc6b] border-2 border-[#2d5a41] flex items-center justify-center text-xs font-bold text-black z-10">
-                  +20
-                </div>
-              </div>
-              <p className="font-semibold text-sm">Trusted by 20+ Cafeteria Staff</p>
-            </div>
-          </div>
 
           {/* Decorative Circle/Image */}
           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#ffffff] rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500"></div>
