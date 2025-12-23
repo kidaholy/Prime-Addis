@@ -4,14 +4,18 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import Link from "next/link"
+import { TrendingUp, Package, DollarSign, Activity } from "lucide-react"
 
 export default function ReportsPage() {
   const [timeRange, setTimeRange] = useState("week")
   const [orders, setOrders] = useState<any[]>([])
+  const [stockItems, setStockItems] = useState<any[]>([])
   const { token } = useAuth()
 
   useEffect(() => {
     fetchReportData()
+    fetchStockItems()
   }, [token, timeRange])
 
   const fetchReportData = async () => {
@@ -25,6 +29,20 @@ export default function ReportsPage() {
       }
     } catch (err) {
       console.error("Failed to load report data")
+    }
+  }
+
+  const fetchStockItems = async () => {
+    try {
+      const response = await fetch("/api/stock", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setStockItems(data)
+      }
+    } catch (err) {
+      console.error("Failed to load stock data")
     }
   }
 
@@ -61,6 +79,8 @@ export default function ReportsPage() {
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.totalAmount, 0)
   const completedOrders = filteredOrders.filter((o) => o.status === "completed").length
   const averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0
+
+  const totalNetWorth = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
   const exportToCSV = () => {
     const csvHeaders = ['Order Number', 'Date', 'Status', 'Total Amount', 'Payment Method', 'Items Count']
@@ -118,7 +138,7 @@ export default function ReportsPage() {
 
             {/* Main Stats */}
             <div className="lg:col-span-9 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#2d5a41]">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Revenue</p>
                   <h3 className="text-4xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} Br</h3>
@@ -133,6 +153,19 @@ export default function ReportsPage() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Average Value</p>
                   <h3 className="text-4xl font-black text-blue-800">{averageOrderValue.toFixed(0)} Br</h3>
                   <p className="text-xs text-blue-400 font-bold mt-2">☕ per customer</p>
+                </div>
+                <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Assets</p>
+                  <h3 className="text-4xl font-black text-purple-600">{totalNetWorth.toFixed(0)} Br</h3>
+                  <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
+                    💎 Net Worth
+                    <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Full Report →</span>
+                  </p>
+                </Link>
+                <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-indigo-400">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Items</p>
+                  <h3 className="text-4xl font-black text-indigo-600">{stockItems.length}</h3>
+                  <p className="text-xs text-indigo-400 font-bold mt-2">📦 SKUs in Stock</p>
                 </div>
               </div>
 

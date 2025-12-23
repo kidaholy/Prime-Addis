@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import Link from "next/link"
 
 interface DashboardStats {
   totalOrders: number
@@ -38,24 +39,30 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      const ordersRes = await fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` } })
+      const [ordersRes, stockRes] = await Promise.all([
+        fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/stock", { headers: { Authorization: `Bearer ${token}` } })
+      ])
 
-      if (ordersRes.ok) {
+      if (ordersRes.ok && stockRes.ok) {
         const orders = await ordersRes.json()
+        const stockItems = await stockRes.json()
 
         const totalRevenue = orders.reduce((sum: number, o: any) => sum + o.totalAmount, 0)
         const completedCount = orders.filter((o: any) => o.status === "completed").length
         const pendingCount = orders.filter((o: any) => o.status === "pending").length
+        const lowStockCount = stockItems.filter((item: any) => item.quantity <= item.minLimit).length
+        const netWorth = stockItems.reduce((sum: number, item: any) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
         setStats({
           totalOrders: orders.length,
           totalRevenue,
           totalCustomers: orders.length,
-          lowStockItems: 0,
+          lowStockItems: lowStockCount,
           pendingOrders: pendingCount,
           completedOrders: completedCount,
           averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
-          inventoryValue: 0,
+          inventoryValue: netWorth,
         })
       }
     } catch (err) {
@@ -85,10 +92,11 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Primary Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <StatCard label="Orders" value={stats.totalOrders} icon="📋" color="white" />
                 <StatCard label="Revenue" value={`${stats.totalRevenue.toFixed(0)} Br`} icon="💰" color="blue" />
                 <StatCard label="Avg Order" value={`${stats.averageOrderValue.toFixed(0)} Br`} icon="🧮" color="orange" />
+                <StatCard label="Net Worth" value={`${stats.inventoryValue.toFixed(0)} Br`} icon="💎" color="white" href="/admin/reports/inventory" />
                 <StatCard label="Customers" value={stats.totalCustomers} icon="👥" color="white" />
               </div>
 
@@ -173,20 +181,29 @@ function StatusItem({ label, status }: { label: string, status: string }) {
   )
 }
 
-function StatCard({ label, value, icon, color }: { label: string, value: string | number, icon: string, color: 'white' | 'blue' | 'orange' }) {
+function StatCard({ label, value, icon, color, href }: { label: string, value: string | number, icon: string, color: 'white' | 'blue' | 'orange', href?: string }) {
   const styles = {
     white: "bg-white text-[#1a1a1a]",
     blue: "bg-[#93c5fd] text-[#1a1a1a]",
     orange: "bg-[#f5bc6b] text-[#1a1a1a]"
   }
 
-  return (
-    <div className={`rounded-[30px] p-5 custom-shadow flex flex-col justify-between h-32 ${styles[color]} transition-transform hover:scale-105`}>
+  const content = (
+    <div className={`rounded-[30px] p-5 custom-shadow flex flex-col justify-between h-32 ${styles[color]} transition-transform hover:scale-105 cursor-pointer`}>
       <div className="text-3xl">{icon}</div>
       <div>
         <p className="text-2xl font-bold leading-none mb-1">{value}</p>
-        <p className="text-xs uppercase font-bold tracking-wider opacity-70">{label}</p>
+        <p className="text-xs uppercase font-bold tracking-wider opacity-70 flex justify-between items-center">
+          {label}
+          {href && <span className="text-[10px] bg-[#2d5a41] text-white px-2 py-0.5 rounded-full ml-auto">Report</span>}
+        </p>
       </div>
     </div>
   )
+
+  if (href) {
+    return <Link href={href}>{content}</Link>
+  }
+
+  return content
 }

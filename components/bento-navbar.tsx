@@ -19,6 +19,7 @@ export function BentoNavbar() {
         { label: "Menu", href: "/admin/menu" },
         { label: "Orders", href: "/admin/orders" },
         { label: "Users", href: "/admin/users" },
+        { label: "Stock", href: "/admin/stock" },
         { label: "Reports", href: "/admin/reports" },
         { label: "Settings", href: "/admin/settings" }
     ]

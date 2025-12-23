@@ -9,6 +9,8 @@ interface IMenuItem {
   isAvailable: boolean
   preparationTime: number
   ingredients: string[]
+  stockItemId?: mongoose.Types.ObjectId
+  stockConsumption?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -23,6 +25,8 @@ const menuItemSchema = new Schema<IMenuItem>(
     isAvailable: { type: Boolean, default: true },
     preparationTime: { type: Number, default: 15 },
     ingredients: [{ type: String }],
+    stockItemId: { type: Schema.Types.ObjectId, ref: "Stock" },
+    stockConsumption: { type: Number, default: 0 },
   },
   { timestamps: true },
 )

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
 import MenuItem from "@/lib/models/menu-item"
+import Stock from "@/lib/models/stock"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -11,15 +12,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-pro
 export async function PUT(request: Request, context: any) {
   try {
     console.log("🔄 PUT request received for menu item update")
-    
+
     const params = await context.params
     console.log("🆔 Raw params:", params)
     console.log("🆔 Params ID:", params.id)
     console.log("🔍 ID type:", typeof params.id)
     console.log("🔍 ID length:", params.id?.length)
-    
+
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    
+
     if (!token) {
       console.log("❌ No token provided")
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
@@ -27,7 +28,7 @@ export async function PUT(request: Request, context: any) {
 
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("🔐 Admin updating menu item:", decoded.email || decoded.id)
-    
+
     if (decoded.role !== "admin") {
       console.log("❌ User is not admin:", decoded.role)
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
@@ -35,7 +36,7 @@ export async function PUT(request: Request, context: any) {
 
     await connectDB()
     console.log("📊 Database connected for menu item update")
-    
+
     const updateData = await request.json()
     console.log("📝 Menu item update data:", updateData)
     console.log("🖼️ Image URL in update data:", updateData.image)
@@ -53,7 +54,8 @@ export async function PUT(request: Request, context: any) {
     // Convert numeric fields
     if (updateData.price) updateData.price = Number(updateData.price)
     if (updateData.preparationTime) updateData.preparationTime = Number(updateData.preparationTime)
-    
+    if (updateData.stockConsumption) updateData.stockConsumption = Number(updateData.stockConsumption)
+
     // Ensure image field is properly handled (empty string should be saved as empty string, not undefined)
     if (updateData.hasOwnProperty('image')) {
       updateData.image = updateData.image || ""
@@ -63,21 +65,21 @@ export async function PUT(request: Request, context: any) {
     // First check if the item exists
     const existingItem = await MenuItem.findById(params.id)
     console.log("🔍 Existing menu item found:", existingItem ? "Yes" : "No")
-    
+
     if (existingItem) {
       console.log("🖼️ Current image URL:", existingItem.image)
     }
-    
+
     if (!existingItem) {
       console.error("❌ Menu item not found in database:", params.id)
       return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
     }
 
     console.log("🔄 Performing MongoDB update with data:", JSON.stringify(updateData, null, 2))
-    
+
     const menuItem = await MenuItem.findByIdAndUpdate(
-      params.id, 
-      updateData, 
+      params.id,
+      updateData,
       { new: true, runValidators: true }
     )
 
@@ -88,11 +90,11 @@ export async function PUT(request: Request, context: any) {
 
     console.log("✅ Menu item updated successfully:", menuItem._id)
     console.log("🖼️ Updated image URL:", menuItem.image)
-    
+
     // Verify the update by fetching the item again
     const verificationItem = await MenuItem.findById(params.id)
     console.log("🔍 Verification fetch - Image URL:", verificationItem?.image)
-    
+
     if (verificationItem?.image !== updateData.image) {
       console.error("⚠️ Image URL mismatch after update!")
       console.error("   Expected:", updateData.image)
@@ -119,16 +121,16 @@ export async function PUT(request: Request, context: any) {
 export async function DELETE(request: Request, context: any) {
   try {
     const params = await context.params
-    
+
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    
+
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("🔐 Admin deleting menu item:", decoded.email || decoded.id)
-    
+
     if (decoded.role !== "admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }

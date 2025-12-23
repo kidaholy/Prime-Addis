@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
 import { connectDB } from "@/lib/db"
 import MenuItem from "@/lib/models/menu-item"
+import Stock from "@/lib/models/stock"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -9,22 +10,22 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-pro
 export async function GET(request: Request) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    
+
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("📋 Admin fetching menu items:", decoded.email || decoded.id)
-    
+
     if (decoded.role !== "admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
     await connectDB()
     console.log("📊 Database connected for menu retrieval")
-    
-    const menuItems = await MenuItem.find({}).lean()
+
+    const menuItems = await MenuItem.find({}).populate("stockItemId").lean()
     console.log(`🍽️ Found ${menuItems.length} menu items in database`)
 
     // Convert ObjectId to string for frontend compatibility
@@ -44,23 +45,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
-    
+
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("🔐 Admin creating menu item:", decoded.email || decoded.id)
-    
+
     if (decoded.role !== "admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
     await connectDB()
     console.log("📊 Database connected for menu item creation")
-    
-    const { name, category, price, description, image, preparationTime, available } = await request.json()
-    console.log("📝 Menu item data received:", { name, category, price })
+
+    const { name, category, price, description, image, preparationTime, available, stockItemId, stockConsumption } = await request.json()
+    console.log("📝 Menu item data received:", { name, category, price, stockItemId })
 
     if (!name || !category || !price) {
       return NextResponse.json({ message: "Name, category, and price are required" }, { status: 400 })
@@ -75,6 +76,8 @@ export async function POST(request: Request) {
       image,
       preparationTime: preparationTime ? Number(preparationTime) : 10,
       available: available !== false,
+      stockItemId: stockItemId || null,
+      stockConsumption: stockConsumption ? Number(stockConsumption) : 0,
     })
 
     console.log("✅ Menu item created successfully:", menuItem._id)

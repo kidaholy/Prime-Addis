@@ -1,0 +1,41 @@
+import { NextResponse } from "next/server"
+import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
+import { connectDB } from "@/lib/db"
+import Category from "@/lib/models/category"
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+
+// DELETE category (Admin only)
+export async function DELETE(request: Request, context: any) {
+    try {
+        const { id } = await context.params
+        const token = request.headers.get("authorization")?.replace("Bearer ", "")
+
+        if (!token) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET) as any
+        if (decoded.role !== "admin") {
+            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+        }
+
+        await connectDB()
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return NextResponse.json({ message: "Invalid category ID format" }, { status: 400 })
+        }
+
+        const deletedCategory = await Category.findByIdAndDelete(id)
+
+        if (!deletedCategory) {
+            return NextResponse.json({ message: "Category not found" }, { status: 404 })
+        }
+
+        return NextResponse.json({ message: "Category deleted successfully" })
+    } catch (error: any) {
+        console.error("❌ Delete category error:", error)
+        return NextResponse.json({ message: error.message || "Failed to delete category" }, { status: 500 })
+    }
+}

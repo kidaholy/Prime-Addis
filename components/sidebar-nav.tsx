@@ -18,6 +18,7 @@ export function SidebarNav() {
       { label: "Menu Items", href: "/admin/menu", icon: "🍽️" },
       { label: "Orders", href: "/admin/orders", icon: "📋" },
       { label: "Users", href: "/admin/users", icon: "👥" },
+      { label: "Stock", href: "/admin/stock", icon: "📦" },
       { label: "Reports", href: "/admin/reports", icon: "📈" },
       { label: "Settings", href: "/admin/settings", icon: "⚙️" },
     ],
@@ -45,10 +46,10 @@ export function SidebarNav() {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.getElementById('mobile-sidebar')
       const hamburger = document.getElementById('hamburger-button')
-      
-      if (isMobileMenuOpen && sidebar && hamburger && 
-          !sidebar.contains(event.target as Node) && 
-          !hamburger.contains(event.target as Node)) {
+
+      if (isMobileMenuOpen && sidebar && hamburger &&
+        !sidebar.contains(event.target as Node) &&
+        !hamburger.contains(event.target as Node)) {
         setIsMobileMenuOpen(false)
       }
     }
@@ -64,7 +65,7 @@ export function SidebarNav() {
     } else {
       document.body.style.overflow = 'unset'
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset'
     }
@@ -95,15 +96,12 @@ export function SidebarNav() {
               aria-label="Toggle menu"
             >
               <div className="w-5 h-5 flex flex-col justify-center items-center">
-                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
-                  isMobileMenuOpen ? 'rotate-45 translate-y-0.5' : '-translate-y-1'
-                }`}></span>
-                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
-                  isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
-                }`}></span>
-                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${
-                  isMobileMenuOpen ? '-rotate-45 -translate-y-0.5' : 'translate-y-1'
-                }`}></span>
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-0.5' : '-translate-y-1'
+                  }`}></span>
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                  }`}></span>
+                <span className={`block w-4 h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-0.5' : 'translate-y-1'
+                  }`}></span>
               </div>
             </button>
           </div>
@@ -113,7 +111,7 @@ export function SidebarNav() {
       {/* Mobile Menu Overlay - Optimized for 412px */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-[60] md:hidden">
-          <div 
+          <div
             id="mobile-sidebar"
             className="fixed left-0 top-0 h-full w-72 max-w-[80vw] bg-sidebar border-r border-sidebar-border shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto"
           >
@@ -130,23 +128,22 @@ export function SidebarNav() {
             <div className="p-3">
               <ul className="space-y-1.5">
                 {items.map((item) => {
-                  const matchingItems = items.filter(menuItem => 
+                  const matchingItems = items.filter(menuItem =>
                     pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
                   )
-                  
+
                   const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
                   const isActive = mostSpecificItem?.href === item.href
-                  
+
                   return (
                     <li key={item.href}>
                       <Link
                         href={item.href}
                         onClick={handleMobileMenuItemClick}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-                          isActive
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${isActive
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        }`}
+                          }`}
                       >
                         {isActive && (
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
@@ -164,7 +161,7 @@ export function SidebarNav() {
                   <span className="text-xs text-sidebar-foreground/70">Theme</span>
                   <SidebarThemeToggle />
                 </div>
-                
+
                 <button
                   onClick={() => {
                     logout()
@@ -195,22 +192,21 @@ export function SidebarNav() {
         <div className="p-4">
           <ul className="space-y-2">
             {items.map((item) => {
-              const matchingItems = items.filter(menuItem => 
+              const matchingItems = items.filter(menuItem =>
                 pathname === menuItem.href || pathname.startsWith(menuItem.href + "/")
               )
-              
+
               const mostSpecificItem = matchingItems.sort((a, b) => b.href.length - a.href.length)[0]
               const isActive = mostSpecificItem?.href === item.href
-              
+
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
-                      isActive
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg font-semibold"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    }`}
+                      }`}
                   >
                     {isActive && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r-full"></div>
@@ -228,7 +224,7 @@ export function SidebarNav() {
               <span className="text-sm text-sidebar-foreground/70">Theme</span>
               <SidebarThemeToggle />
             </div>
-            
+
             <button
               onClick={() => logout()}
               className="w-full px-4 py-3 bg-danger/20 text-danger rounded-lg hover:bg-danger/30 transition-all font-semibold flex items-center justify-center gap-2"

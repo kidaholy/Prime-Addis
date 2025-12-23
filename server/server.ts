@@ -32,6 +32,8 @@ setupSocketHandlers(io)
 // Routes
 app.use("/api/auth", authRoutes)
 app.use("/api/orders", ordersRoutes)
+app.use("/api/auth", authRoutes)
+app.use("/api/orders", ordersRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/users", usersRoutes)
 
