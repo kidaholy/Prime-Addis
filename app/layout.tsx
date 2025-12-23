@@ -10,27 +10,33 @@ import { NotificationCenter } from "@/components/notification-center"
 
 const fredoka = Fredoka({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Prime Addis Coffee - Management System",
-  description: "Coffee Shop Management System - Inventory, POS, and Kitchen Management",
-  generator: "v0.app",
-  icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
-  },
+import { connectDB } from "@/lib/db"
+import Settings from "@/lib/models/settings"
+
+export async function generateMetadata(): Promise<Metadata> {
+  await connectDB()
+  const settings = await Settings.find({
+    key: { $in: ["logo_url", "app_name", "app_tagline"] }
+  }).lean()
+
+  const settingsObj = settings.reduce((acc, s) => {
+    acc[s.key] = s.value
+    return acc
+  }, {} as Record<string, string>)
+
+  const logoUrl = settingsObj.logo_url || "/icon.svg"
+  const appName = settingsObj.app_name || "Prime Addis"
+
+  return {
+    title: `${appName} - Management System`,
+    description: settingsObj.app_tagline || "Coffee Shop Management System",
+    icons: {
+      icon: [
+        { url: logoUrl },
+      ],
+      apple: logoUrl,
+    },
+  }
 }
 
 export default function RootLayout({

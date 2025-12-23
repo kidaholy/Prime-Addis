@@ -99,7 +99,7 @@ export default function AdminSettingsPage() {
         handleSaveSetting("app_name", formData.app_name, "string", "Application name"),
         handleSaveSetting("app_tagline", formData.app_tagline, "string", "Application tagline")
       ])
-      
+
       alert("Settings saved successfully!")
     } catch (error) {
       console.error("Failed to save settings:", error)
@@ -165,7 +165,7 @@ export default function AdminSettingsPage() {
             <div className="lg:col-span-4 space-y-6 sticky top-4">
               <div className="bg-white rounded-[40px] p-8 custom-shadow">
                 <h2 className="text-2xl font-bold mb-6 bubbly-text">Logo Preview</h2>
-                
+
                 <div className="space-y-6">
                   <div className="text-center">
                     <h3 className="text-sm font-bold text-gray-500 mb-3">Current Logo</h3>
@@ -184,11 +184,27 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="border-t pt-6">
-                    <h3 className="text-sm font-bold text-gray-500 mb-3">Preview in Sidebar</h3>
-                    <div className="bg-gray-50 rounded-2xl p-4">
-                      <Logo size="sm" showText={true} />
+                  <div className="border-t pt-6 text-center">
+                    <h3 className="text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest">Browser Tab Preview</h3>
+                    <div className="bg-gray-100 rounded-xl p-3 flex items-center gap-3 border border-gray-200">
+                      <div className="w-6 h-6 rounded bg-white p-0.5 shadow-sm overflow-hidden">
+                        {formData.logo_url ? (
+                          <img src={formData.logo_url} className="w-full h-full object-contain" alt="Favicon" />
+                        ) : (
+                          <div className="w-full h-full bg-[#f4a261] flex items-center justify-center text-[10px] text-white font-black">
+                            {formData.app_name?.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-[10px] font-bold text-slate-700 truncate w-32">
+                          {formData.app_name} - Management System
+                        </div>
+                        <div className="text-[8px] text-gray-400 -mt-1">prime-addis.vercel.app</div>
+                      </div>
+                      <div className="text-gray-300">✕</div>
                     </div>
+                    <p className="text-[10px] text-gray-400 mt-2 italic">Live preview of your browser tab</p>
                   </div>
                 </div>
               </div>
@@ -233,28 +249,26 @@ export default function AdminSettingsPage() {
                       <label className="block text-sm font-bold text-gray-700">
                         Logo Upload
                       </label>
-                      
+
                       {/* Upload Method Toggle */}
                       <div className="flex gap-2 mb-4">
                         <button
                           type="button"
                           onClick={() => setUploadMethod("url")}
-                          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                            uploadMethod === "url"
-                              ? "bg-[#2d5a41] text-white"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${uploadMethod === "url"
+                            ? "bg-[#2d5a41] text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                         >
                           🔗 URL
                         </button>
                         <button
                           type="button"
                           onClick={() => setUploadMethod("file")}
-                          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                            uploadMethod === "file"
-                              ? "bg-[#2d5a41] text-white"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${uploadMethod === "file"
+                            ? "bg-[#2d5a41] text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                         >
                           📁 Upload File
                         </button>
@@ -270,8 +284,8 @@ export default function AdminSettingsPage() {
                             className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41] focus:border-transparent"
                             placeholder="https://example.com/logo.png"
                           />
-                          <p className="text-xs text-gray-500">
-                            Enter a direct URL to your logo image.
+                          <p className="text-xs text-[#2d5a41] font-bold">
+                            🔗 This URL will also be used as your site's Favicon.
                           </p>
                         </div>
                       ) : (
@@ -291,49 +305,41 @@ export default function AdminSettingsPage() {
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500">
-                            Upload an image file (PNG, JPG, GIF, WebP). Max size: 5MB. Images will be automatically compressed.
+                          <p className="text-xs text-[#2d5a41] font-bold">
+                            📁 This image will also be used as your site's Favicon.
                           </p>
-                          
-                          {/* Current Logo Display */}
-                          {formData.logo_url && (
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                              <div className="w-12 h-12 relative overflow-hidden rounded-lg border-2 border-gray-200">
-                                {formData.logo_url.startsWith('data:') ? (
-                                  <img
-                                    src={formData.logo_url}
-                                    alt="Uploaded logo"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <img
-                                    src={formData.logo_url}
-                                    alt="Logo"
-                                    className="w-full h-full object-cover"
-                                  />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-700">
-                                  {formData.logo_url.startsWith('data:') ? 'Uploaded Image' : 'URL Image'}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {formData.logo_url.startsWith('data:') 
-                                    ? `Compressed: ${formatFileSize(getBase64Size(formData.logo_url))}`
-                                    : formData.logo_url.substring(0, 50) + '...'
-                                  }
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleRemoveLogo}
-                                className="text-red-500 hover:text-red-700 p-1"
-                                title="Remove logo"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          )}
+                        </div>
+                      )}
+
+                      {/* Current Logo Display */}
+                      {formData.logo_url && (
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                          <div className="w-12 h-12 relative overflow-hidden rounded-lg border-2 border-gray-200">
+                            <img
+                              src={formData.logo_url}
+                              alt="Current logo"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-700">
+                              {formData.logo_url.startsWith('data:') ? 'Uploaded Image' : 'URL Image'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formData.logo_url.startsWith('data:')
+                                ? `Compressed: ${formatFileSize(getBase64Size(formData.logo_url))}`
+                                : formData.logo_url.substring(0, 50) + '...'
+                              }
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Remove logo"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       )}
                     </div>
@@ -351,8 +357,8 @@ export default function AdminSettingsPage() {
                         placeholder="Prime Addis"
                         required
                       />
-                      <p className="text-xs text-gray-500">
-                        The name that appears throughout the application.
+                      <p className="text-xs text-[#2d5a41] font-bold">
+                        🏷️ Updates the page title and browser tab label.
                       </p>
                     </div>
 
