@@ -4,9 +4,13 @@ import { usePathname } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Logo } from "@/components/logo"
 
+import { useLanguage } from "@/context/language-context"
+import { LanguageSwitcher } from "@/components/language-switcher"
+
 export function BentoNavbar() {
     const pathname = usePathname()
     const { user, logout } = useAuth()
+    const { t } = useLanguage()
 
     const getLinkClass = (path: string) => {
         const base = "hover:text-black hover:scale-105 transition-all"
@@ -15,29 +19,29 @@ export function BentoNavbar() {
 
     // Role-specific links
     const adminLinks = [
-        { label: "Overview", href: "/admin" },
-        { label: "Menu", href: "/admin/menu" },
-        { label: "Orders", href: "/admin/orders" },
-        { label: "Users", href: "/admin/users" },
-        { label: "Stock", href: "/admin/stock" },
-        { label: "Reports", href: "/admin/reports" },
-        { label: "Settings", href: "/admin/settings" }
+        { label: t("nav.overview"), href: "/admin" },
+        { label: t("nav.menu"), href: "/admin/menu" },
+        { label: t("nav.orders"), href: "/admin/orders" },
+        { label: t("nav.users"), href: "/admin/users" },
+        { label: t("nav.stock"), href: "/admin/stock" },
+        { label: t("nav.reports"), href: "/admin/reports" },
+        { label: t("nav.settings"), href: "/admin/settings" }
     ]
 
     const cashierLinks = [
-        { label: "POS", href: "/cashier" },
-        { label: "Recent Orders", href: "/cashier/orders" },
-        { label: "Summary", href: "/cashier/transactions" }
+        { label: t("nav.pos"), href: "/cashier" },
+        { label: t("nav.recentOrders"), href: "/cashier/orders" },
+        { label: t("nav.summary"), href: "/cashier/transactions" }
     ]
 
     const guestLinks = [
-        { label: "Home", href: "/" },
-        { label: "Browse Menu", href: "/menu" }
+        { label: t("nav.home"), href: "/" },
+        { label: t("nav.browseMenu"), href: "/menu" }
     ]
 
     const links = user?.role === "admin" ? adminLinks :
         user?.role === "cashier" ? cashierLinks :
-            user?.role === "chef" ? [{ label: "Kitchen", href: "/chef" }] : guestLinks
+            user?.role === "chef" ? [{ label: t("nav.kitchen"), href: "/chef" }] : guestLinks
 
     return (
         <nav className="flex justify-between items-center mb-10 px-6 py-3 bg-white/70 backdrop-blur-xl rounded-full custom-shadow border border-white/50">
@@ -52,16 +56,17 @@ export function BentoNavbar() {
             </div>
 
             <div className="flex items-center gap-4">
+                <LanguageSwitcher />
                 {user ? (
                     <div className="flex items-center gap-4">
-                        <span className="hidden md:block text-sm font-bold text-[#2d5a41]">Hi, {user.name}! ✨</span>
+                        <span className="hidden md:block text-sm font-bold text-[#2d5a41]">{t("nav.hi")}, {user.name}! ✨</span>
                         <button onClick={logout} className="bg-red-50 text-red-500 px-5 py-2.5 rounded-full text-xs font-bold hover:bg-red-500 hover:text-white transition-all transform active:scale-95">
-                            LOGOUT
+                            {t("nav.logout")}
                         </button>
                     </div>
                 ) : (
                     <Link href="/login" className="bg-[#2d5a41] text-[#e2e7d8] px-7 py-3 rounded-full flex items-center gap-3 font-bold cursor-pointer hover:bg-black transition-colors bubbly-button">
-                        LOGIN
+                        {t("common.login")}
                     </Link>
                 )}
             </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import { Plus, Search, Trash2, Edit2, AlertTriangle, Package, ChevronRight, ArrowUpDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -47,6 +48,7 @@ export default function AdminStockPage() {
     })
 
     const { token } = useAuth()
+    const { t } = useLanguage()
 
     const units = ["kg", "g", "l", "ml", "pcs", "box", "can"]
     const [categories, setCategories] = useState<any[]>([])
@@ -242,12 +244,12 @@ export default function AdminStockPage() {
                                     <div className="p-3 bg-[#2d5a41] rounded-2xl shadow-lg shadow-[#2d5a41]/20">
                                         <Package className="w-6 h-6 text-[#e2e7d8]" />
                                     </div>
-                                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#2d5a41]/60">Inventory System</span>
+                                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#2d5a41]/60">{t("adminStock.system")}</span>
                                 </div>
                                 <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight bubbly-text">
-                                    Stock <span className="text-[#2d5a41]">Control</span>
+                                    {t("adminStock.title")}
                                 </h1>
-                                <p className="text-gray-500 font-medium mt-2 max-w-md">Manage your ingredients and supplies with precision-grade tracking.</p>
+                                <p className="text-gray-500 font-medium mt-2 max-w-md">{t("adminStock.managePrecision")}</p>
                             </motion.div>
 
                             <div className="flex flex-col sm:flex-row gap-3">
@@ -259,7 +261,7 @@ export default function AdminStockPage() {
                                     className="group relative overflow-hidden bg-[#2d5a41] text-[#e2e7d8] px-8 py-4 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl hover:shadow-[#2d5a41]/30 transition-shadow"
                                 >
                                     <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
-                                    <span>Register New Stock</span>
+                                    <span>{t("adminStock.registerNew")}</span>
                                     <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                 </motion.button>
 
@@ -271,7 +273,7 @@ export default function AdminStockPage() {
                                     className="group relative overflow-hidden bg-white text-[#2d5a41] px-8 py-4 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl hover:shadow-white/20 transition-shadow border-2 border-[#2d5a41]/10"
                                 >
                                     <Package className="w-5 h-5" />
-                                    <span>Manage Categories</span>
+                                    <span>{t("adminStock.manageCategories")}</span>
                                 </motion.button>
                             </div>
                         </div>
@@ -285,7 +287,7 @@ export default function AdminStockPage() {
                                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-[#2d5a41] transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Search by name, category, or unit..."
+                                    placeholder={t("adminStock.searchPlaceholder")}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-14 pr-6 py-4 bg-white rounded-[2rem] border-none focus:ring-2 focus:ring-[#2d5a41]/20 outline-none shadow-sm placeholder:text-gray-400 font-medium"
@@ -300,7 +302,7 @@ export default function AdminStockPage() {
                                         }`}
                                 >
                                     <AlertTriangle className={`w-4 h-4 ${lowStockFilter ? 'animate-pulse' : ''}`} />
-                                    <span>{lowStockFilter ? 'Viewing Low Stock' : 'Low Stock Only'}</span>
+                                    <span>{lowStockFilter ? t("adminStock.viewingLowStock") : t("adminStock.lowStockOnly")}</span>
                                 </button>
                             </div>
                         </motion.div>
@@ -328,11 +330,11 @@ export default function AdminStockPage() {
                                     <table className="w-full border-collapse">
                                         <thead>
                                             <tr className="bg-gray-50/50 text-left border-b border-gray-100">
-                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">Item Details</th>
-                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">Category</th>
-                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] text-center">Current Quantity</th>
-                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">Inventory Status</th>
-                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] text-right">Actions</th>
+                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">{t("adminStock.itemDetails")}</th>
+                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">{t("adminStock.category")}</th>
+                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] text-center">{t("adminStock.currentQuantity")}</th>
+                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">{t("adminStock.status")}</th>
+                                                <th className="py-6 px-8 font-black text-gray-400 text-[10px] uppercase tracking-[0.2em] text-right">{t("adminStock.actions")}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
@@ -355,8 +357,8 @@ export default function AdminStockPage() {
                                                                 <div>
                                                                     <p className="font-bold text-slate-800 text-lg">{item.name}</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <p className="text-xs text-gray-400 mt-0.5 capitalize">Last update: {new Date(item.updatedAt).toLocaleDateString()}</p>
-                                                                        <span className="text-[10px] font-bold text-[#2d5a41] bg-[#2d5a41]/5 px-2 py-0.5 rounded-full">{item.unitCost || 0} ETB/unit</span>
+                                                                        <p className="text-xs text-gray-400 mt-0.5 capitalize">{t("adminStock.lastUpdate")}: {new Date(item.updatedAt).toLocaleDateString()}</p>
+                                                                        <span className="text-[10px] font-bold text-[#2d5a41] bg-[#2d5a41]/5 px-2 py-0.5 rounded-full">{item.unitCost || 0} {t("adminStock.etbPerUnit")}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -379,17 +381,17 @@ export default function AdminStockPage() {
                                                                 {isLow ? (
                                                                     <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 shadow-sm shadow-red-100">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest">Low Stock Alert</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{t("adminStock.lowStockAlert")}</span>
                                                                     </div>
                                                                 ) : isHigh ? (
                                                                     <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 shadow-sm shadow-blue-100">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest">Abundant Stock</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{t("adminStock.abundantStock")}</span>
                                                                     </div>
                                                                 ) : (
                                                                     <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest">Healthy Levels</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">{t("adminStock.healthyLevels")}</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -441,9 +443,9 @@ export default function AdminStockPage() {
                                 <div className="flex justify-between items-start mb-10">
                                     <div>
                                         <h2 className="text-3xl font-black text-slate-900 tracking-tight bubbly-text">
-                                            {editingItem ? 'Update' : 'Register'} <span className="text-[#2d5a41]">Stock</span>
+                                            {editingItem ? t("adminStock.update") : t("adminStock.register")} <span className="text-[#2d5a41]">{t("nav.stock")}</span>
                                         </h2>
-                                        <p className="text-gray-500 mt-2 font-medium">Please fill in the details below to update inventory.</p>
+                                        <p className="text-gray-500 mt-2 font-medium">{t("adminStock.managePrecision")}</p>
                                     </div>
                                     <button onClick={resetForm} className="p-3 hover:bg-gray-100 rounded-full transition-colors">
                                         <ChevronRight className="w-6 h-6 rotate-45 text-gray-400" />
@@ -452,10 +454,10 @@ export default function AdminStockPage() {
 
                                 <form onSubmit={handleCreateOrUpdate} className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Product Information</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.infoPlaceholder")}</label>
                                         <input
                                             required
-                                            placeholder="Item Name (e.g. Ethiopian Arabica Beans)"
+                                            placeholder={t("adminStock.namePlaceholder")}
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             className="w-full bg-gray-50 border-none rounded-2xl p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-bold placeholder:text-gray-300"
@@ -464,21 +466,21 @@ export default function AdminStockPage() {
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Category</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.category")}</label>
                                             <select
                                                 value={formData.category}
                                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
                                                 required
                                             >
-                                                <option value="">Select Category</option>
+                                                <option value="">{t("adminStock.selectCategory")}</option>
                                                 {categories.map((cat: any) => (
                                                     <option key={cat._id || cat.name} value={cat.name}>{cat.name}</option>
                                                 ))}
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.unit")}</label>
                                             <select
                                                 required
                                                 value={formData.unit}
@@ -492,7 +494,7 @@ export default function AdminStockPage() {
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Current Quantity</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.currentQuantity")}</label>
                                             <input
                                                 type="number"
                                                 required
@@ -503,11 +505,11 @@ export default function AdminStockPage() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Minimum Limit</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.minLimit")}</label>
                                             <input
                                                 type="number"
                                                 required
-                                                placeholder="Alert at..."
+                                                placeholder={t("adminStock.alertAt")}
                                                 value={formData.minLimit}
                                                 onChange={e => setFormData({ ...formData, minLimit: e.target.value })}
                                                 className="w-full bg-gray-50 border-none rounded-2xl p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-bold placeholder:text-gray-300"
@@ -516,11 +518,11 @@ export default function AdminStockPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit Cost (ETB)</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.unitCost")}</label>
                                         <input
                                             type="number"
                                             required
-                                            placeholder="Purchase price per unit"
+                                            placeholder={t("adminStock.costPlaceholder")}
                                             value={formData.unitCost}
                                             onChange={e => setFormData({ ...formData, unitCost: e.target.value })}
                                             className="w-full bg-gray-50 border-none rounded-2xl p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-bold placeholder:text-gray-300"
@@ -533,14 +535,14 @@ export default function AdminStockPage() {
                                             onClick={resetForm}
                                             className="flex-1 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors"
                                         >
-                                            Discard Changes
+                                            {t("adminStock.discardChanges")}
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={createLoading}
                                             className="flex-[1.5] py-5 bg-[#2d5a41] text-[#e2e7d8] rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
                                         >
-                                            {createLoading ? 'Syncing...' : (editingItem ? 'Publish Updates' : 'Confirm Registration')}
+                                            {createLoading ? t("adminStock.syncing") : (editingItem ? t("adminStock.publishUpdates") : t("adminStock.confirmRegistration"))}
                                         </button>
                                     </div>
                                 </form>
@@ -556,15 +558,16 @@ export default function AdminStockPage() {
                 onAdd={handleAddCategory}
                 onDelete={handleDeleteCategory}
                 loading={categoryLoading}
-                title="Stock Categories"
+                title={t("adminStock.manageCategories")}
                 value={newCategoryName}
                 onChange={setNewCategoryName}
+                t={t}
             />
         </ProtectedRoute>
     )
 }
 
-function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, title, value, onChange }: any) {
+function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, title, value, onChange, t }: any) {
     if (!show) return null
 
     return (
@@ -581,7 +584,7 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
                             type="text"
                             value={value}
                             onChange={(e) => onChange(e.target.value)}
-                            placeholder="New Category Name"
+                            placeholder={t("adminDashboard.newCatPlaceholder")}
                             className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
                         />
                         <button
@@ -589,7 +592,7 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
                             disabled={loading}
                             className="bg-[#2d5a41] text-white px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
                         >
-                            Add
+                            {t("adminDashboard.add")}
                         </button>
                     </div>
                 </form>
@@ -606,17 +609,16 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
                             </button>
                         </div>
                     ))}
-                    {categories.length === 0 && <p className="text-center text-gray-400 py-4 font-sans">No categories yet</p>}
+                    {categories.length === 0 && <p className="text-center text-gray-400 py-4 font-sans">{t("adminDashboard.noCats")}</p>}
                 </div>
 
                 <button
                     onClick={onClose}
                     className="w-full mt-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 font-sans"
                 >
-                    Close
+                    {t("common.close")}
                 </button>
             </div>
         </div>
     )
 }
-

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface Order {
   _id: string
@@ -17,6 +18,7 @@ interface Order {
 
 export default function AdminOrdersPage() {
   const { token } = useAuth()
+  const { t } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
@@ -125,15 +127,15 @@ export default function AdminOrdersPage() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "pending":
-        return { color: "bg-[#f5bc6b]/20 text-[#1a1a1a]", label: "Pending", icon: "🕒" }
+        return { color: "bg-[#f5bc6b]/20 text-[#1a1a1a]", label: t("adminOrders.pending"), icon: "🕒" }
       case "preparing":
-        return { color: "bg-[#93c5fd]/20 text-blue-700", label: "Cooking", icon: "🍳" }
+        return { color: "bg-[#93c5fd]/20 text-blue-700", label: t("adminOrders.cooking"), icon: "🍳" }
       case "ready":
-        return { color: "bg-[#e2e7d8] text-[#2d5a41]", label: "Ready", icon: "✅" }
+        return { color: "bg-[#e2e7d8] text-[#2d5a41]", label: t("adminOrders.ready"), icon: "✅" }
       case "completed":
-        return { color: "bg-gray-100 text-gray-500", label: "Served", icon: "🍽️" }
+        return { color: "bg-gray-100 text-gray-500", label: t("adminOrders.served"), icon: "🍽️" }
       case "cancelled":
-        return { color: "bg-red-50 text-red-500", label: "Cancelled", icon: "✕" }
+        return { color: "bg-red-50 text-red-500", label: t("adminOrders.cancelled"), icon: "✕" }
       default:
         return { color: "bg-gray-100 text-gray-500", label: status, icon: "•" }
     }
@@ -156,20 +158,20 @@ export default function AdminOrdersPage() {
             {/* Left Sidebar - Filters & Stats */}
             <div className="lg:col-span-3 flex flex-col gap-6 sticky top-4">
               <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h2 className="text-2xl font-bold mb-6 bubbly-text">Orders</h2>
+                <h2 className="text-2xl font-bold mb-6 bubbly-text">{t("adminOrders.title")}</h2>
                 <div className="space-y-3">
                   {[
-                    { id: "all", label: "All Orders", count: stats.all, emoji: "📋" },
-                    { id: "pending", label: "Pending", count: stats.pending, emoji: "🕒" },
-                    { id: "preparing", label: "Preparing", count: stats.preparing, emoji: "🔥" },
-                    { id: "ready", label: "Ready", count: stats.ready, emoji: "✅" }
+                    { id: "all", label: t("adminOrders.allOrders"), count: stats.all, emoji: "📋" },
+                    { id: "pending", label: t("adminOrders.pending"), count: stats.pending, emoji: "🕒" },
+                    { id: "preparing", label: t("adminOrders.preparing"), count: stats.preparing, emoji: "🔥" },
+                    { id: "ready", label: t("adminOrders.ready"), count: stats.ready, emoji: "✅" }
                   ].map(item => (
                     <button
                       key={item.id}
                       onClick={() => setFilter(item.id)}
                       className={`w-full flex items-center justify-between p-4 rounded-[25px] font-bold transition-all duration-300 ${filter === item.id
-                          ? "bg-[#2d5a41] text-white shadow-lg scale-105"
-                          : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                        ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                         }`}
                     >
                       <span className="flex items-center gap-3">
@@ -186,8 +188,8 @@ export default function AdminOrdersPage() {
 
               <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
                 <div className="relative z-10">
-                  <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">Need Insights?</h3>
-                  <p className="text-sm font-medium text-[#1a1a1a]/70">Check out the daily reports section.</p>
+                  <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">{t("adminOrders.needInsights")}</h3>
+                  <p className="text-sm font-medium text-[#1a1a1a]/70">{t("adminOrders.checkDailyReports")}</p>
                 </div>
                 <div className="absolute -bottom-6 -right-6 text-8xl opacity-20 transform group-hover:rotate-12 transition-transform duration-500">📊</div>
               </div>
@@ -199,12 +201,12 @@ export default function AdminOrdersPage() {
                 {/* Header with Bulk Delete Button */}
                 <div className="flex justify-between items-center mb-8">
                   <div>
-                    <h2 className="text-2xl font-bold bubbly-text">Order Management</h2>
+                    <h2 className="text-2xl font-bold bubbly-text">{t("adminOrders.orderManagement")}</h2>
                     <p className="text-gray-500 text-sm mt-1">
-                      {filteredOrders.length} {filter !== 'all' ? filter : ''} orders
+                      {filteredOrders.length} {filter !== 'all' ? t(`adminOrders.${filter}`) : ''} {t("adminOrders.ordersCount")}
                     </p>
                   </div>
-                  
+
                   {orders.length > 0 && (
                     <button
                       onClick={handleBulkDeleteOrders}
@@ -214,12 +216,12 @@ export default function AdminOrdersPage() {
                       {bulkDeleting ? (
                         <>
                           <span className="animate-spin">⏳</span>
-                          Deleting...
+                          {t("adminOrders.deleting")}
                         </>
                       ) : (
                         <>
                           <span>🗑️</span>
-                          Delete All Orders
+                          {t("adminOrders.deleteAllOrders")}
                         </>
                       )}
                     </button>
@@ -228,13 +230,13 @@ export default function AdminOrdersPage() {
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-32">
                     <div className="text-6xl animate-bounce mb-4">🍩</div>
-                    <p className="text-gray-400 font-bold">Scanning Orders...</p>
+                    <p className="text-gray-400 font-bold">{t("adminOrders.scanningOrders")}</p>
                   </div>
                 ) : filteredOrders.length === 0 ? (
                   <div className="text-center py-32">
                     <div className="text-8xl mb-6 opacity-20">🍃</div>
-                    <h3 className="text-2xl font-bold text-gray-400">Quiet for now...</h3>
-                    <p className="text-gray-400">No {filter !== 'all' ? filter : ''} orders found.</p>
+                    <h3 className="text-2xl font-bold text-gray-400">{t("adminOrders.quietForNow")}</h3>
+                    <p className="text-gray-400">{t("adminOrders.noOrdersFound")}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -261,15 +263,15 @@ export default function AdminOrdersPage() {
                                 <span className="text-gray-600 font-bold">
                                   <span className="text-[#2d5a41]">{item.quantity}×</span> {item.name}
                                 </span>
-                                <span className="font-bold text-gray-400">{(item.price * item.quantity).toFixed(0)} Br</span>
+                                <span className="font-bold text-gray-400">{(item.price * item.quantity).toFixed(0)} {t("common.currencyBr")}</span>
                               </div>
                             ))}
                           </div>
 
                           <div className="flex justify-between items-center pt-2">
-                            <div className="text-sm font-bold text-gray-400">Total Amount</div>
+                            <div className="text-sm font-bold text-gray-400">{t("adminOrders.totalAmount")}</div>
                             <div className="flex items-center gap-3">
-                              <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} Br</div>
+                              <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} {t("common.currencyBr")}</div>
                               <button
                                 onClick={() => handleDeleteOrder(order._id, order.orderNumber)}
                                 disabled={deleting === order._id}

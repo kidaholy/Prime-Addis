@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface Order {
   _id: string
@@ -18,6 +19,7 @@ export default function TransactionsPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const { token } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     fetchOrders()
@@ -50,7 +52,7 @@ export default function TransactionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#2d5a41]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Sales</p>
-              <h3 className="text-3xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} Br</h3>
+              <h3 className="text-3xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} {t("common.currencyBr")}</h3>
             </div>
             <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Volume</p>
@@ -58,7 +60,7 @@ export default function TransactionsPage() {
             </div>
             <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#93c5fd]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Average Ticket</p>
-              <h3 className="text-3xl font-black text-blue-800">{avgTransaction.toFixed(0)} Br</h3>
+              <h3 className="text-3xl font-black text-blue-800">{avgTransaction.toFixed(0)} {t("common.currencyBr")}</h3>
             </div>
           </div>
 
@@ -78,7 +80,7 @@ export default function TransactionsPage() {
                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl custom-shadow">🧾</div>
                       <div>
                         <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">#{o.orderNumber}</div>
-                        <div className="text-lg font-bold text-gray-800">{o.totalAmount.toFixed(2)} Br</div>
+                        <div className="text-lg font-bold text-gray-800">{o.totalAmount.toFixed(2)} {t("common.currencyBr")}</div>
                       </div>
                     </div>
 

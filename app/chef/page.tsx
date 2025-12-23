@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface OrderItem {
   menuItemId: string
@@ -29,6 +30,7 @@ export default function KitchenDisplayPage() {
   const [newOrderAlert, setNewOrderAlert] = useState(false)
   const [previousOrderCount, setPreviousOrderCount] = useState(0)
   const { token } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     fetchOrders()
@@ -78,7 +80,7 @@ export default function KitchenDisplayPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        const activeOrders = data.filter((order: Order) => 
+        const activeOrders = data.filter((order: Order) =>
           order.status !== "completed" && order.status !== "cancelled"
         )
 
@@ -98,15 +100,13 @@ export default function KitchenDisplayPage() {
   }
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
+    if (!confirm(t("common.areYouSure") || "Are you sure?")) {
       return
     }
 
     try {
-      // Optimistic update - immediately update the UI
-      setOrders(prevOrders =>
-        prevOrders.filter(order => order._id !== orderId)
-      )
+      // Optimistic update
+      setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId))
 
       const response = await fetch(`/api/orders/${orderId}/status`, {
         method: "PUT",
@@ -118,32 +118,24 @@ export default function KitchenDisplayPage() {
       })
 
       if (response.ok) {
-        // Immediate refresh to ensure data consistency
         fetchOrders()
-
-        // Trigger refresh on other pages by setting a flag in localStorage
         localStorage.setItem('orderUpdated', Date.now().toString())
       } else {
-        // Revert optimistic update on failure
         fetchOrders()
-        alert("Failed to cancel order. Please try again.")
+        alert(t("common.error") || "Error")
       }
     } catch (err) {
-      console.error("Failed to cancel order")
-      // Revert optimistic update on error
       fetchOrders()
-      alert("Failed to cancel order. Please try again.")
+      alert(t("common.error") || "Error")
     }
   }
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      // Optimistic update - immediately update the UI
+      // Optimistic update
       setOrders(prevOrders =>
         prevOrders.map(order =>
-          order._id === orderId
-            ? { ...order, status: newStatus as any }
-            : order
+          order._id === orderId ? { ...order, status: newStatus as any } : order
         )
       )
 
@@ -157,18 +149,12 @@ export default function KitchenDisplayPage() {
       })
 
       if (response.ok) {
-        // Immediate refresh to ensure data consistency
         fetchOrders()
-
-        // Trigger refresh on other pages by setting a flag in localStorage
         localStorage.setItem('orderUpdated', Date.now().toString())
       } else {
-        // Revert optimistic update on failure
         fetchOrders()
       }
     } catch (err) {
-      console.error("Failed to update order status")
-      // Revert optimistic update on error
       fetchOrders()
     }
   }
@@ -183,12 +169,28 @@ export default function KitchenDisplayPage() {
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
-          <div className="mb-6 flex justify-between items-center text-[#2d5a41]">
-            <h1 className="text-3xl font-bold bubbly-text">Kitchen Display 👨‍🍳</h1>
-            <div className="flex gap-4">
-              <Badge count={pendingOrders.length} label="Pending" color="warning" />
-              <Badge count={preparingOrders.length} label="Prep" color="info" />
-              <Badge count={readyOrders.length} label="Ready" color="success" />
+          <div className="mb-6">
+            <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow flex flex-col md:flex-row justify-between items-center gap-6 text-[#e2e7d8]">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-4xl">🍳</div>
+                <div>
+                  <h1 className="text-4xl font-bold bubbly-text">{t("chef.kitchenDisplay")}</h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">
+                      {t("adminDashboard.kitchenRunningSmooth")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex bg-white/10 p-2 rounded-[30px] backdrop-blur-md">
+                {["pending", "preparing", "ready"].map((s) => (
+                  <div key={s} className="px-6 py-2 text-center">
+                    <div className="text-2xl font-black">{orders.filter(o => o.status === s).length}</div>
+                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60">{t(`chef.${s}`)}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -197,8 +199,8 @@ export default function KitchenDisplayPage() {
               <div className="flex items-center gap-3">
                 <span className="text-3xl animate-bounce">🔔</span>
                 <div>
-                  <p className="font-bold text-lg">New Order Incoming!</p>
-                  <p className="text-sm opacity-90">Check your queue immediately</p>
+                  <p className="font-bold text-lg">{t("chef.newOrderIncoming")}</p>
+                  <p className="text-sm opacity-90">{t("chef.checkQueueImmediately")}</p>
                 </div>
               </div>
               <button onClick={() => setNewOrderAlert(false)} className="text-2xl font-bold hover:opacity-75">
@@ -210,63 +212,66 @@ export default function KitchenDisplayPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               <div className="text-6xl animate-bounce mb-4">🍳</div>
-              <h2 className="text-2xl font-bold text-gray-400">Loading Kitchen Data...</h2>
+              <h2 className="text-2xl font-bold text-gray-400">{t("chef.loadingKitchenData")}</h2>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Pending Column */}
               <BentoColumn
-                title="Pending"
+                title={t("chef.pending")}
                 icon="⏳"
                 color="bg-orange-50 border-orange-100"
                 headerColor="text-orange-600"
               >
                 {pendingOrders.map(order => (
-                  <OrderCard 
-                    key={order._id} 
-                    order={order} 
-                    onStatusChange={handleStatusChange} 
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onStatusChange={handleStatusChange}
                     onCancelOrder={handleCancelOrder}
-                    nextStatus="preparing" 
-                    accentColor="orange" 
+                    nextStatus="preparing"
+                    accentColor="orange"
+                    t={t}
                   />
                 ))}
               </BentoColumn>
 
               {/* Preparing Column */}
               <BentoColumn
-                title="Preparing"
+                title={t("chef.preparing")}
                 icon="🔥"
                 color="bg-blue-50 border-blue-100"
                 headerColor="text-blue-600"
               >
                 {preparingOrders.map(order => (
-                  <OrderCard 
-                    key={order._id} 
-                    order={order} 
-                    onStatusChange={handleStatusChange} 
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onStatusChange={handleStatusChange}
                     onCancelOrder={handleCancelOrder}
-                    nextStatus="ready" 
-                    accentColor="blue" 
+                    nextStatus="ready"
+                    accentColor="blue"
+                    t={t}
                   />
                 ))}
               </BentoColumn>
 
               {/* Ready Column */}
               <BentoColumn
-                title="Ready for Pickup"
+                title={t("chef.readyForPickup")}
                 icon="✅"
                 color="bg-green-50 border-green-100"
                 headerColor="text-green-600"
               >
                 {readyOrders.map(order => (
-                  <OrderCard 
-                    key={order._id} 
-                    order={order} 
-                    onStatusChange={handleStatusChange} 
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onStatusChange={handleStatusChange}
                     onCancelOrder={handleCancelOrder}
-                    nextStatus="completed" 
-                    accentColor="green" 
+                    nextStatus="completed"
+                    accentColor="green"
+                    t={t}
                   />
                 ))}
               </BentoColumn>
@@ -275,19 +280,6 @@ export default function KitchenDisplayPage() {
         </div>
       </div>
     </ProtectedRoute>
-  )
-}
-
-function Badge({ count, label, color }: { count: number, label: string, color: 'warning' | 'info' | 'success' }) {
-  const colors = {
-    warning: "bg-orange-100 text-orange-700",
-    info: "bg-blue-100 text-blue-700",
-    success: "bg-green-100 text-green-700"
-  }
-  return (
-    <div className={`px-4 py-2 rounded-full font-bold text-sm ${colors[color]} border-2 border-white shadow-sm`}>
-      {label}: {count}
-    </div>
   )
 }
 
@@ -310,9 +302,10 @@ interface OrderCardProps {
   onCancelOrder: (orderId: string) => void
   nextStatus: string
   accentColor: "orange" | "blue" | "green"
+  t: (key: string) => string
 }
 
-function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentColor }: OrderCardProps) {
+function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentColor, t }: OrderCardProps) {
   const createdTime = new Date(order.createdAt)
   const elapsedMinutes = Math.floor((Date.now() - createdTime.getTime()) / 60000)
 
@@ -322,26 +315,13 @@ function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentCol
     green: "border-l-green-500 hover:shadow-green-100"
   }
 
-  const btnInfo = {
-    pending: { text: "Start Prep", bg: "bg-blue-500 hover:bg-blue-600" },
-    preparing: { text: "Mark Ready", bg: "bg-green-500 hover:bg-green-600" },
-    ready: { text: "Complete", bg: "bg-gray-800 hover:bg-black" }
-  }
-
-  // Determine button style based on current status (which implies next action)
-  // Logic: if current is pending -> action is Start (blue)
-  // if current is preparing -> action is Ready (green)
-  // if current is ready -> action is Complete (dark)
-  const btnStyle = order.status === 'pending' ? btnInfo.pending :
-    order.status === 'preparing' ? btnInfo.preparing : btnInfo.ready
-
   return (
     <div className={`bg-white rounded-[25px] p-5 border-l-[6px] shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 ${accents[accentColor]}`}>
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-bold text-lg text-gray-800">#{order.orderNumber}</h3>
           <p className="text-xs text-gray-500 font-medium">
-            ⏱ {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : "Just now"}
+            ⏱ {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : t("chef.justNow")}
           </p>
         </div>
         {order.notes && (
@@ -360,23 +340,42 @@ function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentCol
         ))}
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={() => onStatusChange(order._id, nextStatus)}
-          className={`flex-1 text-white py-3 rounded-xl font-bold transition-colors shadow-md ${btnStyle.bg}`}
-        >
-          {btnStyle.text}
-        </button>
-        
-        {order.status === 'pending' && (
-          <button
-            onClick={() => onCancelOrder(order._id)}
-            className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors shadow-md"
-            title="Cancel Order"
-          >
-            ❌
-          </button>
-        )}
+      <div className="mt-auto">
+        <div className="flex gap-2">
+          {order.status === "pending" && (
+            <button
+              onClick={() => onStatusChange(order._id, "preparing")}
+              className="flex-1 bg-blue-100 text-blue-600 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all transform active:scale-95"
+            >
+              {t("chef.startPrep")}
+            </button>
+          )}
+          {order.status === "preparing" && (
+            <button
+              onClick={() => onStatusChange(order._id, "ready")}
+              className="flex-1 bg-[#2d5a41] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-[#2d5a41]/20 transform hover:scale-105 active:scale-95"
+            >
+              {t("chef.markReady")}
+            </button>
+          )}
+          {order.status === "ready" && (
+            <button
+              onClick={() => onStatusChange(order._id, "completed")}
+              className="flex-1 bg-gray-800 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all transform active:scale-95"
+            >
+              {t("chef.complete")}
+            </button>
+          )}
+          {order.status === "pending" && (
+            <button
+              onClick={() => onCancelOrder(order._id)}
+              className="px-4 py-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-bold transition-all"
+              title={t("common.delete")}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

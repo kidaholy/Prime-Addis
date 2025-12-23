@@ -8,6 +8,9 @@ import Link from "next/link"
 import Image from "next/image"
 import type React from "react"
 
+import { useLanguage } from "@/context/language-context"
+import { LanguageSwitcher } from "@/components/language-switcher"
+
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false)
   const [email, setEmail] = useState("")
@@ -16,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const { settings } = useSettings()
+  const { t } = useLanguage()
 
   useEffect(() => {
     setMounted(true)
@@ -45,6 +49,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#e2e7d8] flex items-center justify-center p-4 relative overflow-hidden">
 
+      {/* Language Switcher - Top Right */}
+      <div className="absolute top-6 right-6 z-50">
+        <LanguageSwitcher />
+      </div>
+
       {/* Decorative Background Elements */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-[#f5bc6b] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-[#93c5fd] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -59,10 +68,10 @@ export default function LoginPage() {
               <Logo size="lg" showText={true} textColor="text-[#e2e7d8]" />
             </div>
             <h1 className="text-5xl font-bold mb-4 leading-tight bubbly-text">
-              Manage <br /> <span className="text-[#f5bc6b]">Deliciously.</span>
+              {t("login.manage")} <br /> <span className="text-[#f5bc6b]">{t("login.deliciously")}</span>
             </h1>
             <p className="text-lg opacity-80 max-w-sm">
-              The sweetest way to manage your cafeteria inventory, staff, and orders.
+              {t("login.description")}
             </p>
           </div>
 
@@ -80,8 +89,8 @@ export default function LoginPage() {
         {/* Login Form Card */}
         <div className="bg-white rounded-[50px] p-10 flex flex-col justify-center custom-shadow relative">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold text-[#1a1a1a] mb-2 bubbly-text">Welcome Back!</h2>
-            <p className="text-gray-500 font-medium">Please enter your details</p>
+            <h2 className="text-3xl font-bold text-[#1a1a1a] mb-2 bubbly-text">{t("login.title")}</h2>
+            <p className="text-gray-500 font-medium">{t("login.subtitle")}</p>
           </div>
 
           {error && (
@@ -92,7 +101,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 ml-2">Email</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2 ml-2">{t("login.emailLabel")}</label>
               <input
                 type="email"
                 value={email}
@@ -103,7 +112,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 ml-2">Password</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2 ml-2">{t("login.passwordLabel")}</label>
               <input
                 type="password"
                 value={password}
@@ -119,13 +128,13 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-[#1a1a1a] text-white font-bold text-lg py-4 rounded-2xl hover:bg-[#f5bc6b] hover:text-[#1a1a1a] hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg bubbly-button"
             >
-              {loading ? "Brewing Access..." : "Log In"}
+              {loading ? t("login.brewing") : t("login.logIn")}
             </button>
           </form>
 
           <div className="mt-8 text-center">
             <Link href="/" className="text-gray-400 font-bold hover:text-[#2d5a41] transition-colors text-sm">
-              ← Back to Home
+              ← {t("login.backHome")}
             </Link>
           </div>
         </div>

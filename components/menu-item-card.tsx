@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useLanguage } from "@/context/language-context"
 
 interface MenuItemCardProps {
   name: string
@@ -25,6 +26,7 @@ export function MenuItemCard({
   isSelected = false,
   index = 0,
 }: MenuItemCardProps) {
+  const { t } = useLanguage()
   const getCategoryEmoji = (cat: string) => {
     const emojiMap: Record<string, string> = {
       "Hot Coffee": "☕",
@@ -49,9 +51,8 @@ export function MenuItemCard({
 
   return (
     <div
-      className={`group card-base hover:shadow-2xl transition-all transform hover:-translate-y-2 cursor-pointer animate-slide-in-up overflow-hidden border-2 ${
-        isSelected ? "border-accent shadow-lg shadow-accent/50" : "border-border"
-      }`}
+      className={`group card-base hover:shadow-2xl transition-all transform hover:-translate-y-2 cursor-pointer animate-slide-in-up overflow-hidden border-2 ${isSelected ? "border-accent shadow-lg shadow-accent/50" : "border-border"
+        }`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
       {/* Item Image */}
@@ -84,7 +85,7 @@ export function MenuItemCard({
 
         {/* Price badge */}
         <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-          {price} Br
+          {price} {t("common.currencyBr")}
         </div>
 
         {/* Category icon */}
@@ -103,7 +104,7 @@ export function MenuItemCard({
       {description && <p className="text-sm text-muted-foreground mb-3 line-clamp-2 group-hover:text-accent/80 transition-colors">{description}</p>}
 
       <div className="flex justify-between items-center mb-4">
-        <div className="text-2xl font-bold text-accent">{price} Br</div>
+        <div className="text-2xl font-bold text-accent">{price} {t("common.currencyBr")}</div>
         {preparationTime && (
           <div className="flex items-center gap-1 text-xs bg-primary/20 text-foreground px-2 py-1 rounded-full">
             <span className="animate-rotate-360">⏱</span> {preparationTime}m
@@ -113,19 +114,18 @@ export function MenuItemCard({
 
       <button
         onClick={onAddToCart}
-        className={`w-full py-3 rounded-lg font-bold transition-all ${
-          isSelected
+        className={`w-full py-3 rounded-lg font-bold transition-all ${isSelected
             ? "bg-accent/30 text-accent border-2 border-accent animate-pulse-glow"
             : "bg-accent text-accent-foreground hover:opacity-90 transform hover:scale-105"
-        }`}
+          }`}
       >
         {isSelected ? (
           <>
-            <span className="animate-bounce">✓</span> Added to Order!
+            <span className="animate-bounce">✓</span> {t("menu.addedToCart")}
           </>
         ) : (
           <>
-            <span className="group-hover:animate-wiggle">🛒</span> Add to Order
+            <span className="group-hover:animate-wiggle">🛒</span> {t("menu.addToOrder")}
           </>
         )}
       </button>

@@ -51,6 +51,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+import { LanguageProvider } from "@/context/language-context"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -59,14 +61,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${fredoka.className} antialiased bg-[#e2e7d8] overflow-x-hidden`} suppressHydrationWarning>
-        <ThemeProvider>
-          <SettingsProvider>
-            <AuthProvider>
-              <NotificationCenter />
-              {children}
-            </AuthProvider>
-          </SettingsProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <SettingsProvider>
+              <AuthProvider>
+                <NotificationCenter />
+                {children}
+              </AuthProvider>
+            </SettingsProvider>
+          </ThemeProvider>
+        </LanguageProvider>
         <Analytics />
       </body>
     </html>

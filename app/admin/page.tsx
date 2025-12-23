@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
 
 interface DashboardStats {
@@ -30,6 +31,7 @@ export default function AdminDashboardPage() {
   })
   const [loading, setLoading] = useState(true)
   const { token } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     fetchDashboardStats()
@@ -72,6 +74,16 @@ export default function AdminDashboardPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <ProtectedRoute requiredRoles={["admin"]}>
+        <div className="min-h-screen bg-[#e2e7d8] p-4 flex items-center justify-center">
+          <div className="text-4xl animate-bounce">☕</div>
+        </div>
+      </ProtectedRoute>
+    )
+  }
+
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
       <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
@@ -85,49 +97,49 @@ export default function AdminDashboardPage() {
               {/* Welcome Card */}
               <div className="bg-[#2d5a41] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group text-[#e2e7d8]">
                 <div className="relative z-10">
-                  <h1 className="text-4xl font-bold mb-2 bubbly-text">Admin HQ 🚀</h1>
-                  <p className="opacity-90 font-medium">System overview and analytics.</p>
+                  <h1 className="text-4xl font-bold mb-2 bubbly-text">{t("adminDashboard.title")}</h1>
+                  <p className="opacity-90 font-medium">{t("adminDashboard.subtitle")}</p>
                 </div>
                 <div className="absolute right-[-20px] bottom-[-20px] w-48 h-48 bg-[#f5bc6b] rounded-full opacity-20 group-hover:scale-125 transition-transform duration-500"></div>
               </div>
 
               {/* Primary Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <StatCard label="Orders" value={stats.totalOrders} icon="📋" color="white" />
-                <StatCard label="Revenue" value={`${stats.totalRevenue.toFixed(0)} Br`} icon="💰" color="blue" />
-                <StatCard label="Avg Order" value={`${stats.averageOrderValue.toFixed(0)} Br`} icon="🧮" color="orange" />
-                <StatCard label="Net Worth" value={`${stats.inventoryValue.toFixed(0)} Br`} icon="💎" color="white" href="/admin/reports/inventory" />
-                <StatCard label="Customers" value={stats.totalCustomers} icon="👥" color="white" />
+                <StatCard label={t("adminDashboard.orders")} value={stats.totalOrders} icon="📋" color="white" />
+                <StatCard label={t("adminDashboard.revenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💰" color="blue" />
+                <StatCard label={t("adminDashboard.avgOrder")} value={`${stats.averageOrderValue.toFixed(0)} ${t("common.currencyBr")}`} icon="🧮" color="orange" />
+                <StatCard label={t("adminDashboard.netWorth")} value={`${stats.inventoryValue.toFixed(0)} ${t("common.currencyBr")}`} icon="💎" color="white" href="/admin/reports/inventory" />
+                <StatCard label={t("adminDashboard.customers")} value={stats.totalCustomers} icon="👥" color="white" />
               </div>
 
               {/* Detailed Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-[40px] p-6 custom-shadow">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="text-2xl">⚠️</span> Alerts
+                    <span className="text-2xl">⚠️</span> {t("adminDashboard.alerts")}
                   </h2>
                   <div className="space-y-3">
                     {stats.lowStockItems > 0 ? (
-                      <AlertItem type="warning" text={`${stats.lowStockItems} items low stock`} subtext="Restock required" />
+                      <AlertItem type="warning" text={`${stats.lowStockItems} ${t("adminDashboard.itemsLowStock")}`} subtext={t("adminDashboard.restockRequired")} />
                     ) : (
-                      <AlertItem type="success" text="Stock levels healthy" subtext="No immediate action" />
+                      <AlertItem type="success" text={t("adminDashboard.stockHealthy")} subtext={t("adminDashboard.noImmediateAction")} />
                     )}
                     {stats.pendingOrders > 5 ? (
-                      <AlertItem type="info" text={`${stats.pendingOrders} pending orders`} subtext="Kitchen busy" />
+                      <AlertItem type="info" text={`${stats.pendingOrders} ${t("adminDashboard.pendingOrders")}`} subtext={t("adminDashboard.kitchenBusy")} />
                     ) : (
-                      <AlertItem type="success" text="Order queue optimal" subtext="Kitchen running smooth" />
+                      <AlertItem type="success" text={t("adminDashboard.orderQueueOptimal")} subtext={t("adminDashboard.kitchenRunningSmooth")} />
                     )}
                   </div>
                 </div>
 
                 <div className="bg-white rounded-[40px] p-6 custom-shadow">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="text-2xl">⚡</span> System Status
+                    <span className="text-2xl">⚡</span> {t("adminDashboard.systemStatus")}
                   </h2>
                   <div className="space-y-3">
-                    <StatusItem label="Database" status="Connected" />
-                    <StatusItem label="API Gateway" status="Online" />
-                    <StatusItem label="Realtime Sync" status="Active" />
+                    <StatusItem label={t("adminDashboard.database")} status={t("adminDashboard.connected")} />
+                    <StatusItem label={t("adminDashboard.apiGateway")} status={t("adminDashboard.online")} />
+                    <StatusItem label={t("adminDashboard.realtimeSync")} status={t("adminDashboard.active")} />
                   </div>
                 </div>
               </div>
@@ -137,15 +149,15 @@ export default function AdminDashboardPage() {
             <div className="md:col-span-12 lg:col-span-4 space-y-6">
               <div className="bg-white rounded-[40px] p-6 custom-shadow relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-100 rounded-bl-[40px] -mr-4 -mt-4 opacity-50"></div>
-                <h2 className="text-xl font-bold mb-4">Pending</h2>
+                <h2 className="text-xl font-bold mb-4">{t("adminDashboard.pending")}</h2>
                 <div className="text-5xl font-bold text-[#f5bc6b] mb-2">{stats.pendingOrders}</div>
-                <p className="text-gray-500">Orders to be served</p>
+                <p className="text-gray-500">{t("adminDashboard.ordersToBeServed")}</p>
               </div>
 
               <div className="bg-white rounded-[40px] p-6 custom-shadow">
-                <h2 className="text-xl font-bold mb-4">Completed</h2>
+                <h2 className="text-xl font-bold mb-4">{t("adminDashboard.completed")}</h2>
                 <div className="text-5xl font-bold text-[#2d5a41] mb-2">{stats.completedOrders}</div>
-                <p className="text-gray-500">Orders served today</p>
+                <p className="text-gray-500">{t("adminDashboard.ordersServedToday")}</p>
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { ParticleSystem } from "@/components/particle-system"
 import { AnimatedLoading } from "@/components/animated-loading"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 // Category icon mapping function
 const getCategoryIcon = (category: string) => {
@@ -65,6 +66,7 @@ export default function MenuPage() {
   const [menuLoading, setMenuLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { token, user } = useAuth()
+  const { t } = useLanguage()
 
   // Fetch menu items from API
   useEffect(() => {
@@ -83,10 +85,10 @@ export default function MenuPage() {
           const data = await response.json()
           setMenuItems(data)
         } else {
-          setError("Failed to load menu items")
+          setError(t("menu.error"))
         }
       } catch (err) {
-        setError("Failed to load menu items")
+        setError(t("menu.error"))
       } finally {
         setMenuLoading(false)
       }
@@ -172,8 +174,8 @@ export default function MenuPage() {
                 {/* Welcome Banner */}
                 <div className="bg-[#f5bc6b] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group">
                   <div className="relative z-10">
-                    <h1 className="text-4xl font-bold text-white mb-2 bubbly-text">Fresh Menu 🥐</h1>
-                    <p className="text-white/90 font-medium">Serve the best to our customers!</p>
+                    <h1 className="text-4xl font-bold text-white mb-2 bubbly-text">{t("menu.title")} 🥐</h1>
+                    <p className="text-white/90 font-medium">{t("menu.subtitle")}</p>
                   </div>
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 text-9xl opacity-20 group-hover:scale-110 transition-transform duration-500">☕</div>
                 </div>
@@ -182,20 +184,20 @@ export default function MenuPage() {
                 <div className="bg-white rounded-[40px] p-6 custom-shadow min-h-[600px]">
                   {/* Loading State */}
                   {menuLoading && (
-                    <AnimatedLoading message="Loading delicious menu items..." type="food" />
+                    <AnimatedLoading message={t("menu.loading")} type="food" />
                   )}
 
                   {/* Error State */}
                   {error && (
                     <div className="text-center py-12">
-                      <h2 className="text-2xl font-bold text-red-500 mb-2">Failed to Load Menu</h2>
+                      <h2 className="text-2xl font-bold text-red-500 mb-2">{t("menu.error")}</h2>
                       <p className="text-gray-500 mb-4">{error}</p>
                       <AnimatedButton
                         onClick={() => window.location.reload()}
                         variant="glow"
                         size="lg"
                       >
-                        🔄 Try Again
+                        🔄 {t("menu.tryAgain")}
                       </AnimatedButton>
                     </div>
                   )}
@@ -210,11 +212,11 @@ export default function MenuPage() {
                               key={cat}
                               onClick={() => setCategoryFilter(cat)}
                               className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all duration-300 ${categoryFilter === cat
-                                  ? "bg-[#2d5a41] text-white shadow-lg scale-105"
-                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                                 }`}
                             >
-                              {cat === "all" ? "All Items" : `${getCategoryIcon(cat)} ${cat}`}
+                              {cat === "all" ? t("menu.allItems") : `${getCategoryIcon(cat)} ${cat}`}
                             </button>
                           ))}
                         </div>
@@ -224,7 +226,7 @@ export default function MenuPage() {
                       {filteredItems.length === 0 && (
                         <div className="text-center py-20">
                           <div className="text-6xl mb-4 opacity-30">🍽️</div>
-                          <h2 className="text-2xl font-bold text-gray-400">No Items Found</h2>
+                          <h2 className="text-2xl font-bold text-gray-400">{t("menu.noItems")}</h2>
                         </div>
                       )}
 
@@ -238,6 +240,7 @@ export default function MenuPage() {
                               onAddToCart={handleAddToCart}
                               isSelected={selectedItem?._id === item._id}
                               index={idx}
+                              t={t}
                             />
                           ))}
                         </div>
@@ -251,7 +254,7 @@ export default function MenuPage() {
               <div className="md:col-span-4 lg:col-span-3 sticky top-4">
                 <div className="bg-white rounded-[40px] p-6 custom-shadow min-h-[500px] border border-gray-100">
                   <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6 flex items-center gap-2">
-                    <span>🛒</span> Current Order
+                    <span>🛒</span> {t("menu.currentOrder")}
                   </h2>
                   <CartSidebar
                     items={cartItems}
@@ -273,10 +276,10 @@ export default function MenuPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center">
         <div className="text-6xl mb-4">🍽️</div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Menu Access Restricted</h1>
-        <p className="text-muted-foreground mb-6">This page is only available for cashiers</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t("menu.restricted")}</h1>
+        <p className="text-muted-foreground mb-6">{t("menu.restrictedDesc")}</p>
         <Link href="/cashier" className="btn-primary">
-          Go to POS System
+          {t("menu.goToPos")}
         </Link>
       </div>
     </div>
@@ -288,7 +291,13 @@ function MenuItemCard({
   onAddToCart,
   isSelected,
   index,
-}: { item: MenuItem; onAddToCart: (item: MenuItem) => void; isSelected: boolean; index: number }) {
+  t,
+}: {
+  item: MenuItem; onAddToCart: (item: MenuItem) => void;
+  isSelected: boolean;
+  index: number;
+  t: (key: string) => string;
+}) {
   return (
     <div
       className={`group card-base hover-lift cursor-pointer animate-bounce-in overflow-hidden relative menu-item-card ${isSelected ? "animate-rainbow-glow" : ""
@@ -334,7 +343,7 @@ function MenuItemCard({
 
         {/* Price badge with animation */}
         <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-2 py-1 rounded-full text-sm font-bold animate-heartbeat">
-          {item.price} Br
+          {item.price} {t("common.currencyBr")}
         </div>
 
         {/* Category icon */}
@@ -365,7 +374,7 @@ function MenuItemCard({
         {/* Availability indicator */}
         <div className="flex items-center gap-1 text-xs">
           <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-          <span className="text-success">Available</span>
+          <span className="text-success">{t("menu.available")}</span>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useLanguage } from "@/context/language-context"
 
 interface OrderAnimationProps {
   orderNumber: string
@@ -10,6 +11,7 @@ interface OrderAnimationProps {
 
 export function OrderAnimation({ orderNumber, totalItems, isVisible }: OrderAnimationProps) {
   const [stage, setStage] = useState(0)
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!isVisible) {
@@ -34,8 +36,8 @@ export function OrderAnimation({ orderNumber, totalItems, isVisible }: OrderAnim
         {stage >= 1 && (
           <div className="animate-slide-in-up">
             <div className="text-7xl mb-4 animate-bounce-gentle">✓</div>
-            <h2 className="text-3xl font-bold text-foreground mb-2">Order Confirmed!</h2>
-            <p className="text-2xl text-accent font-bold">Order #{orderNumber}</p>
+            <h2 className="text-3xl font-bold text-foreground mb-2">{t("cashier.checkoutSuccess")}</h2>
+            <p className="text-2xl text-accent font-bold">{t("cashier.orderIdPrefix")}{orderNumber}</p>
           </div>
         )}
 
@@ -43,7 +45,7 @@ export function OrderAnimation({ orderNumber, totalItems, isVisible }: OrderAnim
         {stage >= 2 && (
           <div className="mt-6 p-4 bg-accent/10 rounded-lg animate-slide-in-up border border-accent/30">
             <p className="text-lg font-semibold text-foreground">
-              {totalItems} {totalItems === 1 ? "item" : "items"} in your order
+              {totalItems} {totalItems === 1 ? t("cashier.itemInOrder") : t("cashier.itemsInOrder")}
             </p>
           </div>
         )}
@@ -52,8 +54,8 @@ export function OrderAnimation({ orderNumber, totalItems, isVisible }: OrderAnim
         {stage >= 3 && (
           <div className="mt-6 animate-slide-in-up">
             <div className="text-6xl animate-bounce-gentle mb-3">👨‍🍳</div>
-            <p className="text-foreground font-semibold text-lg">Chef is preparing</p>
-            <p className="text-sm text-muted-foreground mt-2">Your items will be ready soon</p>
+            <p className="text-foreground font-semibold text-lg">{t("cashier.chefPreparing")}</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("cashier.readySoon")}</p>
           </div>
         )}
 
@@ -61,7 +63,7 @@ export function OrderAnimation({ orderNumber, totalItems, isVisible }: OrderAnim
         {stage >= 4 && (
           <div className="mt-6 animate-slide-in-up">
             <div className="inline-block px-4 py-2 bg-success/20 text-success rounded-full font-bold text-sm border border-success/50">
-              Check the kitchen display
+              {t("cashier.checkKitchen")}
             </div>
           </div>
         )}

@@ -5,6 +5,7 @@ import type React from "react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useLanguage } from "@/context/language-context"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -14,6 +15,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
   const { isAuthenticated, loading, user } = useAuth()
   const router = useRouter()
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!loading) {
@@ -30,7 +32,7 @@ export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps)
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <p className="mt-4 text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )

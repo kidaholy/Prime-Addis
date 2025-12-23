@@ -1,5 +1,7 @@
 "use client"
 
+import { useLanguage } from "@/context/language-context"
+
 interface CartItem {
   id: string
   name: string
@@ -24,6 +26,7 @@ export function CartSidebar({
   isLoading = false,
   isEmbedded = false
 }: CartSidebarProps) {
+  const { t } = useLanguage()
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.08
   const total = subtotal + tax
@@ -37,8 +40,8 @@ export function CartSidebar({
       {/* Header - Only show if not embedded (POS handles its own header) */}
       {!isEmbedded && (
         <div className="p-4 border-b border-border bg-primary/10">
-          <h2 className="text-xl font-bold text-foreground">Order Cart</h2>
-          <p className="text-sm text-muted-foreground">{items.length} items</p>
+          <h2 className="text-xl font-bold text-foreground">{t("cashier.orderCart")}</h2>
+          <p className="text-sm text-muted-foreground">{items.length} {t("cashier.items")}</p>
         </div>
       )}
 
@@ -47,7 +50,7 @@ export function CartSidebar({
         {items.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <div className="text-6xl mb-4 opacity-20">🛒</div>
-            <p className="font-bold">Your cart is empty</p>
+            <p className="font-bold">{t("cashier.cartEmpty")}</p>
           </div>
         ) : (
           items.map((item, idx) => (
@@ -58,7 +61,7 @@ export function CartSidebar({
             >
               <div className="flex-1">
                 <h3 className="font-bold text-sm text-gray-800">{item.name}</h3>
-                <p className="text-xs text-gray-500 font-bold">{item.price} Br</p>
+                <p className="text-xs text-gray-500 font-bold">{item.price} {t("common.currencyBr")}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -90,16 +93,16 @@ export function CartSidebar({
       <div className={`${isEmbedded ? 'mt-auto pt-6' : 'p-4 border-t border-border bg-primary/5'} space-y-3`}>
         <div className="space-y-2 bg-gray-50 p-4 rounded-[30px] border border-gray-100">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500 font-medium">Subtotal</span>
-            <span className="font-bold text-gray-800">{subtotal.toFixed(0)} Br</span>
+            <span className="text-gray-500 font-medium">{t("cashier.subtotal")}</span>
+            <span className="font-bold text-gray-800">{subtotal.toFixed(0)} {t("common.currencyBr")}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500 font-medium">Tax (8%)</span>
-            <span className="font-bold text-gray-800">{tax.toFixed(0)} Br</span>
+            <span className="text-gray-500 font-medium">{t("cashier.tax")} (8%)</span>
+            <span className="font-bold text-gray-800">{tax.toFixed(0)} {t("common.currencyBr")}</span>
           </div>
           <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-            <span className="font-bold text-gray-800">Total</span>
-            <span className="text-2xl font-bold text-[#2d5a41]">{total.toFixed(0)} Br</span>
+            <span className="font-bold text-gray-800">{t("cashier.total")}</span>
+            <span className="text-2xl font-bold text-[#2d5a41]">{total.toFixed(0)} {t("common.currencyBr")}</span>
           </div>
         </div>
 
@@ -111,12 +114,12 @@ export function CartSidebar({
           {isLoading ? (
             <>
               <span className="animate-spin text-xl">⏳</span>
-              Processing...
+              {t("cashier.processing")}
             </>
           ) : (
             <>
               <span className="text-xl">🚀</span>
-              Send to Kitchen
+              {t("cashier.sendToKitchen")}
             </>
           )}
         </button>

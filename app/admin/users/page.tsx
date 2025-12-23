@@ -1,26 +1,16 @@
 "use client"
-
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface User {
   _id: string
   name: string
   email: string
-  role: "admin" | "cashier" | "chef"
-  isActive: boolean
-  createdAt: string
-}
-
-interface UserForm {
-  name: string
-  email: string
-  role: "admin" | "cashier" | "chef"
-  password: string
-  isActive?: boolean
+  role: "admin" | "chef" | "cashier"
 }
 
 export default function AdminUsersPage() {
@@ -29,15 +19,15 @@ export default function AdminUsersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [formLoading, setFormLoading] = useState(false)
-  const [formData, setFormData] = useState<UserForm>({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "cashier",
     password: "",
-    isActive: true
+    role: "cashier" as "admin" | "chef" | "cashier",
   })
 
   const { token, user: currentUser } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (token) fetchUsers()
@@ -50,10 +40,11 @@ export default function AdminUsersPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (response.ok) {
-        setUsers(await response.json())
+        const data = await response.json()
+        setUsers(data)
       }
-    } catch (error) {
-      console.error("Error fetching users:", error)
+    } catch (err) {
+      console.error("Failed to fetch users")
     } finally {
       setLoading(false)
     }
@@ -62,10 +53,11 @@ export default function AdminUsersPage() {
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormLoading(true)
-    try {
-      const url = editingUser ? `/api/users/${editingUser._id}` : "/api/users"
-      const method = editingUser ? "PUT" : "POST"
 
+    const url = editingUser ? `/api/users/${editingUser._id}` : "/api/users"
+    const method = editingUser ? "PUT" : "POST"
+
+    try {
       const response = await fetch(url, {
         method,
         headers: {
@@ -82,10 +74,12 @@ export default function AdminUsersPage() {
         }
         resetForm()
         fetchUsers()
-        localStorage.setItem('userUpdated', Date.now().toString())
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "Failed to save user")
       }
-    } catch (error) {
-      console.error("Error saving user:", error)
+    } catch (err) {
+      console.error("Failed to save user")
     } finally {
       setFormLoading(false)
     }
@@ -101,18 +95,14 @@ export default function AdminUsersPage() {
       })
       if (response.ok) {
         fetchUsers()
-        localStorage.setItem('userUpdated', Date.now().toString())
       }
-    } catch (error) {
-      console.error("Error deleting user:", error)
+    } catch (err) {
+      console.error("Failed to delete user")
     }
   }
 
   const generatePassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
-    let p = ""
-    for (let i = 0; i < 8; i++) p += chars.charAt(Math.floor(Math.random() * chars.length))
-    setFormData({ ...formData, password: p })
+    setFormData({ ...formData, password: Math.random().toString(36).slice(-8) })
   }
 
   const handleEdit = (userToEdit: User) => {
@@ -120,26 +110,21 @@ export default function AdminUsersPage() {
     setFormData({
       name: userToEdit.name,
       email: userToEdit.email,
-      role: userToEdit.role,
       password: "",
-      isActive: userToEdit.isActive
+      role: userToEdit.role,
     })
     setShowForm(true)
   }
 
   const resetForm = () => {
     setEditingUser(null)
-    setFormData({ name: "", email: "", role: "cashier", password: "", isActive: true })
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "cashier",
+    })
     setShowForm(false)
-  }
-
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin': return { label: 'Admin', color: 'bg-[#f5bc6b] text-[#1a1a1a]', emoji: '👑' }
-      case 'chef': return { label: 'Chef', color: 'bg-[#93c5fd] text-blue-800', emoji: '👨‍🍳' }
-      case 'cashier': return { label: 'Cashier', color: 'bg-[#e2e7d8] text-[#2d5a41]', emoji: '💳' }
-      default: return { label: role, color: 'bg-gray-100 text-gray-500', emoji: '👤' }
-    }
   }
 
   return (
@@ -151,61 +136,61 @@ export default function AdminUsersPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Control Sidebar */}
             <div className="lg:col-span-3 flex flex-col gap-6 sticky top-4">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h2 className="text-2xl font-bold mb-6 bubbly-text">Staff</h2>
+              <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow text-[#e2e7d8]">
+                <h1 className="text-4xl font-bold mb-2 bubbly-text">{t("adminUsers.title")} 👥</h1>
+                <p className="opacity-90 font-medium mb-6">{t("adminUsers.totalActiveStaff")}: {users.length}</p>
                 <button
-                  onClick={() => setShowForm(true)}
-                  className="w-full bg-[#2d5a41] text-white font-bold py-4 rounded-[30px] custom-shadow transform transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mb-4"
+                  onClick={() => { resetForm(); setShowForm(true); }}
+                  className="w-full bg-[#f5bc6b] text-[#1a1a1a] px-8 py-4 rounded-full font-bold shadow-xl hover:shadow-[#f5bc6b]/20 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <span className="text-xl">➕</span> Add New Member
+                  <span className="text-xl">✨</span> {t("adminUsers.addNewMember")}
                 </button>
-                <div className="bg-gray-50 rounded-[30px] p-5 text-center">
-                  <div className="text-4xl font-black text-[#2d5a41] mb-1">{users.length}</div>
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Active Staff</div>
-                </div>
               </div>
 
-              <div className="bg-[#93c5fd] rounded-[40px] p-8 custom-shadow text-blue-900 overflow-hidden relative group">
+              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow relative overflow-hidden group">
                 <div className="relative z-10">
-                  <h3 className="font-bold text-xl mb-2">Permissions Card</h3>
-                  <p className="text-sm opacity-80 font-medium">Managers have full access to reports and inventory settings.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t("adminUsers.permissionsCard")}</h2>
+                  <p className="text-gray-700 font-medium">{t("adminUsers.permissionsDesc")}</p>
                 </div>
-                <div className="absolute -bottom-6 -right-6 text-9xl opacity-10 group-hover:rotate-12 transition-transform duration-500">🛡️</div>
+                <div className="absolute -bottom-6 -right-6 text-9xl opacity-10 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">🛡️</div>
               </div>
             </div>
 
-            {/* User Grid */}
+            {/* Users List */}
             <div className="lg:col-span-9">
               <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[700px]">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-32">
-                    <div className="text-6xl animate-bounce mb-4">🧁</div>
-                    <p className="text-gray-400 font-bold">Assembling Team...</p>
+                    <div className="text-6xl animate-bounce mb-4">🧩</div>
+                    <p className="text-gray-400 font-bold">{t("adminUsers.assemblingTeam")}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {users.map((u) => {
-                      const badge = getRoleBadge(u.role)
+                      const isMe = u._id === currentUser?._id
+                      const badge = u.role === "admin"
+                        ? { color: "bg-red-100 text-red-600", label: "Admin" }
+                        : u.role === "chef"
+                          ? { color: "bg-blue-100 text-blue-600", label: "Chef" }
+                          : { color: "bg-emerald-100 text-emerald-600", label: "Cashier" }
+
                       return (
-                        <div key={u._id} className="bg-gray-50 rounded-[40px] p-6 border-2 border-transparent hover:border-[#2d5a41]/10 hover:shadow-xl transition-all flex flex-col group relative overflow-hidden">
-                          <div className="flex items-center gap-4 mb-6">
-                            <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center text-2xl ${badge.color}`}>
-                              {badge.emoji}
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="font-bold text-lg truncate">{u.name}</h3>
-                              <p className="text-xs text-gray-400 truncate font-medium">{u.email}</p>
-                            </div>
+                        <div key={u._id} className="bg-gray-50 rounded-[35px] p-6 hover:shadow-xl transition-all border-4 border-transparent hover:border-[#2d5a41]/10 flex flex-col group relative overflow-hidden">
+                          {isMe && <div className="absolute top-4 right-4 text-xs font-black text-[#2d5a41] bg-[#2d5a41]/10 px-3 py-1 rounded-full uppercase tracking-widest">You</div>}
+                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mb-4 custom-shadow group-hover:scale-110 transition-transform">
+                            {u.role === "admin" ? "🎩" : u.role === "chef" ? "🍳" : "☕"}
                           </div>
+                          <h3 className="font-bold text-lg text-slate-800 mb-1">{u.name}</h3>
+                          <p className="text-sm text-gray-400 mb-6 font-medium truncate">{u.email}</p>
 
                           <div className="flex justify-between items-center mt-auto bg-white/50 rounded-[25px] p-4">
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${badge.color}`}>
-                              {badge.label}
+                              {t(`adminUsers.${u.role}`)}
                             </span>
                             <div className="flex gap-2">
                               <button onClick={() => handleEdit(u)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center custom-shadow hover:scale-110 transition-transform">✏️</button>
-                              {u.email !== currentUser?.email && (
-                                <button onClick={() => handleDelete(u)} className="w-9 h-9 bg-red-50 text-red-500 rounded-full flex items-center justify-center custom-shadow hover:scale-110 transition-transform">🗑️</button>
+                              {!isMe && (
+                                <button onClick={() => handleDelete(u)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center custom-shadow hover:bg-red-50 hover:scale-110 transition-transform">🗑️</button>
                               )}
                             </div>
                           </div>
@@ -219,76 +204,92 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {/* Modal Form */}
+        {/* Create/Edit Modal */}
         {showForm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="bg-white rounded-[50px] p-8 md:p-10 custom-shadow max-w-md w-full relative transform animate-bounce-custom">
               <button onClick={resetForm} className="absolute top-8 right-8 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 hover:bg-red-50 transition-colors">✕</button>
 
-              <h2 className="text-3xl font-bold mb-8 bubbly-text">{editingUser ? "Edit Profile" : "New Member"}</h2>
-
-              <form onSubmit={handleCreateOrUpdate} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Display Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                    placeholder="E.g. Abebe Bikila"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                    placeholder="staff@primeaddis.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Access Level</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['cashier', 'chef', 'admin'].map(r => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: r as any })}
-                        className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border-2 transition-all ${formData.role === r
-                            ? "bg-[#2d5a41] text-white border-[#2d5a41]"
-                            : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
-                          }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Password {editingUser && "(Optional)"}</label>
-                  <div className="flex gap-2">
+              <div className="bg-white rounded-[40px] p-8 custom-shadow border-4 border-[#2d5a41]/5">
+                <h2 className="text-2xl font-bold mb-6 bubbly-text">
+                  {editingUser ? t("adminUsers.editProfile") : t("adminUsers.newMember")}
+                </h2>
+                <form onSubmit={handleCreateOrUpdate} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-600 ml-2">{t("adminUsers.displayName")}</label>
                     <input
-                      type="text"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm"
-                      placeholder={editingUser ? "Keep current" : "Secure Password"}
+                      required
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-medium"
                     />
-                    <button type="button" onClick={generatePassword} className="bg-gray-100 px-4 rounded-2xl font-bold text-gray-600 hover:bg-gray-200">Gen</button>
                   </div>
-                </div>
-
-                <div className="pt-6 border-t border-gray-50 flex gap-3">
-                  <button type="button" onClick={resetForm} className="flex-1 py-4 font-bold text-gray-400 rounded-2xl hover:bg-gray-50 transition-colors">Cancel</button>
-                  <button type="submit" disabled={formLoading} className="flex-[2] bg-[#2d5a41] text-white font-bold py-4 rounded-2xl custom-shadow hover:scale-105 transition-transform disabled:opacity-50">
-                    {formLoading ? "Saving..." : (editingUser ? "Update Profile" : "Create Account")}
-                  </button>
-                </div>
-              </form>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-600 ml-2">{t("adminUsers.emailAddress")}</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-600 ml-2">{t("adminUsers.accessLevel")}</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["cashier", "chef", "admin"].map(r => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, role: r as any })}
+                          className={`py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${formData.role === r ? "bg-[#2d5a41] text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}
+                        >
+                          {t(`adminUsers.${r}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2 relative">
+                    <label className="text-sm font-bold text-gray-600 ml-2">
+                      {t("adminUsers.password")} <span className="text-gray-400 text-xs">{editingUser ? t("adminUsers.optional") : ""}</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required={!editingUser}
+                        value={formData.password}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        className="flex-1 bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={generatePassword}
+                        className="bg-gray-200 text-gray-600 px-4 rounded-2xl font-bold text-xs hover:bg-gray-300 transition-colors"
+                      >
+                        {t("adminUsers.generate")}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    {editingUser && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="flex-1 py-4 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl transition-colors"
+                      >
+                        {t("common.cancel")}
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="flex-[2] bg-[#2d5a41] text-[#e2e7d8] py-4 rounded-2xl font-bold shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
+                    >
+                      {formLoading ? t("common.loading") : (editingUser ? t("adminUsers.updateProfile") : t("adminUsers.createAccount"))}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}

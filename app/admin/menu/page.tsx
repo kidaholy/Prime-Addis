@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface MenuItem {
   _id: string
@@ -62,6 +63,7 @@ export default function AdminMenuPage() {
     stockConsumption: "0",
   })
   const { token } = useAuth()
+  const { t } = useLanguage()
   const [categories, setCategories] = useState<any[]>([])
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -277,45 +279,45 @@ export default function AdminMenuPage() {
             <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-6 sticky top-4">
               {/* Add New Button Card */}
               <div className="bg-white rounded-[40px] p-6 custom-shadow">
-                <h2 className="text-2xl font-bold mb-4 bubbly-text">Actions</h2>
+                <h2 className="text-2xl font-bold mb-4 bubbly-text">{t("adminMenu.actions")}</h2>
                 <button
                   onClick={() => { resetForm(); setShowCreateForm(true); }}
                   className="w-full bg-[#f5bc6b] text-[#1a1a1a] font-bold py-4 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 bubbly-button mb-3"
                 >
-                  ➕ Add New Item
+                  ➕ {t("adminMenu.addNewItem")}
                 </button>
                 <button
                   onClick={() => setShowCategoryManager(true)}
                   className="w-full bg-[#2d5a41] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm"
                 >
-                  📁 Manage Categories
+                  📁 {t("adminMenu.manageCategories")}
                 </button>
               </div>
 
               {/* Filters Card */}
               <div className="bg-[#2d5a41] rounded-[40px] p-6 custom-shadow text-[#e2e7d8]">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <span>🔍</span> Filters
+                  <span>🔍</span> {t("adminMenu.filters")}
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Search Name</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">{t("adminMenu.searchName")}</label>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#f5bc6b] placeholder:text-white/30"
-                      placeholder="e.g. Latte..."
+                      placeholder={t("adminMenu.searchPlaceholder")}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Category</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">{t("adminMenu.category")}</label>
                     <select
                       value={categoryFilter}
                       onChange={(e) => setCategoryFilter(e.target.value)}
                       className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#f5bc6b] appearance-none cursor-pointer"
                     >
-                      <option value="all" className="bg-[#2d5a41]">All Categories</option>
+                      <option value="all" className="bg-[#2d5a41]">{t("adminMenu.allCategories")}</option>
                       {categories.map((cat: any) => (
                         <option key={cat._id || cat.name} value={cat.name} className="bg-[#2d5a41]">{cat.name}</option>
                       ))}
@@ -330,11 +332,11 @@ export default function AdminMenuPage() {
               <div className="bg-white rounded-[40px] p-6 md:p-8 custom-shadow min-h-[600px]">
                 <div className="flex justify-between items-center mb-8">
                   <div>
-                    <h1 className="text-3xl font-bold bubbly-text">Menu Manager</h1>
-                    <p className="text-gray-500 font-medium">Manage your delicius offerings</p>
+                    <h1 className="text-3xl font-bold bubbly-text">{t("adminMenu.title")}</h1>
+                    <p className="text-gray-500 font-medium">{t("adminMenu.subtitle")}</p>
                   </div>
                   <div className="bg-[#e2e7d8] px-4 py-2 rounded-full font-bold text-[#2d5a41] text-sm">
-                    {filteredItems.length} Items Found
+                    {filteredItems.length} {t("adminMenu.itemsFound")}
                   </div>
                 </div>
 
@@ -347,7 +349,7 @@ export default function AdminMenuPage() {
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20">
                     <div className="text-6xl animate-bounce mb-4">🍩</div>
-                    <p className="text-gray-400 font-bold">Loading Menu...</p>
+                    <p className="text-gray-400 font-bold">{t("adminMenu.loading")}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -371,26 +373,26 @@ export default function AdminMenuPage() {
                                   isLow ? "bg-orange-400 text-white" :
                                     "bg-[#2d5a41] text-[#e2e7d8]"
                                   }`}>
-                                  {isOutOfStock ? "Out of Stock" : isLow ? "Low Stock" : "In Stock"}
+                                  {isOutOfStock ? t("adminMenu.outOfStock") : isLow ? t("adminMenu.lowStock") : t("adminMenu.inStock")}
                                 </div>
                               )}
                             </div>
                             <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${item.available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                              {item.available ? "Active" : "Hidden"}
+                              {item.available ? t("adminMenu.active") : t("adminMenu.hidden")}
                             </div>
                           </div>
 
                           <div className="p-5 flex-1 flex flex-col">
                             <h3 className="font-bold text-lg mb-1 truncate">{item.name}</h3>
                             <p className="text-xs font-bold text-[#2d5a41] uppercase tracking-wider mb-3">{item.category}</p>
-                            <p className="text-2xl font-black text-gray-800 mb-4">{item.price} Br</p>
+                            <p className="text-2xl font-black text-gray-800 mb-4">{item.price} {t("common.currencyBr")}</p>
 
                             <div className="flex gap-2 mt-auto">
                               <button
                                 onClick={() => handleEdit(item)}
                                 className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm"
                               >
-                                Edit
+                                {t("adminMenu.edit")}
                               </button>
                               <button
                                 onClick={() => handleDelete(item)}
@@ -409,8 +411,8 @@ export default function AdminMenuPage() {
                 {!loading && filteredItems.length === 0 && (
                   <div className="text-center py-32">
                     <div className="text-7xl mb-6 opacity-20">🍃</div>
-                    <h2 className="text-2xl font-bold text-gray-400">Empty Garden</h2>
-                    <p className="text-gray-400">Try adjusting your filters</p>
+                    <h2 className="text-2xl font-bold text-gray-400">{t("adminMenu.empty")}</h2>
+                    <p className="text-gray-400">{t("adminMenu.emptyDesc")}</p>
                   </div>
                 )}
               </div>
@@ -424,12 +426,12 @@ export default function AdminMenuPage() {
             <div className="bg-white rounded-[50px] p-8 md:p-10 custom-shadow max-w-2xl w-full max-h-[90vh] overflow-y-auto transform animate-bounce-custom relative">
               <button onClick={resetForm} className="absolute top-8 right-8 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
 
-              <h2 className="text-3xl font-bold mb-8 bubbly-text">{editingItem ? "Update Item" : "New Creation"}</h2>
+              <h2 className="text-3xl font-bold mb-8 bubbly-text">{editingItem ? t("adminMenu.updateItem") : t("adminMenu.newItem")}</h2>
 
               <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
                     <input
                       type="text"
                       value={formData.name}
@@ -440,20 +442,20 @@ export default function AdminMenuPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Category *</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.category")} *</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
                       required
                     >
-                      <option value="">Select Category</option>
+                      <option value="">{t("adminMenu.category")}</option>
                       {categories.map((cat: any) => <option key={cat._id || cat.name} value={cat.name}>{cat.name}</option>)}
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Price (Br) *</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.priceBr")} *</label>
                       <input
                         type="number"
                         value={formData.price}
@@ -464,7 +466,7 @@ export default function AdminMenuPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Prep Time</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.prepTime")}</label>
                       <input
                         type="number"
                         value={formData.preparationTime}
@@ -478,20 +480,20 @@ export default function AdminMenuPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Stock Linkage</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.stockLink")}</label>
                     <select
                       value={formData.stockItemId}
                       onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
                     >
-                      <option value="">No Stock Linked</option>
+                      <option value="">{t("adminMenu.stockNoLink")}</option>
                       {stockItems.map(item => (
                         <option key={item._id} value={item._id}>{item.name} ({item.quantity} {item.unit} left)</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Stock Consumption</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.stockCons")}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -500,15 +502,15 @@ export default function AdminMenuPage() {
                       className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
                       placeholder="e.g. 0.05"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1 pl-2 font-bold uppercase tracking-wider">Amount used per order</p>
+                    <p className="text-[10px] text-gray-400 mt-1 pl-2 font-bold uppercase tracking-wider">{t("adminMenu.amountUsed")}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.description")}</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm h-[80px]"
-                      placeholder="Briefly describe this delicioso item..."
+                      placeholder={t("adminMenu.descPlaceholder")}
                     />
                   </div>
                 </div>
@@ -525,7 +527,7 @@ export default function AdminMenuPage() {
                         checked={formData.available}
                         onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
                       />
-                      <span className="font-bold text-gray-700 group-hover:text-black">Available for Customers</span>
+                      <span className="font-bold text-gray-700 group-hover:text-black">{t("adminMenu.available")}</span>
                     </label>
 
                     <div className="flex gap-3">
@@ -534,14 +536,14 @@ export default function AdminMenuPage() {
                         onClick={resetForm}
                         className="px-8 py-3.5 rounded-2xl font-bold text-gray-500 hover:bg-gray-50"
                       >
-                        Cancel
+                        {t("adminMenu.cancel")}
                       </button>
                       <button
                         type="submit"
                         disabled={createLoading}
                         className="px-10 py-3.5 bg-[#2d5a41] text-white rounded-2xl font-bold custom-shadow hover:scale-105 transition-transform disabled:opacity-50"
                       >
-                        {createLoading ? "Saving..." : (editingItem ? "Update Item" : "Create Item")}
+                        {createLoading ? t("adminMenu.save") : (editingItem ? t("adminMenu.updateItem") : t("adminMenu.add"))}
                       </button>
                     </div>
                   </div>
@@ -558,15 +560,16 @@ export default function AdminMenuPage() {
         onAdd={handleAddCategory}
         onDelete={handleDeleteCategory}
         loading={categoryLoading}
-        title="Menu Categories"
+        title={t("adminMenu.manageCategories")}
         value={newCategoryName}
         onChange={setNewCategoryName}
+        t={t}
       />
     </ProtectedRoute>
   )
 }
 
-function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, title, value, onChange }: any) {
+function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, title, value, onChange, t }: any) {
   if (!show) return null
 
   return (
@@ -583,7 +586,7 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="New Category Name"
+              placeholder={t("adminMenu.newCatPlaceholder")}
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
             />
             <button
@@ -591,7 +594,7 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
               disabled={loading}
               className="bg-[#2d5a41] text-white px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
             >
-              Add
+              {t("adminMenu.add")}
             </button>
           </div>
         </form>
@@ -608,14 +611,14 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
               </button>
             </div>
           ))}
-          {categories.length === 0 && <p className="text-center text-gray-400 py-4">No categories yet</p>}
+          {categories.length === 0 && <p className="text-center text-gray-400 py-4">{t("adminMenu.noCats")}</p>}
         </div>
 
         <button
           onClick={onClose}
           className="w-full mt-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200"
         >
-          Close
+          {t("adminMenu.close")}
         </button>
       </div>
     </div>

@@ -4,14 +4,58 @@ import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
-import { TrendingUp, Package, DollarSign, Activity } from "lucide-react"
+
+const StatCard = ({ label, value, icon, color, subtext }: { label: string, value: string, icon: string, color: string, subtext: string }) => {
+  const colorClasses: { [key: string]: string } = {
+    emerald: "border-[#2d5a41] text-[#2d5a41]",
+    orange: "border-[#f5bc6b] text-[#1a1a1a]",
+    blue: "border-[#93c5fd] text-blue-800",
+    purple: "border-purple-500 text-purple-600",
+    indigo: "border-indigo-400 text-indigo-600",
+  };
+  const subtextColorClasses: { [key: string]: string } = {
+    emerald: "text-[#2d5a41]",
+    orange: "text-[#f5bc6b]",
+    blue: "text-blue-400",
+    purple: "text-purple-400",
+    indigo: "text-indigo-400",
+  };
+  return (
+    <div className={`bg-white rounded-[40px] p-8 custom-shadow border-b-8 ${colorClasses[color]}`}>
+      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+      <h3 className={`text-4xl font-black ${colorClasses[color]}`}>{value}</h3>
+      <p className={`text-xs ${subtextColorClasses[color]} font-bold mt-2`}>{icon} {subtext}</p>
+    </div>
+  );
+};
+
+const StatusProgress = ({ label, count, total, color }: { label: string, count: number, total: number, color: string }) => {
+  const percentage = ((count / (total || 1)) * 100).toFixed(0);
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest">
+        <span className="text-gray-400">{label}</span>
+        <span className="text-gray-800">{count} ({percentage}%)</span>
+      </div>
+      <div className="h-4 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
+        <div
+          className="h-full rounded-full transition-all duration-1000"
+          style={{ width: `${percentage}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export default function ReportsPage() {
   const [timeRange, setTimeRange] = useState("week")
   const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [stockItems, setStockItems] = useState<any[]>([])
   const { token } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     fetchReportData()
@@ -19,6 +63,7 @@ export default function ReportsPage() {
   }, [token, timeRange])
 
   const fetchReportData = async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/orders", {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,6 +74,8 @@ export default function ReportsPage() {
       }
     } catch (err) {
       console.error("Failed to load report data")
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -79,8 +126,21 @@ export default function ReportsPage() {
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.totalAmount, 0)
   const completedOrders = filteredOrders.filter((o) => o.status === "completed").length
   const averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0
-
   const totalNetWorth = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
+
+  const stats = {
+    totalRevenue: totalRevenue,
+    completedOrders: completedOrders,
+    averageOrderValue: averageOrderValue,
+    inventoryValue: totalNetWorth,
+    totalOrders: filteredOrders.length,
+    statusDistribution: {
+      pending: filteredOrders.filter((o) => o.status === "pending").length,
+      preparing: filteredOrders.filter((o) => o.status === "preparing").length,
+      ready: filteredOrders.filter((o) => o.status === "ready").length,
+      completed: filteredOrders.filter((o) => o.status === "completed").length,
+    }
+  }
 
   const exportToCSV = () => {
     const csvHeaders = ['Order Number', 'Date', 'Status', 'Total Amount', 'Payment Method', 'Items Count']
@@ -109,29 +169,33 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Controls Sidebar */}
             <div className="lg:col-span-3 space-y-6">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h2 className="text-2xl font-bold mb-6 bubbly-text">Analytics</h2>
+              <div className="bg-white rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
+                <h2 className="text-2xl font-bold mb-2 bubbly-text">{t("adminReports.title")}</h2>
                 <div className="flex flex-col gap-2">
-                  {["today", "week", "month"].map((range) => (
+                  {[
+                    { id: "today", label: t("adminReports.todayView") },
+                    { id: "week", label: t("adminReports.weekView") },
+                    { id: "month", label: t("adminReports.monthView") },
+                  ].map((range) => (
                     <button
-                      key={range}
-                      onClick={() => setTimeRange(range)}
-                      className={`w-full py-4 rounded-[25px] font-bold transition-all duration-300 capitalize ${timeRange === range ? "bg-[#2d5a41] text-white shadow-lg scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      key={range.id}
+                      onClick={() => setTimeRange(range.id)}
+                      className={`w-full py-4 rounded-[25px] font-bold transition-all duration-300 capitalize ${timeRange === range.id ? "bg-[#2d5a41] text-white shadow-lg scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                         }`}
                     >
-                      {range} View
+                      {range.label}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
-                <h3 className="text-xl font-bold text-[#1a1a1a]">Management Tools</h3>
+                <h3 className="text-xl font-bold text-[#1a1a1a]">{t("adminReports.managementTools")}</h3>
                 <button onClick={exportToCSV} className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow">
-                  <span>📊</span> Download CSV
+                  <span>📥</span> {t("adminReports.downloadCsv")}
                 </button>
                 <button onClick={() => window.print()} className="w-full bg-black/10 text-black/60 font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:bg-black/20 transition-colors">
-                  <span>🖨️</span> Print Page
+                  <span>🖨️</span> {t("adminReports.printPage")}
                 </button>
               </div>
             </div>
@@ -139,74 +203,46 @@ export default function ReportsPage() {
             {/* Main Stats */}
             <div className="lg:col-span-9 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#2d5a41]">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Revenue</p>
-                  <h3 className="text-4xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} Br</h3>
-                  <p className="text-xs text-[#2d5a41] font-bold mt-2">✨ {filteredOrders.length} orders total</p>
-                </div>
-                <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b]">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Completed</p>
-                  <h3 className="text-4xl font-black text-[#1a1a1a]">{completedOrders}</h3>
-                  <p className="text-xs text-[#f5bc6b] font-bold mt-2">🔥 Orders Served</p>
-                </div>
-                <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#93c5fd]">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Average Value</p>
-                  <h3 className="text-4xl font-black text-blue-800">{averageOrderValue.toFixed(0)} Br</h3>
-                  <p className="text-xs text-blue-400 font-bold mt-2">☕ per customer</p>
-                </div>
+                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} Br`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
+                <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
+                <StatCard label={t("adminReports.averageValue")} value={`${stats.averageOrderValue.toFixed(0)} Br`} icon="📈" color="blue" subtext={t("adminReports.perCustomer")} />
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Assets</p>
-                  <h3 className="text-4xl font-black text-purple-600">{totalNetWorth.toFixed(0)} Br</h3>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.inventoryAssets")}</p>
+                  <h3 className="text-4xl font-black text-purple-600">{stats.inventoryValue.toFixed(0)} Br</h3>
                   <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
-                    💎 Net Worth
-                    <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Full Report →</span>
+                    💎 {t("adminReports.netWorth")}
+                    <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">{t("adminReports.fullReport")} →</span>
                   </p>
                 </Link>
-                <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-indigo-400">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Items</p>
-                  <h3 className="text-4xl font-black text-indigo-600">{stockItems.length}</h3>
-                  <p className="text-xs text-indigo-400 font-bold mt-2">📦 SKUs in Stock</p>
+                <StatCard label={t("adminReports.totalItems")} value={`${stockItems.length}`} icon="🔢" color="purple" subtext={t("adminReports.skusInStock")} />
+                <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow text-[#e2e7d8] relative overflow-hidden group">
+                  <div className="relative z-10">
+                    <h2 className="text-xl font-bold mb-4">{t("adminReports.peakHour")}</h2>
+                    <div className="text-5xl font-black mb-1 bubbly-text">12:30 PM</div>
+                    <p className="opacity-70 text-sm font-medium">{t("adminReports.fullReport")}</p>
+                  </div>
+                  <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-500"></div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[400px]">
-                <h3 className="text-2xl font-bold mb-8 bubbly-text">Order Status Distribution</h3>
+              <div className="bg-white rounded-[40px] p-8 custom-shadow">
+                <h3 className="text-2xl font-bold mb-8 bubbly-text">{t("adminReports.distribution")}</h3>
                 <div className="space-y-6">
-                  {["pending", "preparing", "ready", "completed"].map((status) => {
-                    const count = filteredOrders.filter((o) => o.status === status).length
-                    const percentage = ((count / (filteredOrders.length || 1)) * 100).toFixed(0)
-                    const colors = {
-                      pending: "bg-[#f5bc6b]",
-                      preparing: "bg-[#93c5fd]",
-                      ready: "bg-[#e2e7d8]",
-                      completed: "bg-[#2d5a41]"
-                    }
-                    return (
-                      <div key={status} className="space-y-2">
-                        <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest">
-                          <span className="text-gray-400">{status}</span>
-                          <span className="text-gray-800">{count} ({percentage}%)</span>
-                        </div>
-                        <div className="h-4 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
-                          <div
-                            className={`${colors[status as keyof typeof colors]} h-full rounded-full transition-all duration-1000`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    )
-                  })}
+                  <StatusProgress label={t("chef.pending")} count={stats.statusDistribution.pending} total={stats.totalOrders} color="#f5bc6b" />
+                  <StatusProgress label={t("chef.preparing")} count={stats.statusDistribution.preparing} total={stats.totalOrders} color="#93c5fd" />
+                  <StatusProgress label={t("chef.ready")} count={stats.statusDistribution.ready} total={stats.totalOrders} color="#2d5a41" />
+                  <StatusProgress label={t("chef.complete")} count={stats.statusDistribution.completed} total={stats.totalOrders} color="#e5e7eb" />
                 </div>
+              </div>
 
-                <div className="mt-12 grid grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-[30px] p-6 text-center">
-                    <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Peak Hour</p>
-                    <p className="text-2xl font-black text-gray-800">12:30 PM</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-[30px] p-6 text-center">
-                    <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Wait Time</p>
-                    <p className="text-2xl font-black text-gray-800">~8.5 min</p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-[30px] p-6 text-center">
+                  <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">{t("adminReports.peakHour")}</p>
+                  <p className="text-2xl font-black text-gray-800">12:30 PM</p>
+                </div>
+                <div className="bg-gray-50 rounded-[30px] p-6 text-center">
+                  <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">{t("adminReports.waitTime")}</p>
+                  <p className="text-2xl font-black text-gray-800">~8.5 min</p>
                 </div>
               </div>
             </div>
@@ -216,4 +252,3 @@ export default function ReportsPage() {
     </ProtectedRoute>
   )
 }
-

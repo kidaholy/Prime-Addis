@@ -6,9 +6,8 @@ import { BentoNavbar } from "@/components/bento-navbar"
 import { CartSidebar } from "@/components/cart-sidebar"
 import { MenuItemCard } from "@/components/menu-item-card"
 import { OrderAnimation } from "@/components/order-animation"
-
-
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 
 interface MenuItem {
   _id: string
@@ -28,18 +27,17 @@ interface CartItem {
   quantity: number
 }
 
-
-
 export default function CashierPOSPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [loading, setLoading] = useState(false)
   const [menuLoading, setMenuLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [orderNumber, setOrderNumber] = useState("")
   const [showOrderAnimation, setShowOrderAnimation] = useState(false)
-  const { token } = useAuth()
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
+  const { token, user } = useAuth()
+  const { t } = useLanguage()
 
   // Fetch menu items from API
   useEffect(() => {
@@ -58,17 +56,17 @@ export default function CashierPOSPage() {
           const data = await response.json()
           setMenuItems(data)
         } else {
-          setError("Failed to load menu items")
+          setError(t("cashier.failedToLoadMenuItems"))
         }
       } catch (err) {
-        setError("Failed to load menu items")
+        setError(t("cashier.failedToLoadMenuItems"))
       } finally {
         setMenuLoading(false)
       }
     }
 
     fetchMenuItems()
-  }, [token])
+  }, [token, t])
 
   // Add localStorage listener for menu updates
   useEffect(() => {
@@ -120,7 +118,7 @@ export default function CashierPOSPage() {
   const handleCheckout = async () => {
     if (cartItems.length === 0) return
 
-    setLoading(true)
+    setIsCheckoutLoading(true)
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -152,11 +150,13 @@ export default function CashierPOSPage() {
           setCartItems([])
           setShowOrderAnimation(false)
         }, 4000)
+      } else {
+        alert(t("cashier.failedToCreateOrder"))
       }
     } catch (err) {
-      alert("Failed to create order")
+      alert(t("cashier.failedToCreateOrder"))
     } finally {
-      setLoading(false)
+      setIsCheckoutLoading(false)
     }
   }
 
@@ -185,7 +185,7 @@ export default function CashierPOSPage() {
                         : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                         }`}
                     >
-                      {cat === "all" ? "All Items" : cat}
+                      {cat === "all" ? t("cashier.allCategories") : cat}
                     </button>
                   ))}
                 </div>
@@ -193,18 +193,25 @@ export default function CashierPOSPage() {
 
               {/* Menu Grid Card */}
               <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[600px]">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 bg-[#2d5a41] rounded-2xl flex items-center justify-center text-2xl custom-shadow">☕</div>
+                  <div>
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t("cashier.posSystem")}</h1>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t("common.hello")}, {user?.name}</p>
+                  </div>
+                </div>
                 {menuLoading ? (
                   <div className="flex flex-col items-center justify-center py-20">
                     <div className="text-5xl animate-bounce mb-4">🥐</div>
-                    <p className="text-gray-400 font-bold">Loading Menu...</p>
+                    <p className="text-gray-400 font-bold">{t("cashier.loadingMenu")}</p>
                   </div>
                 ) : error ? (
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-red-500 mb-2">Ops! Failed to Load</h2>
+                    <h2 className="text-2xl font-bold text-red-500 mb-2">{t("cashier.failedToLoad")}</h2>
                     <p className="text-gray-500 mb-6">{error}</p>
                     <button onClick={() => window.location.reload()} className="bg-[#2d5a41] text-white px-8 py-3 rounded-full font-bold bubbly-button">
-                      Retry
+                      {t("common.retry")}
                     </button>
                   </div>
                 ) : (
@@ -212,7 +219,7 @@ export default function CashierPOSPage() {
                     {filteredItems.length === 0 ? (
                       <div className="text-center py-20">
                         <div className="text-6xl mb-4 opacity-30">🍽️</div>
-                        <h2 className="text-2xl font-bold text-gray-400 border-none outline-none">No Items Found</h2>
+                        <h2 className="text-2xl font-bold text-gray-400 border-none outline-none">{t("cashier.noItemsFound")}</h2>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -242,7 +249,7 @@ export default function CashierPOSPage() {
               <div className="bg-white rounded-[40px] p-6 custom-shadow border-4 border-[#2d5a41]/5 min-h-[600px] flex flex-col">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl">🛒</span>
-                  <h2 className="text-2xl font-bold text-gray-800 bubbly-text">Active Cart</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 bubbly-text">{t("cashier.activeCart")}</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   <CartSidebar
@@ -250,8 +257,8 @@ export default function CashierPOSPage() {
                     onRemove={handleRemoveFromCart}
                     onQuantityChange={handleQuantityChange}
                     onCheckout={handleCheckout}
-                    isLoading={loading}
-                    isEmbedded={true} // New prop to handle embedding styling
+                    isLoading={isCheckoutLoading}
+                    isEmbedded={true}
                   />
                 </div>
               </div>
@@ -271,4 +278,3 @@ export default function CashierPOSPage() {
     </ProtectedRoute>
   )
 }
-
