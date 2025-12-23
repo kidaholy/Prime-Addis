@@ -15,10 +15,10 @@ const StockSchema = new Schema<IStock>(
     {
         name: { type: String, required: true, trim: true },
         category: { type: String, required: true },
-        quantity: { type: Number, required: true, default: 0 },
+        quantity: { type: Number, default: 0 },
         unit: { type: String, required: true }, // e.g., 'kg', 'ltr', 'pcs'
         minLimit: { type: Number, default: 5 }, // Threshold for low stock warning
-        unitCost: { type: Number, required: true, default: 0 },
+        unitCost: { type: Number, default: 0 },
     },
     {
         timestamps: true,

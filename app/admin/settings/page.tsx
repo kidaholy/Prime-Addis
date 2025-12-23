@@ -33,9 +33,9 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (settings) {
       setFormData({
-        logo_url: settings.logo || "",
-        app_name: settings.appName || "Prime Addis",
-        app_tagline: settings.appTagline || "Coffee Management"
+        logo_url: settings.logo_url || "",
+        app_name: settings.app_name || "Prime Addis",
+        app_tagline: settings.app_tagline || "Coffee Management"
       })
     }
   }, [settings])
@@ -244,8 +244,8 @@ export default function AdminSettingsPage() {
                           type="button"
                           onClick={() => setUploadMethod("url")}
                           className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMethod === "url"
-                              ? "bg-white text-[#2d5a41] shadow-sm"
-                              : "text-gray-400 hover:text-gray-600"
+                            ? "bg-white text-[#2d5a41] shadow-sm"
+                            : "text-gray-400 hover:text-gray-600"
                             }`}
                         >
                           🔗 {t("adminSettings.url")}
@@ -254,8 +254,8 @@ export default function AdminSettingsPage() {
                           type="button"
                           onClick={() => setUploadMethod("file")}
                           className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMethod === "file"
-                              ? "bg-white text-[#2d5a41] shadow-sm"
-                              : "text-gray-400 hover:text-gray-600"
+                            ? "bg-white text-[#2d5a41] shadow-sm"
+                            : "text-gray-400 hover:text-gray-600"
                             }`}
                         >
                           📁 {t("adminSettings.uploadFile")}

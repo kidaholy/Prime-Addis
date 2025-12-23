@@ -167,7 +167,7 @@ export default function AdminUsersPage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {users.map((u) => {
-                      const isMe = u._id === currentUser?._id
+                      const isMe = u._id === currentUser?.id
                       const badge = u.role === "admin"
                         ? { color: "bg-red-100 text-red-600", label: "Admin" }
                         : u.role === "chef"

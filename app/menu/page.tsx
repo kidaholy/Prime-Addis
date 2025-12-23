@@ -386,11 +386,11 @@ function MenuItemCard({
       >
         {isSelected ? (
           <>
-            <span className="animate-bounce">✓</span> Added to Cart!
+            <span className="animate-bounce">✓</span> {t("menu.addedToCart")}
           </>
         ) : (
           <>
-            <span className="group-hover:animate-wiggle">🛒</span> Add to Order
+            <span className="group-hover:animate-wiggle">🛒</span> {t("menu.addToOrder")}
           </>
         )}
       </AnimatedButton>

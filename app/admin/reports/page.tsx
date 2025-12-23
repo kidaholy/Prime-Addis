@@ -203,12 +203,12 @@ export default function ReportsPage() {
             {/* Main Stats */}
             <div className="lg:col-span-9 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} Br`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
+                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
                 <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
-                <StatCard label={t("adminReports.averageValue")} value={`${stats.averageOrderValue.toFixed(0)} Br`} icon="📈" color="blue" subtext={t("adminReports.perCustomer")} />
+                <StatCard label={t("adminReports.averageValue")} value={`${stats.averageOrderValue.toFixed(0)} ${t("common.currencyBr")}`} icon="📈" color="blue" subtext={t("adminReports.perCustomer")} />
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.inventoryAssets")}</p>
-                  <h3 className="text-4xl font-black text-purple-600">{stats.inventoryValue.toFixed(0)} Br</h3>
+                  <h3 className="text-4xl font-black text-purple-600">{stats.inventoryValue.toFixed(0)} {t("common.currencyBr")}</h3>
                   <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
                     💎 {t("adminReports.netWorth")}
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">{t("adminReports.fullReport")} →</span>

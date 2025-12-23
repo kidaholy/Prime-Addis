@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
-import { Plus, Search, Trash2, Edit2, AlertTriangle, Package, ChevronRight, ArrowUpDown } from "lucide-react"
+import { Plus, Search, Trash2, Edit2, AlertTriangle, Package, ChevronRight, ArrowUpDown, ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface StockItem {
@@ -55,6 +55,11 @@ export default function AdminStockPage() {
     const [showCategoryManager, setShowCategoryManager] = useState(false)
     const [newCategoryName, setNewCategoryName] = useState("")
     const [categoryLoading, setCategoryLoading] = useState(false)
+    const [showYieldTool, setShowYieldTool] = useState(false)
+    const [selectedSourceItem, setSelectedSourceItem] = useState<StockItem | null>(null)
+    const [targetItemId, setTargetItemId] = useState("")
+    const [yieldQuantity, setYieldQuantity] = useState("1")
+    const [yieldLoading, setYieldLoading] = useState(false)
 
     useEffect(() => {
         if (token) {
@@ -156,13 +161,20 @@ export default function AdminStockPage() {
             const url = editingItem ? `/api/stock/${editingItem._id}` : "/api/stock"
             const method = editingItem ? "PUT" : "POST"
 
+            const payload = {
+                ...formData,
+                quantity: formData.quantity === "" ? 0 : Number(formData.quantity),
+                unitCost: formData.unitCost === "" ? 0 : Number(formData.unitCost),
+                minLimit: formData.minLimit === "" ? 5 : Number(formData.minLimit),
+            }
+
             const response = await fetch(url, {
                 method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             })
 
             if (response.ok) {
@@ -186,6 +198,42 @@ export default function AdminStockPage() {
             fetchStockItems()
         } catch (error) {
             console.error("Error deleting item:", error)
+        }
+    }
+
+    const handleConvert = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!selectedSourceItem || !targetItemId || !yieldQuantity) return
+
+        setYieldLoading(true)
+        try {
+            const response = await fetch("/api/stock/convert", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    sourceId: selectedSourceItem._id,
+                    targetId: targetItemId,
+                    sourceQuantity: 1,
+                    targetYield: Number(yieldQuantity),
+                }),
+            })
+
+            if (response.ok) {
+                alert(t("adminStock.conversionSuccess"))
+                setShowYieldTool(false)
+                fetchStockItems()
+            } else {
+                const data = await response.json()
+                alert(data.message || t("adminStock.failedToConvert"))
+            }
+        } catch (error) {
+            console.error("Conversion error:", error)
+            alert(t("adminStock.failedToConvert"))
+        } finally {
+            setYieldLoading(false)
         }
     }
 
@@ -405,6 +453,13 @@ export default function AdminStockPage() {
                                                                     <Edit2 className="w-4 h-4" />
                                                                 </button>
                                                                 <button
+                                                                    onClick={() => { setSelectedSourceItem(item); setShowYieldTool(true); }}
+                                                                    className="p-3 bg-[#f5bc6b]/10 hover:bg-[#f5bc6b] text-[#f5bc6b] hover:text-[#1a1a1a] rounded-2xl shadow-sm border border-[#f5bc6b]/10 transition-all active:scale-90"
+                                                                    title={t("adminStock.yieldTool")}
+                                                                >
+                                                                    <ArrowUpDown className="w-4 h-4 rotate-90" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => handleDelete(item._id)}
                                                                     className="p-3 bg-white hover:bg-red-500 text-red-500 hover:text-white rounded-2xl shadow-sm border border-gray-100 transition-all active:scale-90"
                                                                 >
@@ -497,7 +552,7 @@ export default function AdminStockPage() {
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.currentQuantity")}</label>
                                             <input
                                                 type="number"
-                                                required
+                                                step="any"
                                                 placeholder="0.00"
                                                 value={formData.quantity}
                                                 onChange={e => setFormData({ ...formData, quantity: e.target.value })}
@@ -508,7 +563,6 @@ export default function AdminStockPage() {
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.minLimit")}</label>
                                             <input
                                                 type="number"
-                                                required
                                                 placeholder={t("adminStock.alertAt")}
                                                 value={formData.minLimit}
                                                 onChange={e => setFormData({ ...formData, minLimit: e.target.value })}
@@ -521,7 +575,7 @@ export default function AdminStockPage() {
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">{t("adminStock.unitCost")}</label>
                                         <input
                                             type="number"
-                                            required
+                                            step="any"
                                             placeholder={t("adminStock.costPlaceholder")}
                                             value={formData.unitCost}
                                             onChange={e => setFormData({ ...formData, unitCost: e.target.value })}
@@ -561,6 +615,19 @@ export default function AdminStockPage() {
                 title={t("adminStock.manageCategories")}
                 value={newCategoryName}
                 onChange={setNewCategoryName}
+                t={t}
+            />
+            <YieldTool
+                show={showYieldTool}
+                onClose={() => setShowYieldTool(false)}
+                sourceItem={selectedSourceItem}
+                stockItems={stockItems}
+                targetId={targetItemId}
+                onTargetChange={setTargetItemId}
+                quantity={yieldQuantity}
+                onQuantityChange={setYieldQuantity}
+                onSubmit={handleConvert}
+                loading={yieldLoading}
                 t={t}
             />
         </ProtectedRoute>
@@ -618,6 +685,98 @@ function CategoryManager({ show, onClose, categories, onAdd, onDelete, loading, 
                 >
                     {t("common.close")}
                 </button>
+            </div>
+        </div>
+    )
+}
+
+function YieldTool({ show, onClose, sourceItem, stockItems, targetId, onTargetChange, quantity, onQuantityChange, onSubmit, loading, t }: any) {
+    if (!show || !sourceItem) return null
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="bg-white rounded-[40px] w-full max-w-lg p-10 relative z-10 custom-shadow animate-bounce-in">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-4 bg-[#f5bc6b] rounded-2xl shadow-lg shadow-[#f5bc6b]/20">
+                        <ArrowUpDown className="w-8 h-8 text-[#1a1a1a] rotate-90" />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-black text-slate-800 bubbly-text">{t("adminStock.yieldTool")}</h2>
+                        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{t("adminStock.yieldDesc")}</p>
+                    </div>
+                </div>
+
+                <form onSubmit={onSubmit} className="space-y-6">
+                    <div className="bg-gray-50 p-6 rounded-[2rem] border-2 border-dashed border-gray-200">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{t("adminStock.sourceItem")}</p>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xl font-black text-[#2d5a41]">{sourceItem.name}</span>
+                            <span className="text-sm font-bold text-gray-400">1 {sourceItem.unit}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-[#e2e7d8] flex items-center justify-center">
+                            <ArrowRight className="w-6 h-6 text-[#2d5a41] rotate-90" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">{t("adminStock.targetItem")}</label>
+                            <select
+                                required
+                                value={targetId}
+                                onChange={e => onTargetChange(e.target.value)}
+                                className="w-full bg-gray-50 border-none rounded-2xl p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-bold appearance-none cursor-pointer"
+                            >
+                                <option value="">{t("adminStock.selectTarget")}</option>
+                                {stockItems.filter((i: any) => i._id !== sourceItem._id).map((i: any) => (
+                                    <option key={i._id} value={i._id}>{i.name} ({i.unit})</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">{t("adminStock.yieldQuantity")}</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    required
+                                    min="0.01"
+                                    step="any"
+                                    value={quantity}
+                                    onChange={e => onQuantityChange(e.target.value)}
+                                    className="w-full bg-gray-50 border-none rounded-2xl p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-bold placeholder:text-gray-300"
+                                    placeholder="0.00"
+                                />
+                                {targetId && (
+                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-[#2d5a41] opacity-40">
+                                        {stockItems.find((i: any) => i._id === targetId)?.unit}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-6">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors"
+                        >
+                            {t("common.close")}
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading || !targetId}
+                            className="flex-[2] py-5 bg-[#2d5a41] text-[#e2e7d8] rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
+                        >
+                            {loading ? t("adminStock.syncing") : t("adminStock.confirmConversion")}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )
