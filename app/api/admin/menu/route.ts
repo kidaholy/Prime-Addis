@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // Create menu item
-    const menuItem = await MenuItem.create({
+    const menuItem = new MenuItem({
       name,
       category,
       price: Number(price),
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       stockItemId: stockItemId || null,
       stockConsumption: stockConsumption ? Number(stockConsumption) : 0,
     })
+    await menuItem.save()
 
     console.log("✅ Menu item created successfully:", menuItem._id)
 

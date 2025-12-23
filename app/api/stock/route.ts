@@ -62,7 +62,8 @@ export async function POST(request: Request) {
         const body = await request.json()
         console.log("📝 Stock data received:", body)
 
-        const newStock = await Stock.create(body)
+        const newStock = new Stock(body)
+        await newStock.save()
         console.log("✅ Stock item created successfully:", newStock._id)
 
         const serializedStock = {

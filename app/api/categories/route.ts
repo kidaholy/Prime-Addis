@@ -46,7 +46,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: "Name and type are required" }, { status: 400 })
         }
 
-        const newCategory = await Category.create({ name, type, description })
+        const newCategory = new Category({ name, type, description })
+        await newCategory.save()
 
         return NextResponse.json(newCategory, { status: 201 })
     } catch (error: any) {
