@@ -10,6 +10,9 @@ import { NotificationCenter } from "@/components/notification-center"
 
 const fredoka = Fredoka({ subsets: ["latin"] })
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 import { connectDB } from "@/lib/db"
 import Settings from "@/lib/models/settings"
 
@@ -24,7 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
     return acc
   }, {} as Record<string, string>)
 
-  const logoUrl = settingsObj.logo_url || "/icon.svg"
+  // Add cache-busting timestamp
+  const timestamp = Date.now()
+  const logoUrl = settingsObj.logo_url
+    ? (settingsObj.logo_url.startsWith('data:') ? settingsObj.logo_url : `${settingsObj.logo_url}${settingsObj.logo_url.includes('?') ? '&' : '?'}v=${timestamp}`)
+    : "/icon.svg"
+
   const appName = settingsObj.app_name || "Prime Addis"
 
   return {
@@ -32,9 +40,13 @@ export async function generateMetadata(): Promise<Metadata> {
     description: settingsObj.app_tagline || "Coffee Shop Management System",
     icons: {
       icon: [
+        { url: logoUrl, sizes: 'any' },
+        { url: logoUrl, type: 'image/png' },
+      ],
+      shortcut: [logoUrl],
+      apple: [
         { url: logoUrl },
       ],
-      apple: logoUrl,
     },
   }
 }

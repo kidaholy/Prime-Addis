@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+
+export const dynamic = "force-dynamic"
 import { connectDB } from "@/lib/db"
 import Settings from "@/lib/models/settings"
 
@@ -31,7 +33,7 @@ export async function GET(request: Request) {
     // Return defaults on error
     return NextResponse.json({
       logo_url: "",
-      app_name: "Prime Addis", 
+      app_name: "Prime Addis",
       app_tagline: "Coffee Management"
     })
   }

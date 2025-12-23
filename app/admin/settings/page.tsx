@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
         handleSaveSetting("app_tagline", formData.app_tagline, "string", "Application tagline")
       ])
 
-      alert("Settings saved successfully!")
+      alert("Settings saved successfully! You may need to refresh the page to see the new favicon in your browser tab.")
     } catch (error) {
       console.error("Failed to save settings:", error)
       alert("Failed to save settings. Please try again.")
