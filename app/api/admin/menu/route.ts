@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     await connectDB()
     console.log("📊 Database connected for menu retrieval")
 
-    const menuItems = await MenuItem.find({}).populate("stockItemId").lean()
+    const menuItems = await MenuItem.find({}).lean()
     console.log(`🍽️ Found ${menuItems.length} menu items in database`)
 
     // Convert ObjectId to string for frontend compatibility
@@ -60,8 +60,8 @@ export async function POST(request: Request) {
     await connectDB()
     console.log("📊 Database connected for menu item creation")
 
-    const { name, category, price, description, image, preparationTime, available, stockItemId, stockConsumption } = await request.json()
-    console.log("📝 Menu item data received:", { name, category, price, stockItemId })
+    const { name, category, price, description, image, preparationTime, available } = await request.json()
+    console.log("📝 Menu item data received:", { name, category, price })
 
     if (!name || !category || !price) {
       return NextResponse.json({ message: "Name, category, and price are required" }, { status: 400 })
@@ -76,8 +76,8 @@ export async function POST(request: Request) {
       image,
       preparationTime: preparationTime ? Number(preparationTime) : 10,
       available: available !== false,
-      stockItemId: stockItemId || null,
-      stockConsumption: stockConsumption ? Number(stockConsumption) : 0,
+      stockItemId: null,
+      stockConsumption: 0,
     })
     await menuItem.save()
 

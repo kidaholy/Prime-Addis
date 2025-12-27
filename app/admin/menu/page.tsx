@@ -5,7 +5,9 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
+
 import { useLanguage } from "@/context/language-context"
+import { compressImage, validateImageFile } from "@/lib/utils/image-utils"
 
 interface MenuItem {
   _id: string
@@ -42,13 +44,15 @@ interface MenuItemForm {
 
 export default function AdminMenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [stockItems, setStockItems] = useState<any[]>([])
+  // const [stockItems, setStockItems] = useState<any[]>([])
   const [filteredItems, setFilteredItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
+
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
+  const [imageProcessing, setImageProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [formData, setFormData] = useState<MenuItemForm>({
@@ -59,9 +63,9 @@ export default function AdminMenuPage() {
     image: "",
     preparationTime: "10",
     available: true,
-    stockItemId: "",
-    stockConsumption: "0",
+    available: true,
   })
+  const [imageInputType, setImageInputType] = useState<'file' | 'url'>('file')
   const { token } = useAuth()
   const { t } = useLanguage()
   const [categories, setCategories] = useState<any[]>([])
@@ -72,7 +76,6 @@ export default function AdminMenuPage() {
   useEffect(() => {
     if (token) {
       fetchMenuItems()
-      fetchStockItems()
       fetchCategories()
     }
   }, [token])
@@ -132,19 +135,7 @@ export default function AdminMenuPage() {
     filterItems()
   }, [menuItems, searchTerm, categoryFilter])
 
-  const fetchStockItems = async () => {
-    try {
-      const response = await fetch("/api/stock", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setStockItems(data)
-      }
-    } catch (error) {
-      console.error("Error fetching stock:", error)
-    }
-  }
+
 
   const fetchMenuItems = async () => {
     try {
@@ -224,6 +215,33 @@ export default function AdminMenuPage() {
     }
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate
+    const { valid, error } = validateImageFile(file)
+    if (!valid) {
+      alert(error)
+      return
+    }
+
+    try {
+      setImageProcessing(true)
+      const compressedImage = await compressImage(file, {
+        maxWidth: 800, // Larger for menu items
+        maxHeight: 800,
+        quality: 0.8
+      })
+      setFormData(prev => ({ ...prev, image: compressedImage }))
+    } catch (err) {
+      console.error("Image processing failed:", err)
+      alert("Failed to process image")
+    } finally {
+      setImageProcessing(false)
+    }
+  }
+
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item)
     setFormData({
@@ -234,8 +252,8 @@ export default function AdminMenuPage() {
       image: item.image || "",
       preparationTime: item.preparationTime?.toString() || "10",
       available: item.available,
-      stockItemId: item.stockItemId?._id || "",
-      stockConsumption: item.stockConsumption?.toString() || "0",
+      preparationTime: item.preparationTime?.toString() || "10",
+      available: item.available,
     })
     setShowCreateForm(true)
   }
@@ -262,7 +280,6 @@ export default function AdminMenuPage() {
     setFormData({
       name: "", category: "", price: "", description: "",
       image: "", preparationTime: "10", available: true,
-      stockItemId: "", stockConsumption: "0"
     })
     setEditingItem(null)
     setShowCreateForm(false)
@@ -353,58 +370,44 @@ export default function AdminMenuPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredItems.map((item) => {
-                      const stock = item.stockItemId
-                      const isLow = stock && stock.quantity <= stock.minLimit
-                      const isOutOfStock = stock && stock.quantity <= 0
-
-                      return (
-                        <div key={item._id} className="bg-gray-50 rounded-[35px] overflow-hidden border border-gray-100 hover:shadow-xl transition-all group flex flex-col">
-                          {/* Item Image */}
-                          <div className="h-40 bg-gray-200 relative overflow-hidden">
-                            {item.image ? (
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">☕</div>
-                            )}
-                            <div className="absolute top-4 left-4 flex flex-col gap-2">
-                              {stock && (
-                                <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${isOutOfStock ? "bg-red-500 text-white" :
-                                  isLow ? "bg-orange-400 text-white" :
-                                    "bg-[#2d5a41] text-[#e2e7d8]"
-                                  }`}>
-                                  {isOutOfStock ? t("adminMenu.outOfStock") : isLow ? t("adminMenu.lowStock") : t("adminMenu.inStock")}
-                                </div>
-                              )}
-                            </div>
-                            <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${item.available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                              {item.available ? t("adminMenu.active") : t("adminMenu.hidden")}
-                            </div>
+                    {filteredItems.map((item) => (
+                      <div key={item._id} className="bg-gray-50 rounded-[35px] overflow-hidden border border-gray-100 hover:shadow-xl transition-all group flex flex-col">
+                        {/* Item Image */}
+                        <div className="h-40 bg-gray-200 relative overflow-hidden">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">☕</div>
+                          )}
+                          <div className="absolute top-4 left-4 flex flex-col gap-2">
                           </div>
-
-                          <div className="p-5 flex-1 flex flex-col">
-                            <h3 className="font-bold text-lg mb-1 truncate">{item.name}</h3>
-                            <p className="text-xs font-bold text-[#2d5a41] uppercase tracking-wider mb-3">{item.category}</p>
-                            <p className="text-2xl font-black text-gray-800 mb-4">{item.price} {t("common.currencyBr")}</p>
-
-                            <div className="flex gap-2 mt-auto">
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm"
-                              >
-                                {t("adminMenu.edit")}
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="px-4 bg-red-50 text-red-500 font-bold py-2.5 rounded-2xl hover:bg-red-100 transition-colors text-sm"
-                              >
-                                🗑️
-                              </button>
-                            </div>
+                          <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${item.available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                            {item.available ? t("adminMenu.active") : t("adminMenu.hidden")}
                           </div>
                         </div>
-                      )
-                    })}
+
+                        <div className="p-5 flex-1 flex flex-col">
+                          <h3 className="font-bold text-lg mb-1 truncate">{item.name}</h3>
+                          <p className="text-xs font-bold text-[#2d5a41] uppercase tracking-wider mb-3">{item.category}</p>
+                          <p className="text-2xl font-black text-gray-800 mb-4">{item.price} {t("common.currencyBr")}</p>
+
+                          <div className="flex gap-2 mt-auto">
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm"
+                            >
+                              {t("adminMenu.edit")}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="px-4 bg-red-50 text-red-500 font-bold py-2.5 rounded-2xl hover:bg-red-100 transition-colors text-sm"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -430,6 +433,79 @@ export default function AdminMenuPage() {
 
               <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
+                  {/* Image Upload Section */}
+                  <div className="md:col-span-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-sm font-bold text-gray-700">{t("adminMenu.itemImage") || "Item Image"}</label>
+                      <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <button
+                          type="button"
+                          onClick={() => setImageInputType('file')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'file' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
+                        >
+                          Upload File
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImageInputType('url')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'url' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
+                        >
+                          Image URL
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-200">
+                        {formData.image ? (
+                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📷</div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 space-y-3">
+                        {imageInputType === 'file' ? (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              disabled={imageProcessing}
+                              className="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#2d5a41] file:text-white
+                                hover:file:bg-[#1a3828] cursor-pointer"
+                            />
+                            <p className="text-xs text-gray-500">{imageProcessing ? "⏳ Processing..." : "Supports JPG, PNG, WebP. Max 5MB."}</p>
+                          </>
+                        ) : (
+                          <div>
+                            <input
+                              type="url"
+                              value={formData.image}
+                              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                              placeholder="https://example.com/image.jpg"
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                            />
+                            <p className="mt-2 text-xs text-gray-500">Enter a direct link to an image.</p>
+                          </div>
+                        )}
+
+                        {formData.image && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, image: "" }))}
+                            className="text-xs text-red-500 font-bold hover:underline"
+                          >
+                            Remove Image
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
                     <input
@@ -480,31 +556,6 @@ export default function AdminMenuPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.stockLink")}</label>
-                    <select
-                      value={formData.stockItemId}
-                      onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                    >
-                      <option value="">{t("adminMenu.stockNoLink")}</option>
-                      {stockItems.map(item => (
-                        <option key={item._id} value={item._id}>{item.name} ({item.quantity} {item.unit} left)</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.stockCons")}</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.stockConsumption}
-                      onChange={(e) => setFormData({ ...formData, stockConsumption: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
-                      placeholder="e.g. 0.05"
-                    />
-                    <p className="text-[10px] text-gray-400 mt-1 pl-2 font-bold uppercase tracking-wider">{t("adminMenu.amountUsed")}</p>
-                  </div>
-                  <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.description")}</label>
                     <textarea
                       value={formData.description}
@@ -552,19 +603,20 @@ export default function AdminMenuPage() {
             </div>
           </div>
         )}
+
+        <CategoryManager
+          show={showCategoryManager}
+          onClose={() => setShowCategoryManager(false)}
+          categories={categories}
+          onAdd={handleAddCategory}
+          onDelete={handleDeleteCategory}
+          loading={categoryLoading}
+          title={t("adminMenu.manageCategories")}
+          value={newCategoryName}
+          onChange={setNewCategoryName}
+          t={t}
+        />
       </div>
-      <CategoryManager
-        show={showCategoryManager}
-        onClose={() => setShowCategoryManager(false)}
-        categories={categories}
-        onAdd={handleAddCategory}
-        onDelete={handleDeleteCategory}
-        loading={categoryLoading}
-        title={t("adminMenu.manageCategories")}
-        value={newCategoryName}
-        onChange={setNewCategoryName}
-        t={t}
-      />
     </ProtectedRoute>
   )
 }
