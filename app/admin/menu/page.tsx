@@ -38,8 +38,6 @@ interface MenuItemForm {
   image: string
   preparationTime: string
   available: boolean
-  stockItemId: string
-  stockConsumption: string
 }
 
 export default function AdminMenuPage() {
@@ -62,7 +60,6 @@ export default function AdminMenuPage() {
     description: "",
     image: "",
     preparationTime: "10",
-    available: true,
     available: true,
   })
   const [imageInputType, setImageInputType] = useState<'file' | 'url'>('file')
@@ -250,8 +247,6 @@ export default function AdminMenuPage() {
       price: item.price.toString(),
       description: item.description || "",
       image: item.image || "",
-      preparationTime: item.preparationTime?.toString() || "10",
-      available: item.available,
       preparationTime: item.preparationTime?.toString() || "10",
       available: item.available,
     })
