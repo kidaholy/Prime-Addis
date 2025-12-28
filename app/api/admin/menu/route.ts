@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     await connectDB()
     console.log("📊 Database connected for menu retrieval")
 
-    const menuItems = await MenuItem.find({}).populate("stockItemId", "name unit").lean()
+    const menuItems = await MenuItem.find({}).populate("stockItemId", "name unit status").lean()
     console.log(`🍽️ Found ${menuItems.length} menu items in database`)
 
     // Convert ObjectId to string for frontend compatibility

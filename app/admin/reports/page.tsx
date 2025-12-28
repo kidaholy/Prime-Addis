@@ -237,10 +237,10 @@ export default function ReportsPage() {
                 })()}
                 <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.inventoryAssets")}</p>
-                  <h3 className="text-4xl font-black text-purple-600">{stats.inventoryValue.toFixed(0)} {t("common.currencyBr")}</h3>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.estimatedMarketValue")}</p>
+                  <h3 className="text-4xl font-black text-purple-600">{stats.totalRevenue.toFixed(0)} {t("common.currencyBr")}</h3>
                   <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
-                    💎 {t("adminReports.netWorth")}
+                    💎 {t("adminReports.totalValuation")}: {stats.inventoryValue.toFixed(0)} {t("common.currencyBr")}
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">{t("adminReports.fullReport")} →</span>
                   </p>
                 </Link>

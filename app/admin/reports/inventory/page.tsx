@@ -153,8 +153,8 @@ export default function InventoryReportPage() {
                                 <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12 group-hover:scale-110 transition-transform"><TrendingUp size={120} /></div>
                                 <div className="relative z-10">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">{t("adminReports.estimatedMarketValue")}</p>
-                                    <div className="text-3xl font-black mb-1 leading-tight">{totalNetWorth.toLocaleString()} <span className="text-xs">Br</span></div>
-                                    <p className="text-[10px] opacity-80 font-bold uppercase tracking-widest">Total Assets (Stock + Livestock)</p>
+                                    <div className="text-3xl font-black mb-1 leading-tight">{(periodData?.sales?.summary?.totalRevenue || 0).toLocaleString()} <span className="text-xs">Br</span></div>
+                                    <p className="text-[10px] opacity-80 font-bold uppercase tracking-widest">Total Orders (Sales Revenue)</p>
                                 </div>
                             </div>
 
@@ -174,13 +174,13 @@ export default function InventoryReportPage() {
                             <div className="bg-white rounded-[2.5rem] p-8 text-[#1a1a1a] shadow-xl border border-gray-50 flex flex-col justify-between">
                                 <div>
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><TrendingUp size={20} /></div>
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Orders ({filter})</span>
+                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Package size={20} /></div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Stock Assets Value</span>
                                     </div>
                                     <div className="text-2xl font-black mb-1 text-slate-800 leading-tight">
-                                        +{(periodData?.sales?.summary?.totalRevenue || 0).toLocaleString()} <span className="text-[10px] font-bold opacity-30">ETB</span>
+                                        {totalNetWorth.toLocaleString()} <span className="text-[10px] font-bold opacity-30">ETB</span>
                                     </div>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">Total Sales Generated</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">On-Hand Stock Assets</p>
                                 </div>
                             </div>
 

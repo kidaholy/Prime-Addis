@@ -35,6 +35,7 @@ interface StockItem {
     unitCost?: number
     trackQuantity: boolean
     showStatus: boolean
+    status: 'active' | 'finished'
 }
 
 export default function StockAndExpensesPage() {
@@ -134,6 +135,7 @@ export default function StockAndExpensesPage() {
 
             if (response.ok) {
                 fetchExpenses()
+                fetchStockItems()
                 resetExpenseForm()
             } else {
                 const data = await response.json()
@@ -205,6 +207,7 @@ export default function StockAndExpensesPage() {
             })
             if (response.ok) {
                 fetchExpenses()
+                fetchStockItems()
             } else {
                 const data = await response.json()
                 alert(data.error || "Failed to delete expense")
@@ -240,6 +243,38 @@ export default function StockAndExpensesPage() {
             showStatus: item.showStatus
         })
         setShowStockForm(true)
+    }
+
+    const handleMarkFinished = async (item: StockItem) => {
+        if (!confirm(`Are you sure you want to mark ${item.name} as Finished? \n\nThis will set its quantity to 0 and block related orders.`)) return
+
+        const shouldArchive = confirm(`Do you want to ARCHIVE this record? \n\nArchiving renames it to "${item.name} (Finished)" which preserves its history in your reports and allows you to start a fresh batch next time.`)
+
+        try {
+            const updateData: any = {
+                quantity: 0,
+                status: 'finished'
+            }
+
+            if (shouldArchive) {
+                const dateStr = new Date().toISOString().split('T')[0]
+                updateData.name = `${item.name} (Finished ${dateStr})`
+            }
+
+            const response = await fetch(`/api/stock/${item._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(updateData),
+            })
+            if (response.ok) {
+                fetchStockItems()
+            }
+        } catch (error) {
+            console.error("Error marking stock as finished:", error)
+        }
     }
 
     const resetExpenseForm = () => {
@@ -461,7 +496,23 @@ export default function StockAndExpensesPage() {
                                                             <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{new Date(expense.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
                                                             <div className="flex items-center gap-6">
                                                                 <div>
-                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">🐂 Ox Value</span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">🐂 Ox Value</span>
+                                                                        {expense.oxQuantity > 0 && (
+                                                                            (() => {
+                                                                                const activeOx = stockItems.find(s => s.name.toLowerCase() === 'ox' && s.status !== 'finished');
+                                                                                if (!activeOx) return null;
+                                                                                return (
+                                                                                    <button
+                                                                                        onClick={() => handleMarkFinished(activeOx)}
+                                                                                        className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all ml-2"
+                                                                                    >
+                                                                                        Mark Finished
+                                                                                    </button>
+                                                                                )
+                                                                            })()
+                                                                        )}
+                                                                    </div>
                                                                     <p className="font-black text-2xl text-[#2d5a41]">{expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span></p>
                                                                 </div>
                                                                 <div className="w-px h-8 bg-gray-200" />
@@ -560,7 +611,11 @@ export default function StockAndExpensesPage() {
                                                                     </td>
                                                                     <td className="py-6">
                                                                         {item.showStatus ? (
-                                                                            isLow ? (
+                                                                            item.status === 'finished' ? (
+                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                                                                                    🏁 Finished
+                                                                                </span>
+                                                                            ) : isLow ? (
                                                                                 <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">
                                                                                     <AlertCircle size={10} /> Low Stock
                                                                                 </span>
@@ -574,7 +629,17 @@ export default function StockAndExpensesPage() {
                                                                         )}
                                                                     </td>
                                                                     <td className="py-6 text-right pr-4">
-                                                                        <div className="flex justify-end gap-2">
+                                                                        <div className="flex justify-end gap-2 items-center">
+                                                                            {item.status !== 'finished' && (
+                                                                                <button
+                                                                                    onClick={() => handleMarkFinished(item)}
+                                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 rounded-lg transition-all font-black text-[9px] uppercase tracking-wider border border-slate-200 hover:border-emerald-200"
+                                                                                    title="Finish and Archive"
+                                                                                >
+                                                                                    <CheckCircle2 size={12} />
+                                                                                    Finish Stock
+                                                                                </button>
+                                                                            )}
                                                                             <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#2d5a41]/10 text-[#2d5a41] rounded-xl transition-colors">
                                                                                 <Edit2 size={16} />
                                                                             </button>

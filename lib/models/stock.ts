@@ -9,6 +9,7 @@ export interface IStock extends Document {
     unitCost?: number
     trackQuantity: boolean
     showStatus: boolean
+    status: 'active' | 'finished'
     createdAt: Date
     updatedAt: Date
 }
@@ -23,6 +24,7 @@ const StockSchema = new Schema<IStock>(
         unitCost: { type: Number },
         trackQuantity: { type: Boolean, default: true },
         showStatus: { type: Boolean, default: true },
+        status: { type: String, enum: ['active', 'finished'], default: 'active' },
     },
     {
         timestamps: true,

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db"
 import Order from "@/lib/models/order"
 import MenuItem from "@/lib/models/menu-item"
 import Stock from "@/lib/models/stock"
+import DailyExpense from "@/lib/models/daily-expense"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -59,18 +60,38 @@ export async function GET(request: Request) {
             status: "completed"
         }).lean()
 
-        // 3. Fetch Menu Items (for reporting units)
+        // 3. Fetch Stock & Menu Items
+        const stockItems = await Stock.find({}).lean()
         const menuItems = await MenuItem.find({}).lean()
         const menuMap = new Map(menuItems.map(m => [m._id.toString(), m]))
 
-        // 4. Calculate Usage (Aggregated by Unit)
+        // 4. Fetch Daily Expenses (Purchases)
+        const dailyExpenses = await DailyExpense.find({
+            date: { $gte: startDate, $lte: endDate }
+        }).lean()
+
+        // 5. Aggregate Purchases
+        const purchaseStats: Record<string, number> = {}
+        dailyExpenses.forEach((exp: any) => {
+            // Aggregate Ox
+            if (exp.oxQuantity > 0) {
+                purchaseStats['ox'] = (purchaseStats['ox'] || 0) + (exp.oxQuantity || 0)
+            }
+            // Aggregate other items
+            exp.items?.forEach((item: any) => {
+                const nameKey = item.name.toLowerCase()
+                purchaseStats[nameKey] = (purchaseStats[nameKey] || 0) + (item.quantity || 0)
+            })
+        })
+
+        // 6. Calculate Consumption (Aggregated by Unit & Stock Item)
         const usageStats: Record<string, { unit: string, total: number, items: any[] }> = {
             'kg': { unit: 'kg', total: 0, items: [] },
             'liter': { unit: 'liter', total: 0, items: [] },
             'piece': { unit: 'piece', total: 0, items: [] }
         }
 
-        const itemConsumption: Record<string, { name: string, unit: string, quantity: number }> = {}
+        const itemConsumption: Record<string, { name: string, unit: string, quantity: number, stockId: string }> = {}
 
         for (const order of orders) {
             for (const item of order.items) {
@@ -81,18 +102,17 @@ export async function GET(request: Request) {
                     const unit = menuData.reportUnit || 'piece'
                     const amount = (menuData.reportQuantity || 0) * item.quantity
 
-                    // Global aggregate for this unit
                     if (usageStats[unit]) {
                         usageStats[unit].total += amount
                     }
 
-                    // Per-item breakdown
                     const itemId = item.menuItemId.toString()
                     if (!itemConsumption[itemId]) {
                         itemConsumption[itemId] = {
                             name: menuData.name,
                             unit: unit,
-                            quantity: 0
+                            quantity: 0,
+                            stockId: menuData.stockItemId?.toString() || ""
                         }
                     }
                     itemConsumption[itemId].quantity += amount
@@ -100,10 +120,30 @@ export async function GET(request: Request) {
             }
         }
 
-        // Convert itemConsumption to lists inside usageStats
-        Object.values(itemConsumption).forEach(item => {
-            if (usageStats[item.unit]) {
-                usageStats[item.unit].items.push(item)
+        // 7. Combine into full analysis
+        const stockAnalysis = stockItems.map(stock => {
+            const fullName = stock.name.toLowerCase()
+            // Extract root name (e.g., "Ox (Finished...)" -> "ox")
+            const rootName = fullName.split(' (finished')[0].trim()
+
+            const purchased = purchaseStats[rootName] || purchaseStats[fullName] || 0
+
+            // Sum all menu item consumption linked to this stock item
+            const consumed = Object.values(itemConsumption)
+                .filter(c => c.stockId === stock._id.toString())
+                .reduce((acc, c) => acc + c.quantity, 0)
+
+            return {
+                id: stock._id,
+                name: stock.name,
+                category: stock.category,
+                unit: stock.unit,
+                purchased,
+                consumed,
+                remaining: stock.quantity,
+                minLimit: stock.minLimit,
+                unitCost: stock.unitCost,
+                status: stock.status
             }
         })
 
@@ -114,10 +154,11 @@ export async function GET(request: Request) {
             summary: {
                 totalBeef: usageStats['kg'].total,
                 totalMilk: usageStats['liter'].total,
-                totalDrinks: usageStats['piece'].total
+                totalDrinks: usageStats['piece'].total,
+                totalOrders: orders.length
             },
-            usage: Object.values(usageStats),
-            totalOrders: orders.length
+            stockAnalysis,
+            usage: Object.values(usageStats)
         })
 
     } catch (error: any) {

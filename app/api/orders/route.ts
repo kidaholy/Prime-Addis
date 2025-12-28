@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
 import { connectDB } from "@/lib/db"
 import Order from "@/lib/models/order"
+import MenuItem from "@/lib/models/menu-item"
+import Stock from "@/lib/models/stock"
 import { addNotification } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
 
     await connectDB()
     console.log("📊 Database connected for order retrieval")
-    
+
     const orders = await Order.find().sort({ createdAt: -1 }).lean()
     console.log(`📦 Found ${orders.length} orders in database`)
 
@@ -66,10 +68,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Valid total amount is required" }, { status: 400 })
     }
 
+    // 🔬 Validation: Check if any item is linked to "Finished" stock
+    const menuItemIds = items.map(i => i.menuItemId)
+    const linkedMenuItems = await MenuItem.find({ _id: { $in: menuItemIds } }).populate('stockItemId')
+
+    for (const menuData of linkedMenuItems) {
+      if ((menuData.stockItemId as any)?.status === 'finished') {
+        return NextResponse.json({
+          message: `Order Failed: ${menuData.name} is currently out of stock (Finished).`,
+          outOfStockItem: menuData.name
+        }, { status: 400 })
+      }
+    }
+
     // Generate order number based on highest existing number + 1
     const lastOrder = await Order.findOne({}, { orderNumber: 1 }).sort({ orderNumber: -1 })
     let orderNumber: string
-    
+
     if (lastOrder && lastOrder.orderNumber) {
       // Increment the highest order number
       const lastNumber = Number(lastOrder.orderNumber)
@@ -78,14 +93,14 @@ export async function POST(request: Request) {
       // No orders exist, start with 001
       orderNumber = "001"
     }
-    
+
     console.log("🔢 Last order number:", lastOrder?.orderNumber || "none")
     console.log("🔢 Generated order number:", orderNumber)
-    
+
     // Log total order count for verification
     const totalOrders = await Order.countDocuments()
     console.log("📊 Total orders in database:", totalOrders)
-    
+
     // Double-check that this order number doesn't already exist (safety check)
     const existingOrder = await Order.findOne({ orderNumber })
     if (existingOrder) {
@@ -125,19 +140,19 @@ export async function POST(request: Request) {
         `🍽️ New Order #${order.orderNumber} - ${order.items.length} items (${order.totalAmount} Br)`,
         "chef"
       )
-      
+
       addNotification(
         "success",
         `✅ Order #${order.orderNumber} created successfully`,
         "cashier"
       )
-      
+
       addNotification(
         "info",
         `📋 New Order #${order.orderNumber} received - Total: ${order.totalAmount} Br`,
         "admin"
       )
-      
+
       console.log(`✅ New order notifications sent for order: ${order.orderNumber}`)
     } catch (error) {
       console.error("❌ Failed to send order notifications:", error)

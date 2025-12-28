@@ -16,12 +16,23 @@ export async function GET(request: Request) {
     jwt.verify(token, JWT_SECRET)
 
     await connectDB()
-    const menuItems = await MenuItem.find({ available: true }).lean()
+    const menuItems = await MenuItem.find({ available: true })
+      .populate('stockItemId')
+      .lean()
+
+    // Filter out items where linked stock is finished
+    const filteredItems = menuItems.filter((item: any) => {
+      if (item.stockItemId && item.stockItemId.status === 'finished') {
+        return false
+      }
+      return true
+    })
 
     // Convert ObjectId to string for frontend compatibility
-    const serializedItems = menuItems.map(item => ({
+    const serializedItems = filteredItems.map((item: any) => ({
       ...item,
-      _id: item._id.toString()
+      _id: item._id.toString(),
+      stockItemId: item.stockItemId ? item.stockItemId._id.toString() : null
     }))
 
     return NextResponse.json(serializedItems)

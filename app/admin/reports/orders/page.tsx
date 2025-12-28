@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 export default function OrdersReportPage() {
     const [filter, setFilter] = useState("today") // today, week, month, year
     const [data, setData] = useState<any>(null)
+    const [stockItems, setStockItems] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const { token } = useAuth()
     const { t } = useLanguage()
@@ -24,12 +25,21 @@ export default function OrdersReportPage() {
     const fetchReport = async () => {
         setLoading(true)
         try {
+            // Fetch Report Data
             const res = await fetch(`/api/reports/sales?period=${filter}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            if (res.ok) {
+
+            // Fetch Stock for Asset Valuation
+            const stockRes = await fetch("/api/stock", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+
+            if (res.ok && stockRes.ok) {
                 const report = await res.json()
+                const stock = await stockRes.json()
                 setData(report)
+                setStockItems(stock)
             }
         } catch (error) {
             console.error(error)
@@ -105,60 +115,75 @@ export default function OrdersReportPage() {
                         </div>
                     ) : (
                         <>
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                                <StatCard icon={DollarSign} label="Total Revenue" value={`${data?.summary.totalRevenue.toLocaleString()} ETB`} color="bg-emerald-500 text-emerald-600" />
-                                <StatCard icon={DollarSign} label="Total Expenses" value={`${data?.summary.totalExpenses.toLocaleString()} ETB`} color="bg-red-500 text-red-600" />
-                                <StatCard
-                                    icon={TrendingUp}
-                                    label="Net Profit"
-                                    value={`${data?.summary.netProfit.toLocaleString()} ETB`}
-                                    color={data?.summary.netProfit >= 0 ? "bg-emerald-500 text-emerald-600" : "bg-red-500 text-red-600"}
-                                />
-                                <StatCard icon={ShoppingBag} label="Orders" value={data?.summary.totalOrders} color="bg-blue-500 text-blue-600" />
-                                <button onClick={exportCSV} className="bg-[#2d5a41] text-white rounded-[2rem] p-6 flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform shadow-xl shadow-[#2d5a41]/20">
-                                    <Download size={24} />
-                                    <span className="font-bold">Export CSV</span>
-                                </button>
-                            </div>
+                            {(() => {
+                                const oxStockValue = stockItems.filter(i => i.name.toLowerCase() === 'ox').reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0);
+                                const physicalStockValue = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0) - oxStockValue;
+                                const totalInvestment = (data?.summary.totalOxCost || 0) + (data?.summary.totalOtherExpenses || 0) + physicalStockValue;
+                                const netRecovery = (data?.summary.totalRevenue || 0) - totalInvestment;
 
-                            {/* Expense Breakdown */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
-                                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Investment Analysis</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-gray-500 font-medium">🐄 Total Ox Cost</span>
-                                            <span className="font-black text-xl">{data?.summary.totalOxCost.toLocaleString()} ETB</span>
+                                return (
+                                    <>
+                                        {/* Stats Grid */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                                            <StatCard icon={DollarSign} label="Total Revenue" value={`${data?.summary.totalRevenue.toLocaleString()} ETB`} color="bg-emerald-500 text-emerald-600" />
+                                            <StatCard icon={DollarSign} label="Total Expenses" value={`${totalInvestment.toLocaleString()} ETB`} color="bg-red-500 text-red-600" />
+                                            <StatCard
+                                                icon={TrendingUp}
+                                                label="Net Profit"
+                                                value={`${netRecovery.toLocaleString()} ETB`}
+                                                color={netRecovery >= 0 ? "bg-emerald-500 text-emerald-600" : "bg-red-500 text-red-600"}
+                                            />
+                                            <StatCard icon={ShoppingBag} label="Orders" value={data?.summary.totalOrders} color="bg-blue-500 text-blue-600" />
+                                            <button onClick={exportCSV} className="bg-[#2d5a41] text-white rounded-[2rem] p-6 flex flex-col items-center justify-center gap-2 hover:scale-105 transition-transform shadow-xl shadow-[#2d5a41]/20">
+                                                <Download size={24} />
+                                                <span className="font-bold">Export CSV</span>
+                                            </button>
                                         </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-gray-500 font-medium">🛠️ Total Other Expenses</span>
-                                            <span className="font-black text-xl">{data?.summary.totalOtherExpenses.toLocaleString()} ETB</span>
+
+                                        {/* Expense Breakdown */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
+                                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Investment Analysis</h3>
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="text-gray-500 font-medium">🐄 Total Ox Cost</span>
+                                                        <span className="font-black text-xl">{data?.summary.totalOxCost.toLocaleString()} ETB</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="text-gray-500 font-medium">📦 Physical Stock</span>
+                                                        <span className="font-black text-xl">{physicalStockValue.toLocaleString()} ETB</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="text-gray-500 font-medium">🛠️ Total Other Expenses</span>
+                                                        <span className="font-black text-xl">{data?.summary.totalOtherExpenses.toLocaleString()} ETB</span>
+                                                    </div>
+                                                    <div className="pt-4 border-t border-gray-50 flex justify-between items-end">
+                                                        <span className="text-gray-900 font-bold uppercase text-[10px] tracking-widest">Gross Expenses</span>
+                                                        <span className="font-black text-2xl text-red-600">{totalInvestment.toLocaleString()} ETB</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-[#2d5a41] p-8 rounded-[40px] shadow-xl text-[#e2e7d8] relative overflow-hidden">
+                                                <div className="absolute -right-10 -bottom-10 opacity-10">
+                                                    <TrendingUp className="w-48 h-48" />
+                                                </div>
+                                                <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Performance Scorecard</h3>
+                                                <div className="space-y-4 relative z-10">
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="opacity-80 font-medium">Profit Margin</span>
+                                                        <span className="font-black text-3xl">
+                                                            {data?.summary.totalRevenue > 0
+                                                                ? ((netRecovery / data.summary.totalRevenue) * 100).toFixed(1)
+                                                                : 0}%
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs opacity-60">Calculated based on total revenue vs (Ox + Physical Stock + Others).</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="pt-4 border-t border-gray-50 flex justify-between items-end">
-                                            <span className="text-gray-900 font-bold uppercase text-[10px] tracking-widest">Gross Expenses</span>
-                                            <span className="font-black text-2xl text-red-600">{data?.summary.totalExpenses.toLocaleString()} ETB</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-[#2d5a41] p-8 rounded-[40px] shadow-xl text-[#e2e7d8] relative overflow-hidden">
-                                    <div className="absolute -right-10 -bottom-10 opacity-10">
-                                        <TrendingUp className="w-48 h-48" />
-                                    </div>
-                                    <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Performance Scorecard</h3>
-                                    <div className="space-y-4 relative z-10">
-                                        <div className="flex justify-between items-end">
-                                            <span className="opacity-80 font-medium">Profit Margin</span>
-                                            <span className="font-black text-3xl">
-                                                {data?.summary.totalRevenue > 0
-                                                    ? ((data.summary.netProfit / data.summary.totalRevenue) * 100).toFixed(1)
-                                                    : 0}%
-                                            </span>
-                                        </div>
-                                        <p className="text-xs opacity-60">Calculated based on total revenue vs total operational costs for this period.</p>
-                                    </div>
-                                </div>
-                            </div>
+                                    </>
+                                );
+                            })()}
 
                             {/* Detailed Table */}
                             <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 overflow-hidden">

@@ -84,12 +84,32 @@ export default function StockUsageReportPage() {
                         </div>
                     ) : (
                         <>
-                            <StatCard
-                                icon={TrendingDown}
-                                label="Total Consumption"
-                                value={`${((data?.summary?.totalBeef || 0) + (data?.summary?.totalMilk || 0) + (data?.summary?.totalDrinks || 0)).toLocaleString()} Units`}
-                                color="bg-[#2d5a41] text-white"
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <StatCard
+                                    icon={TrendingDown}
+                                    label="Total Consumption"
+                                    value={`${((data?.summary?.totalBeef || 0) + (data?.summary?.totalMilk || 0) + (data?.summary?.totalDrinks || 0)).toLocaleString()} Units`}
+                                    color="bg-[#2d5a41] text-white"
+                                />
+                                <StatCard
+                                    icon={TrendingUp}
+                                    label="Total Purchases"
+                                    value={`${data?.stockAnalysis?.reduce((sum: number, s: any) => sum + s.purchased, 0).toLocaleString()} Units`}
+                                    color="bg-emerald-500 text-emerald-600"
+                                />
+                                <StatCard
+                                    icon={Package}
+                                    label="On-Hand Assets"
+                                    value={`${data?.stockAnalysis?.reduce((sum: number, s: any) => sum + s.remaining, 0).toLocaleString()} Units`}
+                                    color="bg-blue-500 text-blue-600"
+                                />
+                                <StatCard
+                                    icon={TrendingDown}
+                                    label="Restock Required"
+                                    value={`${data?.stockAnalysis?.filter((s: any) => (s.remaining <= s.minLimit)).length} SKUs`}
+                                    color="bg-red-500 text-red-600"
+                                />
+                            </div>
 
                             {/* Consumption Highlights */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
@@ -156,9 +176,62 @@ export default function StockUsageReportPage() {
                                 </motion.div>
                             </div>
 
+                            {/* Detailed Physical Stock Flow Analysis */}
+                            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                <h3 className="text-xl font-black mb-6">Physical Stock Flow Analysis</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                <th className="pb-4 pl-4">Stock Item</th>
+                                                <th className="pb-4">Category</th>
+                                                <th className="pb-4 text-right">Purchased ({filter})</th>
+                                                <th className="pb-4 text-right">Consumed ({filter})</th>
+                                                <th className="pb-4 text-right pr-4">Remaining (Current)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {data?.stockAnalysis?.map((item: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="py-4 pl-4 font-bold text-slate-800">
+                                                        <div className="flex flex-col">
+                                                            <span>{item.name}</span>
+                                                            <span className="text-[10px] text-gray-400 font-medium">ID: {item.id.slice(-6)}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4">
+                                                        <span className="text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 px-3 py-1 rounded-full">
+                                                            {item.category}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 text-right font-black text-emerald-500 text-lg">
+                                                        {item.purchased.toLocaleString()} <span className="text-xs font-bold">{item.unit}</span>
+                                                    </td>
+                                                    <td className="py-4 text-right font-black text-red-400 text-lg">
+                                                        {item.consumed.toLocaleString()} <span className="text-xs font-bold">{item.unit}</span>
+                                                    </td>
+                                                    <td className={`py-4 text-right pr-4 font-black text-lg ${item.remaining <= (item.minLimit || 0) || item.status === 'finished' ? 'text-red-600' : 'text-slate-800'}`}>
+                                                        {item.status === 'finished' ? (
+                                                            <span className="text-sm bg-gray-100 text-gray-500 px-3 py-1 rounded-full border border-gray-200 uppercase tracking-tighter">🏁 Finished</span>
+                                                        ) : (
+                                                            <>
+                                                                {item.remaining.toLocaleString()} <span className="text-xs font-bold">{item.unit}</span>
+                                                                {item.remaining <= (item.minLimit || 0) && (
+                                                                    <div className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Low Stock</div>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             {/* Full Itemized Table */}
                             <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 overflow-hidden mt-8">
-                                <h3 className="text-xl font-black mb-6">Full Consumption Breakdown</h3>
+                                <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-[#2d5a41]">Menu Item Consumption</h3>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
