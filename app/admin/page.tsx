@@ -41,30 +41,39 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      const [ordersRes, stockRes] = await Promise.all([
-        fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/stock", { headers: { Authorization: `Bearer ${token}` } })
-      ])
+      const res = await fetch(`/api/reports/sales?period=today`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
 
-      if (ordersRes.ok && stockRes.ok) {
-        const orders = await ordersRes.json()
-        const stockItems = await stockRes.json()
+      if (res.ok) {
+        const report = await res.json()
+        const { summary } = report
 
-        const totalRevenue = orders.reduce((sum: number, o: any) => sum + o.totalAmount, 0)
-        const completedCount = orders.filter((o: any) => o.status === "completed").length
-        const pendingCount = orders.filter((o: any) => o.status === "pending").length
-        const lowStockCount = stockItems.filter((item: any) => item.quantity <= item.minLimit).length
-        const netWorth = stockItems.reduce((sum: number, item: any) => sum + (item.quantity * (item.unitCost || 0)), 0)
+        // Fetch Inventory Value separately for Net calculation
+        const stockRes = await fetch(`/api/stock`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        let inventoryValue = 0
+        let oxStockValue = 0
+        if (stockRes.ok) {
+          const items = await stockRes.json()
+          inventoryValue = items.reduce((sum: number, i: any) => sum + (i.quantity * (i.unitCost || 0)), 0)
+          oxStockValue = items.filter((i: any) => i.name.toLowerCase() === 'ox').reduce((sum: number, i: any) => sum + (i.quantity * (i.unitCost || 0)), 0)
+        }
+
+        const physicalStockValue = inventoryValue - oxStockValue
+        const totalInvestment = (summary.totalExpenses || 0) + physicalStockValue
+        const netValue = summary.totalRevenue - totalInvestment
 
         setStats({
-          totalOrders: orders.length,
-          totalRevenue,
-          totalCustomers: orders.length,
-          lowStockItems: lowStockCount,
-          pendingOrders: pendingCount,
-          completedOrders: completedCount,
-          averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
-          inventoryValue: netWorth,
+          totalOrders: summary.totalOrders,
+          totalRevenue: summary.totalRevenue,
+          totalCustomers: summary.totalOrders,
+          lowStockItems: 0,
+          pendingOrders: 0,
+          completedOrders: summary.totalOrders,
+          averageOrderValue: summary.totalRevenue / (summary.totalOrders || 1),
+          inventoryValue: netValue,
         })
       }
     } catch (err) {
@@ -108,7 +117,7 @@ export default function AdminDashboardPage() {
                 <StatCard label={t("adminDashboard.orders")} value={stats.totalOrders} icon="📋" color="white" />
                 <StatCard label={t("adminDashboard.revenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💰" color="blue" />
                 <StatCard label={t("adminDashboard.avgOrder")} value={`${stats.averageOrderValue.toFixed(0)} ${t("common.currencyBr")}`} icon="🧮" color="orange" />
-                <StatCard label={t("adminDashboard.netWorth")} value={`${stats.inventoryValue.toFixed(0)} ${t("common.currencyBr")}`} icon="💎" color="white" href="/admin/reports/inventory" />
+                <StatCard label="Inventory Net" value={`${stats.inventoryValue.toFixed(0)} ${t("common.currencyBr")}`} icon="💎" color="white" href="/admin/reports/orders" subtext="Orders - (Diary + Assets)" />
                 <StatCard label={t("adminDashboard.customers")} value={stats.totalCustomers} icon="👥" color="white" />
               </div>
 
@@ -116,14 +125,19 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-[40px] p-6 custom-shadow">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="text-2xl">⚠️</span> {t("adminDashboard.alerts")}
+                    <span className="text-2xl">⚡</span> Quick Insights
                   </h2>
                   <div className="space-y-3">
-                    {stats.lowStockItems > 0 ? (
-                      <AlertItem type="warning" text={`${stats.lowStockItems} ${t("adminDashboard.itemsLowStock")}`} subtext={t("adminDashboard.restockRequired")} />
-                    ) : (
-                      <AlertItem type="success" text={t("adminDashboard.stockHealthy")} subtext={t("adminDashboard.noImmediateAction")} />
-                    )}
+                    <AlertItem type="success" text="Operations Healthy" subtext="No immediate action required" />
+                    <Link href="/admin/reports/stock" className="block p-4 rounded-2xl border border-[#f5bc6b] bg-[#f5bc6b]/10 text-[#1a1a1a] hover:scale-[1.02] transition-transform">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-sm">📦 View Stock Status</p>
+                          <p className="text-xs opacity-70">Check beef, drinks, and milk consumption</p>
+                        </div>
+                        <span className="text-xl">→</span>
+                      </div>
+                    </Link>
                     {stats.pendingOrders > 5 ? (
                       <AlertItem type="info" text={`${stats.pendingOrders} ${t("adminDashboard.pendingOrders")}`} subtext={t("adminDashboard.kitchenBusy")} />
                     ) : (
@@ -193,7 +207,7 @@ function StatusItem({ label, status }: { label: string, status: string }) {
   )
 }
 
-function StatCard({ label, value, icon, color, href }: { label: string, value: string | number, icon: string, color: 'white' | 'blue' | 'orange', href?: string }) {
+function StatCard({ label, value, icon, color, href, subtext }: { label: string, value: string | number, icon: string, color: 'white' | 'blue' | 'orange', href?: string, subtext?: string }) {
   const styles = {
     white: "bg-white text-[#1a1a1a]",
     blue: "bg-[#93c5fd] text-[#1a1a1a]",
@@ -204,7 +218,10 @@ function StatCard({ label, value, icon, color, href }: { label: string, value: s
     <div className={`rounded-[30px] p-5 custom-shadow flex flex-col justify-between h-32 ${styles[color]} transition-transform hover:scale-105 cursor-pointer`}>
       <div className="text-3xl">{icon}</div>
       <div>
-        <p className="text-2xl font-bold leading-none mb-1">{value}</p>
+        <div className="flex justify-between items-start mb-1">
+          <p className="text-2xl font-bold leading-none">{value}</p>
+          {subtext && <span className="text-[8px] font-black uppercase opacity-60 tracking-widest">{subtext}</span>}
+        </div>
         <p className="text-xs uppercase font-bold tracking-wider opacity-70 flex justify-between items-center">
           {label}
           {href && <span className="text-[10px] bg-[#2d5a41] text-white px-2 py-0.5 rounded-full ml-auto">Report</span>}

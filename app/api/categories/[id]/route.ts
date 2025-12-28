@@ -39,3 +39,44 @@ export async function DELETE(request: Request, context: any) {
         return NextResponse.json({ message: error.message || "Failed to delete category" }, { status: 500 })
     }
 }
+
+// PUT update category (Admin only)
+export async function PUT(request: Request, context: any) {
+    try {
+        const { id } = await context.params
+        const token = request.headers.get("authorization")?.replace("Bearer ", "")
+
+        if (!token) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET) as any
+        if (decoded.role !== "admin") {
+            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+        }
+
+        await connectDB()
+
+        const body = await request.json()
+        const { name } = body
+
+        if (!name) {
+            return NextResponse.json({ message: "Name is required" }, { status: 400 })
+        }
+
+        const updatedCategory = await Category.findByIdAndUpdate(
+            id,
+            { name },
+            { new: true }
+        )
+
+        if (!updatedCategory) {
+            return NextResponse.json({ message: "Category not found" }, { status: 404 })
+        }
+
+        return NextResponse.json(updatedCategory)
+    } catch (error: any) {
+        console.error("❌ Update category error:", error)
+        return NextResponse.json({ message: error.message || "Failed to update category" }, { status: 500 })
+    }
+}

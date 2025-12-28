@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         const decoded = jwt.verify(token, JWT_SECRET) as any
         console.log("📦 Admin fetching stock items:", decoded.email || decoded.id)
 
-        if (decoded.role !== "admin") {
+        if (decoded.role !== "admin" && decoded.role !== "super-admin") {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 })
         }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         const decoded = jwt.verify(token, JWT_SECRET) as any
         console.log("🔐 Admin creating stock item:", decoded.email || decoded.id)
 
-        if (decoded.role !== "admin") {
+        if (decoded.role !== "admin" && decoded.role !== "super-admin") {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 })
         }
 

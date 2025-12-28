@@ -18,14 +18,14 @@ export async function GET(request: Request) {
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("📋 Admin fetching menu items:", decoded.email || decoded.id)
 
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super-admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
     await connectDB()
     console.log("📊 Database connected for menu retrieval")
 
-    const menuItems = await MenuItem.find({}).lean()
+    const menuItems = await MenuItem.find({}).populate("stockItemId", "name unit").lean()
     console.log(`🍽️ Found ${menuItems.length} menu items in database`)
 
     // Convert ObjectId to string for frontend compatibility
@@ -53,15 +53,15 @@ export async function POST(request: Request) {
     const decoded = jwt.verify(token, JWT_SECRET) as any
     console.log("🔐 Admin creating menu item:", decoded.email || decoded.id)
 
-    if (decoded.role !== "admin") {
+    if (decoded.role !== "admin" && decoded.role !== "super-admin") {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
     await connectDB()
     console.log("📊 Database connected for menu item creation")
 
-    const { name, category, price, description, image, preparationTime, available } = await request.json()
-    console.log("📝 Menu item data received:", { name, category, price })
+    const { name, category, price, description, image, preparationTime, available, stockItemId, stockConsumption } = await request.json()
+    console.log("📝 Menu item data received:", { name, category, price, stockItemId })
 
     if (!name || !category || !price) {
       return NextResponse.json({ message: "Name, category, and price are required" }, { status: 400 })
@@ -76,8 +76,8 @@ export async function POST(request: Request) {
       image,
       preparationTime: preparationTime ? Number(preparationTime) : 10,
       available: available !== false,
-      stockItemId: null,
-      stockConsumption: 0,
+      stockItemId: stockItemId || null,
+      stockConsumption: stockConsumption ? Number(stockConsumption) : 0,
     })
     await menuItem.save()
 

@@ -57,10 +57,25 @@ export default function ReportsPage() {
   const { token } = useAuth()
   const { t } = useLanguage()
 
+  const [periodData, setPeriodData] = useState<any>(null)
   useEffect(() => {
     fetchReportData()
     fetchStockItems()
+    fetchPeriodSummary()
   }, [token, timeRange])
+
+  const fetchPeriodSummary = async () => {
+    try {
+      const response = await fetch(`/api/reports/sales?period=${timeRange}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        setPeriodData(await response.json())
+      }
+    } catch (err) {
+      console.error("Failed to fetch summary")
+    }
+  }
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -204,8 +219,23 @@ export default function ReportsPage() {
             <div className="lg:col-span-9 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
+                {(() => {
+                  const oxStockValue = stockItems.filter(i => i.name.toLowerCase() === 'ox').reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0);
+                  const physicalStockValue = stats.inventoryValue - oxStockValue;
+                  const totalInvestment = (periodData?.summary?.totalExpenses || 0) + physicalStockValue;
+                  const netRecovery = stats.totalRevenue - totalInvestment;
+
+                  return (
+                    <StatCard
+                      label="Inventory Net"
+                      value={`${netRecovery.toLocaleString()} ${t("common.currencyBr")}`}
+                      icon="💎"
+                      color="purple"
+                      subtext="Orders - (Diary + Assets)"
+                    />
+                  );
+                })()}
                 <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
-                <StatCard label={t("adminReports.averageValue")} value={`${stats.averageOrderValue.toFixed(0)} ${t("common.currencyBr")}`} icon="📈" color="blue" subtext={t("adminReports.perCustomer")} />
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.inventoryAssets")}</p>
                   <h3 className="text-4xl font-black text-purple-600">{stats.inventoryValue.toFixed(0)} {t("common.currencyBr")}</h3>
@@ -214,15 +244,33 @@ export default function ReportsPage() {
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">{t("adminReports.fullReport")} →</span>
                   </p>
                 </Link>
-                <StatCard label={t("adminReports.totalItems")} value={`${stockItems.length}`} icon="🔢" color="purple" subtext={t("adminReports.skusInStock")} />
-                <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow text-[#e2e7d8] relative overflow-hidden group">
+
+                {/* New Report Links */}
+                <Link href="/admin/reports/orders" className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow hover:scale-105 transition-transform group relative overflow-hidden">
                   <div className="relative z-10">
-                    <h2 className="text-xl font-bold mb-4">{t("adminReports.peakHour")}</h2>
-                    <div className="text-5xl font-black mb-1 bubbly-text">12:30 PM</div>
-                    <p className="opacity-70 text-sm font-medium">{t("adminReports.fullReport")}</p>
+                    <p className="text-xs font-bold text-[#e2e7d8] opacity-60 uppercase tracking-widest mb-1">Transaction History</p>
+                    <h3 className="text-2xl font-black text-white mb-2">Orders Report</h3>
+                    <p className="text-xs text-[#e2e7d8] font-medium flex items-center gap-2">
+                      View Details <span className="text-white group-hover:translate-x-1 transition-transform">→</span>
+                    </p>
                   </div>
-                  <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full group-hover:scale-125 transition-transform duration-500"></div>
-                </div>
+                  <div className="absolute right-[-20px] bottom-[-20px] opacity-10 rotate-12">
+                    <span className="text-9xl">💸</span>
+                  </div>
+                </Link>
+
+                <Link href="/admin/reports/stock" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b] hover:scale-105 transition-transform group relative overflow-hidden">
+                  <div className="relative z-10">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Consumption Analysis</p>
+                    <h3 className="text-2xl font-black text-slate-800 mb-2">Stock Usage</h3>
+                    <p className="text-xs text-[#f5bc6b] font-bold flex items-center gap-2">
+                      View Details <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </p>
+                  </div>
+                  <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
+                    <span className="text-8xl">📦</span>
+                  </div>
+                </Link>
               </div>
 
               <div className="bg-white rounded-[40px] p-8 custom-shadow">

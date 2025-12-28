@@ -18,13 +18,9 @@ interface MenuItem {
   image?: string
   preparationTime?: number
   available: boolean
-  stockItemId?: {
-    _id: string
-    name: string
-    quantity: number
-    minLimit: number
-    unit: string
-  }
+  reportUnit?: 'kg' | 'liter' | 'piece'
+  reportQuantity?: number
+  stockItemId?: string | any
   stockConsumption?: number
   createdAt: string
   updatedAt: string
@@ -38,11 +34,15 @@ interface MenuItemForm {
   image: string
   preparationTime: string
   available: boolean
+  reportUnit: 'kg' | 'liter' | 'piece'
+  reportQuantity: string
+  stockItemId: string
+  stockConsumption: string
 }
 
 export default function AdminMenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  // const [stockItems, setStockItems] = useState<any[]>([])
+  const [stockItems, setStockItems] = useState<any[]>([])
   const [filteredItems, setFilteredItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +61,10 @@ export default function AdminMenuPage() {
     image: "",
     preparationTime: "10",
     available: true,
+    reportUnit: 'piece',
+    reportQuantity: '1',
+    stockItemId: "",
+    stockConsumption: "0"
   })
   const [imageInputType, setImageInputType] = useState<'file' | 'url'>('file')
   const { token } = useAuth()
@@ -74,8 +78,23 @@ export default function AdminMenuPage() {
     if (token) {
       fetchMenuItems()
       fetchCategories()
+      fetchStockItems()
     }
   }, [token])
+
+  const fetchStockItems = async () => {
+    try {
+      const response = await fetch("/api/stock", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setStockItems(data)
+      }
+    } catch (error) {
+      console.error("Error fetching stock:", error)
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -127,6 +146,8 @@ export default function AdminMenuPage() {
       console.error("Error deleting category:", error)
     }
   }
+
+  // Filters and search logic
 
   useEffect(() => {
     filterItems()
@@ -249,6 +270,10 @@ export default function AdminMenuPage() {
       image: item.image || "",
       preparationTime: item.preparationTime?.toString() || "10",
       available: item.available,
+      reportUnit: item.reportUnit || 'piece',
+      reportQuantity: item.reportQuantity?.toString() || "0",
+      stockItemId: item.stockItemId?._id || item.stockItemId || "",
+      stockConsumption: item.stockConsumption?.toString() || "0",
     })
     setShowCreateForm(true)
   }
@@ -275,6 +300,8 @@ export default function AdminMenuPage() {
     setFormData({
       name: "", category: "", price: "", description: "",
       image: "", preparationTime: "10", available: true,
+      reportUnit: 'piece', reportQuantity: '1',
+      stockItemId: "", stockConsumption: "0"
     })
     setEditingItem(null)
     setShowCreateForm(false)
@@ -558,6 +585,86 @@ export default function AdminMenuPage() {
                       className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm h-[80px]"
                       placeholder={t("adminMenu.descPlaceholder")}
                     />
+                  </div>
+
+                  {/* Reporting Configuration */}
+                  <div className="bg-[#2d5a41]/5 p-6 rounded-[30px] border border-[#2d5a41]/10">
+                    <h3 className="text-sm font-black text-[#2d5a41] uppercase tracking-widest mb-4">Reporting Configuration</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Reporting Unit</label>
+                        <select
+                          value={formData.reportUnit}
+                          onChange={(e) => setFormData({ ...formData, reportUnit: e.target.value as any })}
+                          className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                        >
+                          <option value="kg">kg (Beef)</option>
+                          <option value="liter">liter (Drinks/Milk)</option>
+                          <option value="piece">piece (Soft Drinks)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Amount per Sale</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="any"
+                            value={formData.reportQuantity}
+                            onChange={(e) => setFormData({ ...formData, reportQuantity: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
+                            placeholder="0.00"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2d5a41] text-xs font-bold uppercase">
+                            {formData.reportUnit}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[10px] text-gray-400 font-medium">Used for calculating total consumption in reports.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stock Linkage Configuration */}
+                  <div className="bg-[#f5bc6b]/10 p-6 rounded-[30px] border border-[#f5bc6b]/20">
+                    <h3 className="text-sm font-black text-[#8b6e3f] uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <span>📦</span> Stock Linkage (Optional)
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Link to Stock Item</label>
+                        <select
+                          value={formData.stockItemId}
+                          onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
+                          className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#f5bc6b]"
+                        >
+                          <option value="">No Stock Linked</option>
+                          {stockItems.map((stock: any) => (
+                            <option key={stock._id} value={stock._id}>
+                              {stock.name} ({stock.unit})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="mt-2 text-[10px] text-gray-400 font-medium italic">Select a stock item to auto-track inventory on every sale.</p>
+                      </div>
+
+                      {formData.stockItemId && (
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Stock Used Per Sale</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="any"
+                              value={formData.stockConsumption}
+                              onChange={(e) => setFormData({ ...formData, stockConsumption: e.target.value })}
+                              className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
+                              placeholder="1.0"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#f5bc6b] text-xs font-black">
+                              {stockItems.find(s => s._id === formData.stockItemId)?.unit || 'units'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -62,6 +62,16 @@ export async function PUT(request: Request, context: any) {
       console.log("🖼️ Processed image URL:", updateData.image)
     }
 
+    // Handle stock linkage
+    if (updateData.stockItemId === "") {
+      updateData.stockItemId = null
+    }
+    if (updateData.stockConsumption) {
+      updateData.stockConsumption = Number(updateData.stockConsumption)
+    } else if (updateData.stockConsumption === "") {
+      updateData.stockConsumption = 0
+    }
+
     // First check if the item exists
     const existingItem = await MenuItem.findById(params.id)
     console.log("🔍 Existing menu item found:", existingItem ? "Yes" : "No")

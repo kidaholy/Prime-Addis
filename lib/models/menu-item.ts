@@ -11,6 +11,8 @@ interface IMenuItem {
   ingredients?: string[]
   stockItemId?: mongoose.Types.ObjectId
   stockConsumption?: number
+  reportUnit?: 'kg' | 'liter' | 'piece'
+  reportQuantity?: number
 }
 
 const menuItemSchema = new Schema<IMenuItem>(
@@ -25,6 +27,8 @@ const menuItemSchema = new Schema<IMenuItem>(
     ingredients: [{ type: String }],
     stockItemId: { type: Schema.Types.ObjectId, ref: "Stock" },
     stockConsumption: { type: Number, default: 0 },
+    reportUnit: { type: String, enum: ['kg', 'liter', 'piece'], default: 'piece' },
+    reportQuantity: { type: Number, default: 0 },
   },
   { timestamps: true }
 )
