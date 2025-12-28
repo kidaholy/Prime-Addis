@@ -693,7 +693,7 @@ export default function StockAndExpensesPage() {
                                                             </div>
                                                         </div>
                                                     ))}
-                                                    <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: "", amount: 0 }] })} className="w-full p-3 border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-black uppercase text-gray-400 hover:text-[#2d5a41] transition-all">+ Add Item</button>
+                                                    <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: "", amount: 0, quantity: 1, unit: "" }] })} className="w-full p-3 border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-black uppercase text-gray-400 hover:text-[#2d5a41] transition-all">+ Add Item</button>
                                                 </div>
                                                 <div className="flex flex-wrap gap-2 pt-2">
                                                     {['Milk', 'Charcoal', 'Gas', 'Spices'].map(s => <button key={s} type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: s, amount: 0, quantity: 1, unit: s === 'Milk' ? 'L' : 'pcs' }] })} className="text-[9px] font-black uppercase bg-gray-50 px-3 py-1 rounded-full text-gray-400">+ {s}</button>)}
