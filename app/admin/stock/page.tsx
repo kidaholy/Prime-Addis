@@ -14,6 +14,7 @@ import {
     AlertCircle, CheckCircle2, ChevronDown
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { PlusCircle } from "lucide-react"
 
 interface DailyExpense {
     _id: string
@@ -51,6 +52,11 @@ export default function StockAndExpensesPage() {
     const [editingStock, setEditingStock] = useState<StockItem | null>(null)
     const [saveLoading, setSaveLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+
+    const [showRestockModal, setShowRestockModal] = useState(false)
+    const [restockingItem, setRestockingItem] = useState<StockItem | null>(null)
+    const [restockAmount, setRestockAmount] = useState("")
+    const [newUnitCost, setNewUnitCost] = useState("")
 
     const [expenseFormData, setExpenseFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -212,7 +218,7 @@ export default function StockAndExpensesPage() {
             confirmText: "Delete Item",
             cancelText: "Cancel"
         })
-        
+
         if (!confirmed) return
         try {
             const response = await fetch(`/api/stock/${id}`, {
@@ -227,6 +233,66 @@ export default function StockAndExpensesPage() {
         }
     }
 
+    const handleRestockSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!restockingItem) return
+
+        setSaveLoading(true)
+        try {
+            const addedAmount = Number(restockAmount)
+            const currentQuantity = restockingItem.quantity || 0
+            const newQuantity = currentQuantity + addedAmount
+
+            // If user provides a new unit cost, update it. Otherwise keep the old one.
+            // You might want to do a weighted average, but for simplicity we'll just update the current cost
+            // or keep existing if blank.
+            const updatedUnitCost = newUnitCost ? Number(newUnitCost) : restockingItem.unitCost
+
+            const response = await fetch(`/api/stock/${restockingItem._id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    quantity: newQuantity,
+                    unitCost: updatedUnitCost,
+                    status: 'active' // Reactivate if it was finished
+                }),
+            })
+
+            if (response.ok) {
+                fetchStockItems()
+                setShowRestockModal(false)
+                setRestockingItem(null)
+                setRestockAmount("")
+                setNewUnitCost("")
+                notify({
+                    title: "Stock Updated",
+                    message: `Added ${addedAmount} ${restockingItem.unit} to ${restockingItem.name}. New total: ${newQuantity} ${restockingItem.unit}.`,
+                    type: "success"
+                })
+            } else {
+                notify({
+                    title: "Update Failed",
+                    message: "Failed to update stock quantity.",
+                    type: "error"
+                })
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setSaveLoading(false)
+        }
+    }
+
+    const openRestockModal = (item: StockItem) => {
+        setRestockingItem(item)
+        setRestockAmount("")
+        setNewUnitCost(item.unitCost?.toString() || "")
+        setShowRestockModal(true)
+    }
+
     const deleteExpense = async (id: string) => {
         const confirmed = await confirm({
             title: "Delete Expense Record",
@@ -235,7 +301,7 @@ export default function StockAndExpensesPage() {
             confirmText: "Delete Record",
             cancelText: "Cancel"
         })
-        
+
         if (!confirmed) return
         try {
             const response = await fetch(`/api/admin/expenses?id=${id}`, {
@@ -299,7 +365,7 @@ export default function StockAndExpensesPage() {
             confirmText: "Mark Finished",
             cancelText: "Cancel"
         })
-        
+
         if (!confirmed) return
 
         const shouldArchive = await confirm({
@@ -690,6 +756,14 @@ export default function StockAndExpensesPage() {
                                                                     </td>
                                                                     <td className="py-6 text-right pr-4">
                                                                         <div className="flex justify-end gap-2 items-center">
+                                                                            <button
+                                                                                onClick={() => openRestockModal(item)}
+                                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8B4513]/5 hover:bg-[#8B4513] text-[#8B4513] hover:text-white rounded-lg transition-all font-black text-[9px] uppercase tracking-wider border border-[#8B4513]/20 hover:border-[#8B4513]"
+                                                                                title="Add Stock"
+                                                                            >
+                                                                                <PlusCircle size={12} />
+                                                                                Restock
+                                                                            </button>
                                                                             {item.status !== 'finished' && (
                                                                                 <button
                                                                                     onClick={() => handleMarkFinished(item)}
@@ -958,6 +1032,66 @@ export default function StockAndExpensesPage() {
                                         <button type="button" onClick={resetStockForm} className="flex-1 py-6 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
                                         <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
                                             {saveLoading ? "Saving..." : (editingStock ? "Update Stock" : "Add to Inventory")}
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Restock Modal */}
+                <AnimatePresence>
+                    {showRestockModal && restockingItem && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRestockModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="relative bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full border border-white"
+                            >
+                                <h2 className="text-2xl font-black text-slate-900 mb-1">Restock {restockingItem.name}</h2>
+                                <p className="text-sm text-gray-500 mb-6">Current Stock: {restockingItem.quantity} {restockingItem.unit}</p>
+
+                                <form onSubmit={handleRestockSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Add Quantity ({restockingItem.unit})</label>
+                                        <input
+                                            type="number"
+                                            autoFocus
+                                            placeholder="e.g. 50"
+                                            value={restockAmount}
+                                            onChange={e => setRestockAmount(e.target.value)}
+                                            className="w-full bg-gray-50 border-none rounded-[1.5rem] p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-black text-xl"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">New Unit Cost (Optional)</label>
+                                        <input
+                                            type="number"
+                                            placeholder={restockingItem.unitCost?.toString()}
+                                            value={newUnitCost}
+                                            onChange={e => setNewUnitCost(e.target.value)}
+                                            className="w-full bg-gray-50 border-none rounded-[1.5rem] p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-bold text-lg"
+                                        />
+                                    </div>
+
+                                    <div className="pt-4 flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRestockModal(false)}
+                                            className="flex-1 py-3 rounded-2xl font-bold bg-gray-100 text-gray-500"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={saveLoading}
+                                            className="flex-1 py-3 rounded-2xl font-bold bg-[#8B4513] text-white shadow-lg shadow-[#8B4513]/20"
+                                        >
+                                            {saveLoading ? 'Saving...' : 'Confirm Restock'}
                                         </button>
                                     </div>
                                 </form>
