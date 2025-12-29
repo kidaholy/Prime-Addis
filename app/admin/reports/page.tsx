@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
-import { ReportExporter, ProfitCalculator } from "@/lib/export-utils"
+import { ReportExporter, ProfitCalculator, ComprehensiveExportData } from "@/lib/export-utils"
 import { Download, FileText, Printer, Calendar, TrendingUp, Package, DollarSign } from "lucide-react"
 import Link from "next/link"
 
