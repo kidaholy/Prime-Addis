@@ -157,14 +157,10 @@ export default function ReportsPage() {
           const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
           return orderDay.getTime() === today.getTime()
         case "week":
-          const startOfWeek = new Date(today)
-          const dayOfWeek = today.getDay()
-          const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-          startOfWeek.setDate(today.getDate() + mondayOffset)
-          const endOfWeek = new Date(startOfWeek)
-          endOfWeek.setDate(startOfWeek.getDate() + 6)
-          endOfWeek.setHours(23, 59, 59, 999)
-          return orderDate >= startOfWeek && orderDate <= endOfWeek
+          const lastWeek = new Date(today);
+          lastWeek.setDate(today.getDate() - 7);
+          lastWeek.setHours(0, 0, 0, 0);
+          return orderDate >= lastWeek && orderDate <= now
         case "month":
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
           const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)

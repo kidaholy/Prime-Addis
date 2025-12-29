@@ -41,11 +41,10 @@ export async function GET(request: Request) {
                     startDate = today
                     break
                 case "week":
-                    // Start of current week (assuming Monday start)
-                    const day = today.getDay()
-                    const diff = today.getDate() - day + (day === 0 ? -6 : 1)
-                    startDate = new Date(today.setDate(diff))
-                    startDate.setHours(0, 0, 0, 0)
+                    // Last 7 days
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 7);
+                    startDate.setHours(0, 0, 0, 0);
                     break
                 case "month":
                     startDate = new Date(today.getFullYear(), today.getMonth(), 1)
