@@ -25,7 +25,6 @@ export function BentoNavbar() {
         { label: t("nav.users"), href: "/admin/users" },
         { label: t("nav.stock"), href: "/admin/stock" },
         { label: t("nav.reports"), href: "/admin/reports" },
-        { label: "🧠 BI", href: "/admin/business-intelligence" },
         { label: t("nav.settings"), href: "/admin/settings" }
     ]
 
