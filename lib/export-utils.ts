@@ -151,6 +151,12 @@ export class ReportExporter {
             text: title,
             bold: true,
             size: 32,
+            font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            },
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -165,6 +171,12 @@ export class ReportExporter {
           new TextRun({
             text: `Period: ${period.toUpperCase()}`,
             size: 24,
+            font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            },
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -178,6 +190,12 @@ export class ReportExporter {
           new TextRun({
             text: `Generated: ${new Date().toLocaleString()}`,
             size: 20,
+            font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            },
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -194,6 +212,12 @@ export class ReportExporter {
               text: "Summary",
               bold: true,
               size: 28,
+              font: {
+                name: "Noto Sans Ethiopic",
+                cs: "Noto Sans Ethiopic",
+                ascii: "Noto Sans Ethiopic",
+                hAnsi: "Noto Sans Ethiopic"
+              },
             }),
           ],
           spacing: { after: 200 },
@@ -206,13 +230,27 @@ export class ReportExporter {
           children: [
             new TableCell({
               children: [new Paragraph({
-                children: [new TextRun({ text: key, bold: true })],
+                children: [new TextRun({
+                  text: key, bold: true, font: {
+                    name: "Noto Sans Ethiopic",
+                    cs: "Noto Sans Ethiopic",
+                    ascii: "Noto Sans Ethiopic",
+                    hAnsi: "Noto Sans Ethiopic"
+                  }
+                })],
               })],
               width: { size: 40, type: WidthType.PERCENTAGE },
             }),
             new TableCell({
               children: [new Paragraph({
-                children: [new TextRun({ text: String(value) })],
+                children: [new TextRun({
+                  text: String(value), font: {
+                    name: "Noto Sans Ethiopic",
+                    cs: "Noto Sans Ethiopic",
+                    ascii: "Noto Sans Ethiopic",
+                    hAnsi: "Noto Sans Ethiopic"
+                  }
+                })],
               })],
               width: { size: 60, type: WidthType.PERCENTAGE },
             }),
@@ -252,6 +290,12 @@ export class ReportExporter {
               text: "Data",
               bold: true,
               size: 28,
+              font: {
+                name: "Noto Sans Ethiopic",
+                cs: "Noto Sans Ethiopic",
+                ascii: "Noto Sans Ethiopic",
+                hAnsi: "Noto Sans Ethiopic"
+              },
             }),
           ],
           spacing: { after: 200 },
@@ -263,7 +307,14 @@ export class ReportExporter {
         children: headers.map(header =>
           new TableCell({
             children: [new Paragraph({
-              children: [new TextRun({ text: header, bold: true })],
+              children: [new TextRun({
+                text: header, bold: true, font: {
+                  name: "Noto Sans Ethiopic",
+                  cs: "Noto Sans Ethiopic",
+                  ascii: "Noto Sans Ethiopic",
+                  hAnsi: "Noto Sans Ethiopic"
+                }
+              })],
               alignment: AlignmentType.CENTER,
             })],
             shading: { fill: "D3D3D3" },
@@ -277,7 +328,14 @@ export class ReportExporter {
           children: headers.map(header =>
             new TableCell({
               children: [new Paragraph({
-                children: [new TextRun({ text: String(row[header] || '') })],
+                children: [new TextRun({
+                  text: String(row[header] || ''), font: {
+                    name: "Noto Sans Ethiopic",
+                    cs: "Noto Sans Ethiopic",
+                    ascii: "Noto Sans Ethiopic",
+                    hAnsi: "Noto Sans Ethiopic"
+                  }
+                })],
               })],
             })
           ),
@@ -308,6 +366,12 @@ export class ReportExporter {
             new TextRun({
               text: metadata.companyName,
               size: 20,
+              font: {
+                name: "Noto Sans Ethiopic",
+                cs: "Noto Sans Ethiopic",
+                ascii: "Noto Sans Ethiopic",
+                hAnsi: "Noto Sans Ethiopic"
+              },
             }),
           ],
           alignment: AlignmentType.RIGHT,
@@ -345,6 +409,12 @@ export class ReportExporter {
             text: title,
             bold: true,
             size: 36,
+            font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            },
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -356,13 +426,27 @@ export class ReportExporter {
     children.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `Period: ${period.toUpperCase()}`, size: 24 }),
+          new TextRun({
+            text: `Period: ${period.toUpperCase()}`, size: 24, font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            }
+          }),
         ],
         alignment: AlignmentType.CENTER,
       }),
       new Paragraph({
         children: [
-          new TextRun({ text: `Generated: ${new Date().toLocaleString()}`, size: 20 }),
+          new TextRun({
+            text: `Generated: ${new Date().toLocaleString()}`, size: 20, font: {
+              name: "Noto Sans Ethiopic",
+              cs: "Noto Sans Ethiopic",
+              ascii: "Noto Sans Ethiopic",
+              hAnsi: "Noto Sans Ethiopic"
+            }
+          }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 400 },
@@ -380,6 +464,12 @@ export class ReportExporter {
               bold: true,
               size: 28,
               underline: {},
+              font: {
+                name: "Noto Sans Ethiopic",
+                cs: "Noto Sans Ethiopic",
+                ascii: "Noto Sans Ethiopic",
+                hAnsi: "Noto Sans Ethiopic"
+              },
             }),
           ],
           spacing: { before: 400, after: 200 },
@@ -391,7 +481,14 @@ export class ReportExporter {
         section.content.forEach(text => {
           children.push(
             new Paragraph({
-              children: [new TextRun({ text, size: 22 })],
+              children: [new TextRun({
+                text, size: 22, font: {
+                  name: "Noto Sans Ethiopic",
+                  cs: "Noto Sans Ethiopic",
+                  ascii: "Noto Sans Ethiopic",
+                  hAnsi: "Noto Sans Ethiopic"
+                }
+              })],
               spacing: { after: 120 },
             })
           )
@@ -404,12 +501,30 @@ export class ReportExporter {
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: key, bold: true, size: 20 })] })],
+                children: [new Paragraph({
+                  children: [new TextRun({
+                    text: key, bold: true, size: 20, font: {
+                      name: "Noto Sans Ethiopic",
+                      cs: "Noto Sans Ethiopic",
+                      ascii: "Noto Sans Ethiopic",
+                      hAnsi: "Noto Sans Ethiopic"
+                    }
+                  })]
+                })],
                 width: { size: 40, type: WidthType.PERCENTAGE },
                 shading: { fill: "F5F5F5" }
               }),
               new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: String(value), size: 20 })] })],
+                children: [new Paragraph({
+                  children: [new TextRun({
+                    text: String(value), size: 20, font: {
+                      name: "Noto Sans Ethiopic",
+                      cs: "Noto Sans Ethiopic",
+                      ascii: "Noto Sans Ethiopic",
+                      hAnsi: "Noto Sans Ethiopic"
+                    }
+                  })]
+                })],
                 width: { size: 60, type: WidthType.PERCENTAGE },
               }),
             ],
@@ -439,7 +554,14 @@ export class ReportExporter {
           children: section.headers.map(header =>
             new TableCell({
               children: [new Paragraph({
-                children: [new TextRun({ text: header, bold: true, size: 18 })],
+                children: [new TextRun({
+                  text: header, bold: true, size: 18, font: {
+                    name: "Noto Sans Ethiopic",
+                    cs: "Noto Sans Ethiopic",
+                    ascii: "Noto Sans Ethiopic",
+                    hAnsi: "Noto Sans Ethiopic"
+                  }
+                })],
                 alignment: AlignmentType.CENTER,
               })],
               shading: { fill: "D3D3D3" },
@@ -452,7 +574,14 @@ export class ReportExporter {
             children: section.headers!.map(header =>
               new TableCell({
                 children: [new Paragraph({
-                  children: [new TextRun({ text: String(row[header] || ''), size: 18 })],
+                  children: [new TextRun({
+                    text: String(row[header] || ''), size: 18, font: {
+                      name: "Noto Sans Ethiopic",
+                      cs: "Noto Sans Ethiopic",
+                      ascii: "Noto Sans Ethiopic",
+                      hAnsi: "Noto Sans Ethiopic"
+                    }
+                  })],
                 })],
               })
             ),
@@ -485,6 +614,12 @@ export class ReportExporter {
               text: `© ${new Date().getFullYear()} ${metadata.companyName}`,
               size: 18,
               italics: true,
+              font: {
+                name: "Noto Sans Ethiopic",
+                cs: "Noto Sans Ethiopic",
+                ascii: "Noto Sans Ethiopic",
+                hAnsi: "Noto Sans Ethiopic"
+              },
             }),
           ],
           alignment: AlignmentType.RIGHT,
@@ -519,18 +654,15 @@ export class ProfitCalculator {
     const totalStockValue = stockItems
       .reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
-    // Total investment = Ox costs + Other expenses + Total stock assets
-    const totalInvestment = (expenses.totalOxCost || 0) + (expenses.totalOtherExpenses || 0) + totalStockValue
-
-    // Net profit = Revenue - Total investment (Orders - (Asset + Ox))
-    const netProfit = revenue - totalInvestment
+    // Net profit = Revenue - (Ox costs + Other expenses + Stock Value)
+    const netProfit = revenue - (expenses.totalOxCost || 0) - (expenses.totalOtherExpenses || 0) - totalStockValue
 
     return {
       revenue,
       oxCost: expenses.totalOxCost || 0,
       otherExpenses: expenses.totalOtherExpenses || 0,
-      totalStockValue, // This includes ox stock as assets
-      totalInvestment,
+      totalStockValue, // Keeping for asset valuation report
+      totalInvestment: (expenses.totalOxCost || 0) + (expenses.totalOtherExpenses || 0), // Operating investment
       netProfit,
       profitMargin: revenue > 0 ? (netProfit / revenue) * 100 : 0
     }

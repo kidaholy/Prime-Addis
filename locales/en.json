@@ -65,7 +65,8 @@
         "menu": "Menu",
         "orders": "Orders",
         "users": "Users",
-        "stock": "Stock & Expenses",
+        "otherExpenses": "Physical Expense",
+        "oxCosts": "Ox Cost",
         "reports": "Reports",
         "settings": "Settings",
         "pos": "POS",
@@ -249,7 +250,9 @@
         "confidentialBusinessReport": "Confidential Business Report",
         "backToDashboard": "Back to Dashboard",
         "printReport": "Print Report",
-        "saveAsPdf": "Save as PDF"
+        "saveAsPdf": "Save as PDF",
+        "otherExpenses": "Physical Expense",
+        "oxCosts": "Ox Cost"
     },
     "adminSettings": {
         "title": "App Settings",

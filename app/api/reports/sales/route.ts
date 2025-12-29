@@ -100,7 +100,8 @@ export async function GET(request: Request) {
                 totalExpenses,
                 netProfit
             },
-            orders
+            orders,
+            dailyExpenses
         })
 
     } catch (error: any) {

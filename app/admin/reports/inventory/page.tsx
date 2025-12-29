@@ -70,10 +70,20 @@ export default function NetWorthReportPage() {
     const totalRevenue = periodData?.sales?.summary?.totalRevenue || 0
     const totalOxCost = periodData?.sales?.summary?.totalOxCost || 0
     const totalOtherExpenses = periodData?.sales?.summary?.totalOtherExpenses || 0
-    const totalStockValue = stockItems.reduce((acc, item) => acc + ((item.quantity ?? 0) * (item.unitCost ?? 0)), 0)
-    
-    // Net Worth = Revenue - (Ox Costs + Other Expenses + Stock Investment)
-    const netWorth = totalRevenue - (totalOxCost + totalOtherExpenses + totalStockValue)
+
+    // Net Worth = Revenue - (Ox Costs + Physical Expense)
+    // Group stock into the appropriate categories for the formula
+    const oxStockValue = stockItems
+        .filter(item => item.category.toLowerCase() === "meat" || item.name.toLowerCase().includes("ox"))
+        .reduce((acc, item) => acc + ((item.quantity ?? 0) * (item.unitCost ?? 0)), 0)
+
+    const otherStockValue = stockItems
+        .filter(item => !(item.category.toLowerCase() === "meat" || item.name.toLowerCase().includes("ox")))
+        .reduce((acc, item) => acc + ((item.quantity ?? 0) * (item.unitCost ?? 0)), 0)
+
+    const displayOxCosts = totalOxCost + oxStockValue
+    const displayPhysicalExpenses = totalOtherExpenses + otherStockValue
+    const netWorth = totalRevenue - (displayOxCosts + displayPhysicalExpenses)
 
     const exportNetWorthCSV = () => {
         const exportData = {
@@ -90,37 +100,69 @@ export default function NetWorthReportPage() {
                 {
                     "Component": "Ox Costs",
                     "Type": "Expense",
-                    "Amount (ብር)": `-${totalOxCost.toLocaleString()}`,
-                    "Description": "Cost of oxen purchased"
+                    "Amount (ብር)": `-${displayOxCosts.toLocaleString()}`,
+                    "Description": "Oxen purchased & stock value"
                 },
                 {
-                    "Component": "Other Expenses",
-                    "Type": "Expense", 
-                    "Amount (ብር)": `-${totalOtherExpenses.toLocaleString()}`,
-                    "Description": "Operational and other expenses"
-                },
-                {
-                    "Component": "Stock Investment",
-                    "Type": "Asset",
-                    "Amount (ብር)": `-${totalStockValue.toLocaleString()}`,
-                    "Description": "Current value of physical stock"
+                    "Component": "Physical Expense",
+                    "Type": "Expense",
+                    "Amount (ብር)": `-${displayPhysicalExpenses.toLocaleString()}`,
+                    "Description": "Operational & other stock value"
                 },
                 {
                     "Component": "Net Worth",
                     "Type": "Result",
                     "Amount (ብር)": netWorth.toLocaleString(),
-                    "Description": "Revenue - (Ox + Expenses + Stock)"
+                    "Description": "Orders - (Ox Costs + Physical Expense)"
                 }
             ],
             summary: {
                 "Total Revenue": `${totalRevenue.toLocaleString()} ብር`,
-                "Total Costs": `${(totalOxCost + totalOtherExpenses + totalStockValue).toLocaleString()} ብር`,
+                "Total Costs": `${(displayOxCosts + displayPhysicalExpenses).toLocaleString()} ብር`,
                 "Net Worth": `${netWorth.toLocaleString()} ብር`,
                 "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`
             }
         }
-        
+
         ReportExporter.exportToCSV(exportData)
+    }
+
+    const exportNetWorthWord = () => {
+        const exportData = {
+            title: "Net Worth Analysis Report",
+            period: filter,
+            headers: ["Component", "Type", "Amount", "Description"],
+            data: [
+                {
+                    "Component": "Revenue",
+                    "Type": "Income",
+                    "Amount": `${totalRevenue.toLocaleString()} ብር`,
+                    "Description": "Total sales revenue"
+                },
+                {
+                    "Component": "Ox Costs",
+                    "Type": "Expense",
+                    "Amount": `${displayOxCosts.toLocaleString()} ብር`,
+                    "Description": "Oxen purchases & stock"
+                },
+                {
+                    "Component": "Physical Expense",
+                    "Type": "Expense",
+                    "Amount": `${displayPhysicalExpenses.toLocaleString()} ብር`,
+                    "Description": "Operational expenses & stock"
+                }
+            ],
+            summary: {
+                "Net Worth": `${netWorth.toLocaleString()} ብር`,
+                "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`,
+                "Total Stock Assets": `${(oxStockValue + otherStockValue).toLocaleString()} ብር`
+            },
+            metadata: {
+                companyName: settings.app_name || "Prime Addis Coffee"
+            }
+        }
+
+        ReportExporter.exportToWord(exportData)
     }
 
     const exportNetWorthPDF = () => {
@@ -138,31 +180,25 @@ export default function NetWorthReportPage() {
                 {
                     "Component": "Ox Costs",
                     "Type": "Expense",
-                    "Amount": `${totalOxCost.toLocaleString()} ብር`,
-                    "Description": "Oxen purchases"
+                    "Amount": `${displayOxCosts.toLocaleString()} ብር`,
+                    "Description": "Oxen purchases & stock"
                 },
                 {
-                    "Component": "Other Expenses",
+                    "Component": "Physical Expense",
                     "Type": "Expense",
-                    "Amount": `${totalOtherExpenses.toLocaleString()} ብր`,
-                    "Description": "Operational expenses"
-                },
-                {
-                    "Component": "Stock Investment",
-                    "Type": "Asset",
-                    "Amount": `${totalStockValue.toLocaleString()} ብር`,
-                    "Description": "Physical stock value"
+                    "Amount": `${displayPhysicalExpenses.toLocaleString()} ብር`,
+                    "Description": "Operational expenses & stock"
                 }
             ],
             summary: {
                 "Net Worth": `${netWorth.toLocaleString()} ብር`,
-                "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`
+                "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`,
             },
             metadata: {
                 companyName: settings.app_name || "Prime Addis Coffee"
             }
         }
-        
+
         ReportExporter.exportToPDF(exportData)
     }
 
@@ -193,8 +229,15 @@ export default function NetWorthReportPage() {
                                     </button>
                                 ))}
                             </div>
-                            
+
                             <div className="flex gap-2">
+                                <button
+                                    onClick={exportNetWorthWord}
+                                    className="bg-blue-600 text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
+                                >
+                                    <FileText size={20} />
+                                    <span className="hidden md:inline font-bold">DOC</span>
+                                </button>
                                 <button
                                     onClick={exportNetWorthPDF}
                                     className="bg-[#8B4513] text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
@@ -202,7 +245,7 @@ export default function NetWorthReportPage() {
                                     <FileText size={20} />
                                     <span className="hidden md:inline font-bold">PDF</span>
                                 </button>
-                                
+
                                 <button
                                     onClick={exportNetWorthCSV}
                                     className="bg-[#D2691E] text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
@@ -210,7 +253,7 @@ export default function NetWorthReportPage() {
                                     <Download size={20} />
                                     <span className="hidden md:inline font-bold">CSV</span>
                                 </button>
-                                
+
                                 <button
                                     onClick={() => window.print()}
                                     className="bg-white text-[#8B4513] p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100"
@@ -247,9 +290,7 @@ export default function NetWorthReportPage() {
                                         <span className="text-3xl">-</span>
                                         <span className="bg-white/20 px-4 py-2 rounded-2xl">Ox Costs</span>
                                         <span className="text-3xl">-</span>
-                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Other Expenses</span>
-                                        <span className="text-3xl">-</span>
-                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Stock Investment</span>
+                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Physical Expense</span>
                                         <span className="text-3xl">=</span>
                                         <span className="bg-white text-[#8B4513] px-6 py-3 rounded-2xl font-black">
                                             {netWorth.toLocaleString()} ብር
@@ -288,7 +329,7 @@ export default function NetWorthReportPage() {
                                     </div>
                                 </motion.div>
 
-                                {/* Ox Costs */}
+                                {/* Ox Costs (Daily + Stock) */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -306,15 +347,15 @@ export default function NetWorthReportPage() {
                                             <span className="text-xs font-black uppercase tracking-wider text-red-600">Ox Costs ({filter})</span>
                                         </div>
                                         <p className="text-3xl font-black text-red-700 mb-2">
-                                            -{totalOxCost.toLocaleString()} <span className="text-sm">ብር</span>
+                                            -{displayOxCosts.toLocaleString()} <span className="text-sm">ብር</span>
                                         </p>
                                         <p className="text-xs text-red-600 font-medium">
-                                            {periodData?.sales?.dailyExpenses?.reduce((acc: number, d: any) => acc + (d.oxQuantity || 0), 0) || 0} oxen purchased
+                                            Purchases & Stock Assets
                                         </p>
                                     </div>
                                 </motion.div>
 
-                                {/* Other Expenses */}
+                                {/* Physical Expense (Daily + Stock) */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -329,18 +370,18 @@ export default function NetWorthReportPage() {
                                             <div className="p-3 bg-orange-500 text-white rounded-2xl">
                                                 <span className="text-lg">💸</span>
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-wider text-orange-600">Other Expenses ({filter})</span>
+                                            <span className="text-xs font-black uppercase tracking-wider text-orange-600">Physical Expense ({filter})</span>
                                         </div>
                                         <p className="text-3xl font-black text-orange-700 mb-2">
-                                            -{totalOtherExpenses.toLocaleString()} <span className="text-sm">ብር</span>
+                                            -{displayPhysicalExpenses.toLocaleString()} <span className="text-sm">ብር</span>
                                         </p>
                                         <p className="text-xs text-orange-600 font-medium">
-                                            Operational and miscellaneous costs
+                                            Misc & Other Stock Assets
                                         </p>
                                     </div>
                                 </motion.div>
 
-                                {/* Stock Investment */}
+                                {/* Stock Asset Card (Summary) */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -355,24 +396,23 @@ export default function NetWorthReportPage() {
                                             <div className="p-3 bg-blue-500 text-white rounded-2xl">
                                                 <Package size={20} />
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-wider text-blue-600">Stock Investment</span>
+                                            <span className="text-xs font-black uppercase tracking-wider text-blue-600">Total Stock Assets</span>
                                         </div>
                                         <p className="text-3xl font-black text-blue-700 mb-2">
-                                            -{totalStockValue.toLocaleString()} <span className="text-sm">ብር</span>
+                                            {(oxStockValue + otherStockValue).toLocaleString()} <span className="text-sm">ብር</span>
                                         </p>
                                         <p className="text-xs text-blue-600 font-medium">
-                                            Current value of {stockItems.length} stock items
+                                            Current valuation of all stock
                                         </p>
                                     </div>
                                 </motion.div>
                             </div>
 
                             {/* Final Net Worth Result */}
-                            <div className={`rounded-[40px] p-8 text-center relative overflow-hidden ${
-                                netWorth >= 0 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
-                                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                            }`}>
+                            <div className={`rounded-[40px] p-8 text-center relative overflow-hidden ${netWorth >= 0
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
+                                : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                                }`}>
                                 <div className="absolute -right-20 -bottom-20 opacity-10">
                                     <DollarSign className="w-64 h-64" />
                                 </div>
@@ -412,11 +452,10 @@ export default function NetWorthReportPage() {
                                                     <td className="py-4 pl-4 font-bold text-slate-800">#{order.orderNumber}</td>
                                                     <td className="py-4 text-gray-600 text-sm">{new Date(order.createdAt).toLocaleDateString()}</td>
                                                     <td className="py-4">
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                                                            order.status === 'completed' ? 'bg-green-100 text-green-600' :
-                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-600' : 
-                                                            'bg-yellow-100 text-yellow-600'
-                                                        }`}>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-600' :
+                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                                                                'bg-yellow-100 text-yellow-600'
+                                                            }`}>
                                                             {order.status}
                                                         </span>
                                                     </td>
@@ -440,7 +479,7 @@ export default function NetWorthReportPage() {
 
                             {/* Detailed Ox Costs Analysis */}
                             <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-red-600">Ox Costs Breakdown</h3>
+                                <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-red-600">Ox Cost Breakdown</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {periodData?.sales?.dailyExpenses?.filter((day: any) => day.oxQuantity > 0).map((day: any, idx: number) => (
                                         <div key={idx} className="bg-red-50 border border-red-200 rounded-3xl p-6">
@@ -470,6 +509,42 @@ export default function NetWorthReportPage() {
                                 </div>
                                 {periodData?.sales?.dailyExpenses?.filter((day: any) => day.oxQuantity > 0).length === 0 && (
                                     <p className="text-center text-gray-500 py-8">No ox purchases in this period</p>
+                                )}
+                            </div>
+
+                            {/* Detailed Physical Expense Analysis */}
+                            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
+                                <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-orange-600">Physical Expense Breakdown</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {periodData?.sales?.dailyExpenses?.filter((day: any) => day.otherExpenses > 0 || day.items?.length > 0).map((day: any, idx: number) => (
+                                        <div key={idx} className="bg-orange-50 border border-orange-200 rounded-3xl p-6">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h4 className="font-black text-slate-800">{new Date(day.date).toLocaleDateString()}</h4>
+                                                    <p className="text-xs text-gray-500 uppercase tracking-wider">Misc Expenses</p>
+                                                </div>
+                                                <span className="text-2xl">💸</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {day.items?.map((item: any, i: number) => (
+                                                    <div key={i} className="flex justify-between items-center bg-white/50 p-2 rounded-xl">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-700">{item.name}</p>
+                                                            <p className="text-[10px] text-gray-500">{item.quantity} {item.unit}</p>
+                                                        </div>
+                                                        <span className="text-sm font-black text-orange-600">{item.amount.toLocaleString()} ብር</span>
+                                                    </div>
+                                                ))}
+                                                <div className="pt-2 border-t border-orange-200 flex justify-between items-center">
+                                                    <span className="text-xs font-black uppercase text-gray-400">Total Day:</span>
+                                                    <span className="text-lg font-black text-orange-700">{day.otherExpenses.toLocaleString()} ብር</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {periodData?.sales?.dailyExpenses?.filter((day: any) => day.otherExpenses > 0).length === 0 && (
+                                    <p className="text-center text-gray-500 py-8">No physical expenses in this period</p>
                                 )}
                             </div>
 
@@ -517,7 +592,7 @@ export default function NetWorthReportPage() {
                                                     Total Stock Investment:
                                                 </td>
                                                 <td className="py-4 text-right pr-4 font-black text-2xl text-blue-600">
-                                                    {totalStockValue.toLocaleString()} ብር
+                                                    {(oxStockValue + otherStockValue).toLocaleString()} ብር
                                                 </td>
                                             </tr>
                                         </tfoot>
