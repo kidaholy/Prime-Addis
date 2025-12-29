@@ -13,6 +13,8 @@ import { AnimatedLoading } from "@/components/animated-loading"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 // Category icon mapping function
 const getCategoryIcon = (category: string) => {
@@ -67,6 +69,7 @@ export default function MenuPage() {
   const [error, setError] = useState<string | null>(null)
   const { token, user } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
   // Fetch menu items from API
   useEffect(() => {
@@ -146,11 +149,25 @@ export default function MenuPage() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(`Order #${data.orderNumber} sent to kitchen! Preparing your items...`)
+        notify({
+          title: "Order Placed Successfully!",
+          message: `Order #${data.orderNumber} has been sent to the kitchen.\nYour items are being prepared.`,
+          type: "success"
+        })
         setCartItems([])
+      } else {
+        notify({
+          title: "Order Failed",
+          message: "Failed to place your order. Please try again.",
+          type: "error"
+        })
       }
     } catch (err) {
-      alert("Failed to create order")
+      notify({
+        title: "Error",
+        message: "Failed to create order. Please check your connection and try again.",
+        type: "error"
+      })
     } finally {
       setLoading(false)
     }
@@ -163,7 +180,7 @@ export default function MenuPage() {
   if (user?.role === "cashier") {
     return (
       <ProtectedRoute requiredRoles={["cashier"]}>
-        <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+        <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
           <div className="max-w-7xl mx-auto">
             <BentoNavbar />
 
@@ -172,7 +189,7 @@ export default function MenuPage() {
               <div className="md:col-span-8 lg:col-span-9">
 
                 {/* Welcome Banner */}
-                <div className="bg-[#f5bc6b] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group">
+                <div className="bg-[#D2691E] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group">
                   <div className="relative z-10">
                     <h1 className="text-4xl font-bold text-white mb-2 bubbly-text">{t("menu.title")} 🥐</h1>
                     <p className="text-white/90 font-medium">{t("menu.subtitle")}</p>
@@ -212,7 +229,7 @@ export default function MenuPage() {
                               key={cat}
                               onClick={() => setCategoryFilter(cat)}
                               className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all duration-300 ${categoryFilter === cat
-                                ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                                ? "bg-[#8B4513] text-white shadow-lg scale-105"
                                 : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                                 }`}
                             >
@@ -267,6 +284,29 @@ export default function MenuPage() {
               </div>
             </div>
           </div>
+
+          {/* Confirmation and Notification Cards */}
+          <ConfirmationCard
+            isOpen={confirmationState.isOpen}
+            onClose={closeConfirmation}
+            onConfirm={confirmationState.onConfirm}
+            title={confirmationState.options.title}
+            message={confirmationState.options.message}
+            type={confirmationState.options.type}
+            confirmText={confirmationState.options.confirmText}
+            cancelText={confirmationState.options.cancelText}
+            icon={confirmationState.options.icon}
+          />
+
+          <NotificationCard
+            isOpen={notificationState.isOpen}
+            onClose={closeNotification}
+            title={notificationState.options.title}
+            message={notificationState.options.message}
+            type={notificationState.options.type}
+            autoClose={notificationState.options.autoClose}
+            duration={notificationState.options.duration}
+          />
         </div>
       </ProtectedRoute>
     )

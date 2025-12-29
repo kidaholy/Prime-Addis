@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 import {
     Plus, Search, Trash2, Edit2, Calendar,
     DollarSign, PenTool, TrendingUp, History,
@@ -72,6 +74,7 @@ export default function StockAndExpensesPage() {
 
     const { token } = useAuth()
     const { t } = useLanguage()
+    const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
     useEffect(() => {
         if (token) {
@@ -137,9 +140,18 @@ export default function StockAndExpensesPage() {
                 fetchExpenses()
                 fetchStockItems()
                 resetExpenseForm()
+                notify({
+                    title: "Expense Saved",
+                    message: "Daily expense record has been saved successfully.",
+                    type: "success"
+                })
             } else {
                 const data = await response.json()
-                alert(data.error || "Failed to save expense")
+                notify({
+                    title: "Save Failed",
+                    message: data.error || "Failed to save expense",
+                    type: "error"
+                })
             }
         } catch (error) {
             console.error("Error saving expense:", error)
@@ -172,9 +184,18 @@ export default function StockAndExpensesPage() {
             if (response.ok) {
                 fetchStockItems()
                 resetStockForm()
+                notify({
+                    title: editingStock ? "Stock Updated" : "Stock Added",
+                    message: editingStock ? "Stock item has been updated successfully." : "New stock item has been added to inventory.",
+                    type: "success"
+                })
             } else {
                 const data = await response.json()
-                alert(data.message || "Failed to save stock item")
+                notify({
+                    title: "Save Failed",
+                    message: data.message || "Failed to save stock item",
+                    type: "error"
+                })
             }
         } catch (error) {
             console.error("Error saving stock:", error)
@@ -184,7 +205,15 @@ export default function StockAndExpensesPage() {
     }
 
     const deleteStockItem = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this stock item?")) return
+        const confirmed = await confirm({
+            title: "Delete Stock Item",
+            message: "Are you sure you want to delete this stock item?\n\nThis action cannot be undone.",
+            type: "danger",
+            confirmText: "Delete Item",
+            cancelText: "Cancel"
+        })
+        
+        if (!confirmed) return
         try {
             const response = await fetch(`/api/stock/${id}`, {
                 method: "DELETE",
@@ -199,7 +228,15 @@ export default function StockAndExpensesPage() {
     }
 
     const deleteExpense = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this expense record?")) return
+        const confirmed = await confirm({
+            title: "Delete Expense Record",
+            message: "Are you sure you want to delete this expense record?\n\nThis action cannot be undone.",
+            type: "danger",
+            confirmText: "Delete Record",
+            cancelText: "Cancel"
+        })
+        
+        if (!confirmed) return
         try {
             const response = await fetch(`/api/admin/expenses?id=${id}`, {
                 method: "DELETE",
@@ -208,9 +245,18 @@ export default function StockAndExpensesPage() {
             if (response.ok) {
                 fetchExpenses()
                 fetchStockItems()
+                notify({
+                    title: "Expense Deleted",
+                    message: "Expense record has been deleted successfully.",
+                    type: "success"
+                })
             } else {
                 const data = await response.json()
-                alert(data.error || "Failed to delete expense")
+                notify({
+                    title: "Delete Failed",
+                    message: data.error || "Failed to delete expense",
+                    type: "error"
+                })
             }
         } catch (error) {
             console.error("Error deleting expense:", error)
@@ -246,9 +292,23 @@ export default function StockAndExpensesPage() {
     }
 
     const handleMarkFinished = async (item: StockItem) => {
-        if (!confirm(`Are you sure you want to mark ${item.name} as Finished? \n\nThis will set its quantity to 0 and block related orders.`)) return
+        const confirmed = await confirm({
+            title: "Mark Stock as Finished",
+            message: `Are you sure you want to mark ${item.name} as Finished?\n\nThis will set its quantity to 0 and block related orders.`,
+            type: "warning",
+            confirmText: "Mark Finished",
+            cancelText: "Cancel"
+        })
+        
+        if (!confirmed) return
 
-        const shouldArchive = confirm(`Do you want to ARCHIVE this record? \n\nArchiving renames it to "${item.name} (Finished)" which preserves its history in your reports and allows you to start a fresh batch next time.`)
+        const shouldArchive = await confirm({
+            title: "Archive This Record?",
+            message: `Do you want to ARCHIVE this record?\n\nArchiving renames it to "${item.name} (Finished)" which preserves its history in your reports and allows you to start a fresh batch next time.`,
+            type: "info",
+            confirmText: "Yes, Archive",
+            cancelText: "No, Just Mark Finished"
+        })
 
         try {
             const updateData: any = {
@@ -325,7 +385,7 @@ export default function StockAndExpensesPage() {
 
     return (
         <ProtectedRoute requiredRoles={["admin"]}>
-            <div className="min-h-screen bg-[#e2e7d8] p-4 md:p-8 font-sans text-slate-800">
+            <div className="min-h-screen bg-white p-4 md:p-8 font-sans text-slate-800">
                 <div className="max-w-7xl mx-auto">
                     <BentoNavbar />
 
@@ -336,7 +396,7 @@ export default function StockAndExpensesPage() {
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="bg-[#2d5a41] rounded-[40px] p-8 text-[#e2e7d8] custom-shadow overflow-hidden relative"
+                                className="bg-[#8B4513] rounded-[40px] p-8 text-white custom-shadow overflow-hidden relative"
                             >
                                 <div className="absolute -right-10 -bottom-10 opacity-10">
                                     {activeTab === 'expenses' ? <TrendingUp className="w-48 h-48" /> : <Package className="w-48 h-48" />}
@@ -397,8 +457,8 @@ export default function StockAndExpensesPage() {
                                     <h2 className="text-xl font-black text-slate-800 tracking-tight">
                                         {activeTab === 'expenses' ? 'Record Ox Cost' : 'Physical Operations'}
                                     </h2>
-                                    <div className="p-2 bg-[#2d5a41]/10 rounded-xl">
-                                        {activeTab === 'expenses' ? <TrendingUp className="w-5 h-5 text-[#2d5a41]" /> : <Plus className="w-5 h-5 text-[#2d5a41]" />}
+                                    <div className="p-2 bg-[#8B4513]/10 rounded-xl">
+                                        {activeTab === 'expenses' ? <TrendingUp className="w-5 h-5 text-[#8B4513]" /> : <Plus className="w-5 h-5 text-[#8B4513]" />}
                                     </div>
                                 </div>
                                 <p className="text-gray-500 text-sm font-medium">
@@ -411,7 +471,7 @@ export default function StockAndExpensesPage() {
                                         if (activeTab === 'expenses') { resetExpenseForm(); setShowForm(true); }
                                         else { resetStockForm(); setShowStockForm(true); }
                                     }}
-                                    className="w-full bg-[#f5bc6b] text-slate-900 py-4 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[#f5bc6b]/20 hover:scale-[1.02] active:scale-98 transition-all"
+                                    className="w-full bg-[#D2691E] text-slate-900 py-4 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[#D2691E]/20 hover:scale-[1.02] active:scale-98 transition-all"
                                 >
                                     {activeTab === 'expenses' ? 'Log Ox Price' : 'Add Physical Item'}
                                 </button>
@@ -424,13 +484,13 @@ export default function StockAndExpensesPage() {
                             <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
                                 <button
                                     onClick={() => setActiveTab("expenses")}
-                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#2d5a41] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
+                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
                                 >
                                     🐂 Ox Diary
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("inventory")}
-                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#2d5a41] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
+                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
                                 >
                                     📦 Physical Stock & Expenses
                                 </button>
@@ -444,20 +504,20 @@ export default function StockAndExpensesPage() {
                                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                                     <div>
                                         <h1 className="text-3xl font-black text-slate-900 tracking-tight bubbly-text">
-                                            {activeTab === 'expenses' ? <>Daily <span className="text-[#2d5a41]">Expenses</span></> : <>Physical <span className="text-[#2d5a41]">Stock</span></>}
+                                            {activeTab === 'expenses' ? <>Daily <span className="text-[#8B4513]">Expenses</span></> : <>Physical <span className="text-[#8B4513]">Stock</span></>}
                                         </h1>
                                         <p className="text-gray-500 font-medium mt-1">
                                             {activeTab === 'expenses' ? 'Observational financial record of operations.' : 'Itemized list of all physical assets and quantities.'}
                                         </p>
                                     </div>
                                     <div className="relative group w-full md:w-64">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d5a41] transition-colors" />
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#8B4513] transition-colors" />
                                         <input
                                             type="text"
                                             placeholder={activeTab === 'expenses' ? "Search by date..." : "Search items..."}
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[#2d5a41]/10 outline-none font-bold text-sm"
+                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[#8B4513]/10 outline-none font-bold text-sm"
                                         />
                                     </div>
                                 </div>
@@ -488,9 +548,9 @@ export default function StockAndExpensesPage() {
                                                     className="group relative flex items-center justify-between p-6 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-xl transition-all"
                                                 >
                                                     <div className="flex items-center gap-6">
-                                                        <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center group-hover:bg-[#2d5a41]/5 transition-colors">
-                                                            <span className="text-[10px] font-black uppercase text-[#2d5a41]/40">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                            <span className="text-xl font-black text-[#2d5a41] leading-none">{new Date(expense.date).getDate()}</span>
+                                                        <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center group-hover:bg-[#8B4513]/5 transition-colors">
+                                                            <span className="text-[10px] font-black uppercase text-[#8B4513]/40">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short' })}</span>
+                                                            <span className="text-xl font-black text-[#8B4513] leading-none">{new Date(expense.date).getDate()}</span>
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{new Date(expense.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
@@ -513,7 +573,7 @@ export default function StockAndExpensesPage() {
                                                                             })()
                                                                         )}
                                                                     </div>
-                                                                    <p className="font-black text-2xl text-[#2d5a41]">{expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span></p>
+                                                                    <p className="font-black text-2xl text-[#8B4513]">{expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span></p>
                                                                 </div>
                                                                 <div className="w-px h-8 bg-gray-200" />
                                                                 <div>
@@ -536,7 +596,7 @@ export default function StockAndExpensesPage() {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => handleEditExpense(expense)}
-                                                            className="p-3 bg-white hover:bg-[#2d5a41] text-[#2d5a41] hover:text-white rounded-2xl shadow-sm border border-gray-100 transition-all active:scale-90"
+                                                            className="p-3 bg-white hover:bg-[#8B4513] text-[#8B4513] hover:text-white rounded-2xl shadow-sm border border-gray-100 transition-all active:scale-90"
                                                         >
                                                             <Edit2 className="w-4 h-4" />
                                                         </button>
@@ -558,7 +618,7 @@ export default function StockAndExpensesPage() {
                                             <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">📋 Inventory List</h3>
                                             <button
                                                 onClick={() => { resetExpenseForm(); setShowForm(true); }}
-                                                className="px-4 py-2 bg-[#2d5a41]/5 hover:bg-[#2d5a41]/10 text-[#2d5a41] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                className="px-4 py-2 bg-[#8B4513]/5 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                             >
                                                 + Record Operational Costs (Charcoal, Gas...)
                                             </button>
@@ -640,7 +700,7 @@ export default function StockAndExpensesPage() {
                                                                                     Finish Stock
                                                                                 </button>
                                                                             )}
-                                                                            <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#2d5a41]/10 text-[#2d5a41] rounded-xl transition-colors">
+                                                                            <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
                                                                                 <Edit2 size={16} />
                                                                             </button>
                                                                             <button onClick={() => deleteStockItem(item._id)} className="p-2 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
@@ -688,12 +748,12 @@ export default function StockAndExpensesPage() {
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Date</label>
                                             <div className="relative">
-                                                <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2d5a41]" />
+                                                <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8B4513]" />
                                                 <input
                                                     type="date"
                                                     value={expenseFormData.date}
                                                     onChange={e => setExpenseFormData({ ...expenseFormData, date: e.target.value })}
-                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] pl-16 pr-6 py-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] pl-16 pr-6 py-5 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-black text-lg"
                                                     required
                                                 />
                                             </div>
@@ -779,7 +839,7 @@ export default function StockAndExpensesPage() {
 
                                         <div className="flex gap-4 pt-6">
                                             <button type="button" onClick={resetExpenseForm} className="flex-1 py-6 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
-                                            <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#2d5a41] text-[#e2e7d8] rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                            <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
                                                 {saveLoading ? "Saving..." : (editingExpense ? "Update Entry" : "Commit Record")}
                                             </button>
                                         </div>
@@ -896,7 +956,7 @@ export default function StockAndExpensesPage() {
 
                                     <div className="flex gap-4 pt-6">
                                         <button type="button" onClick={resetStockForm} className="flex-1 py-6 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
-                                        <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#2d5a41] text-[#e2e7d8] rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                        <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
                                             {saveLoading ? "Saving..." : (editingStock ? "Update Stock" : "Add to Inventory")}
                                         </button>
                                     </div>
@@ -905,6 +965,29 @@ export default function StockAndExpensesPage() {
                         </div>
                     )}
                 </AnimatePresence>
+
+                {/* Confirmation and Notification Cards */}
+                <ConfirmationCard
+                    isOpen={confirmationState.isOpen}
+                    onClose={closeConfirmation}
+                    onConfirm={confirmationState.onConfirm}
+                    title={confirmationState.options.title}
+                    message={confirmationState.options.message}
+                    type={confirmationState.options.type}
+                    confirmText={confirmationState.options.confirmText}
+                    cancelText={confirmationState.options.cancelText}
+                    icon={confirmationState.options.icon}
+                />
+
+                <NotificationCard
+                    isOpen={notificationState.isOpen}
+                    onClose={closeNotification}
+                    title={notificationState.options.title}
+                    message={notificationState.options.message}
+                    type={notificationState.options.type}
+                    autoClose={notificationState.options.autoClose}
+                    duration={notificationState.options.duration}
+                />
             </div>
         </ProtectedRoute>
     )

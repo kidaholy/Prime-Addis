@@ -5,6 +5,8 @@ import { BentoNavbar } from "@/components/bento-navbar"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface User {
   _id: string
@@ -28,6 +30,7 @@ export default function AdminUsersPage() {
 
   const { token, user: currentUser } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
   useEffect(() => {
     if (token) fetchUsers()
@@ -70,13 +73,27 @@ export default function AdminUsersPage() {
       if (response.ok) {
         const data = await response.json()
         if (!editingUser) {
-          alert(`✅ User created!\nEmail: ${data.credentials.email}\nPassword: ${data.credentials.password}`)
+          notify({
+            title: "User Created Successfully!",
+            message: `Email: ${data.credentials.email}\nPassword: ${data.credentials.password}`,
+            type: "success"
+          })
+        } else {
+          notify({
+            title: "User Updated",
+            message: "User information has been updated successfully.",
+            type: "success"
+          })
         }
         resetForm()
         fetchUsers()
       } else {
         const errorData = await response.json()
-        alert(errorData.message || "Failed to save user")
+        notify({
+          title: "Save Failed",
+          message: errorData.message || "Failed to save user",
+          type: "error"
+        })
       }
     } catch (err) {
       console.error("Failed to save user")
@@ -86,7 +103,15 @@ export default function AdminUsersPage() {
   }
 
   const handleDelete = async (userToDelete: User) => {
-    if (!confirm(`Are you sure you want to delete "${userToDelete.name}"?`)) return
+    const confirmed = await confirm({
+      title: "Delete User",
+      message: `Are you sure you want to delete "${userToDelete.name}"?\n\nThis action cannot be undone.`,
+      type: "danger",
+      confirmText: "Delete User",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
 
     try {
       const response = await fetch(`/api/users/${userToDelete._id}`, {
@@ -129,28 +154,28 @@ export default function AdminUsersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Control Sidebar */}
             <div className="lg:col-span-3 flex flex-col gap-6 sticky top-4">
-              <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow text-[#e2e7d8]">
+              <div className="bg-[#8B4513] rounded-[40px] p-8 custom-shadow text-white">
                 <h1 className="text-4xl font-bold mb-2 bubbly-text">{t("adminUsers.title")} 👥</h1>
                 <p className="opacity-90 font-medium mb-6">{t("adminUsers.totalActiveStaff")}: {users.length}</p>
                 <button
                   onClick={() => { resetForm(); setShowForm(true); }}
-                  className="w-full bg-[#f5bc6b] text-[#1a1a1a] px-8 py-4 rounded-full font-bold shadow-xl hover:shadow-[#f5bc6b]/20 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full bg-[#D2691E] text-white px-8 py-4 rounded-full font-bold shadow-xl hover:shadow-[#D2691E]/20 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-xl">✨</span> {t("adminUsers.addNewMember")}
                 </button>
               </div>
 
-              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow relative overflow-hidden group">
+              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow relative overflow-hidden group">
                 <div className="relative z-10">
-                  <h2 className="text-2xl font-bold mb-2">{t("adminUsers.permissionsCard")}</h2>
-                  <p className="text-gray-700 font-medium">{t("adminUsers.permissionsDesc")}</p>
+                  <h2 className="text-2xl font-bold mb-2 text-white">{t("adminUsers.permissionsCard")}</h2>
+                  <p className="text-white/80 font-medium">{t("adminUsers.permissionsDesc")}</p>
                 </div>
                 <div className="absolute -bottom-6 -right-6 text-9xl opacity-10 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">🛡️</div>
               </div>
@@ -169,14 +194,14 @@ export default function AdminUsersPage() {
                     {users.map((u) => {
                       const isMe = u._id === currentUser?.id
                       const badge = u.role === "admin"
-                        ? { color: "bg-red-100 text-red-600", label: "Admin" }
+                        ? { color: "bg-[#8B4513] text-white", label: "Admin" }
                         : u.role === "chef"
-                          ? { color: "bg-blue-100 text-blue-600", label: "Chef" }
-                          : { color: "bg-emerald-100 text-emerald-600", label: "Cashier" }
+                          ? { color: "bg-[#D2691E] text-white", label: "Chef" }
+                          : { color: "bg-[#CD853F] text-white", label: "Cashier" }
 
                       return (
-                        <div key={u._id} className="bg-gray-50 rounded-[35px] p-6 hover:shadow-xl transition-all border-4 border-transparent hover:border-[#2d5a41]/10 flex flex-col group relative overflow-hidden">
-                          {isMe && <div className="absolute top-4 right-4 text-xs font-black text-[#2d5a41] bg-[#2d5a41]/10 px-3 py-1 rounded-full uppercase tracking-widest">You</div>}
+                        <div key={u._id} className="bg-gray-50 rounded-[35px] p-6 hover:shadow-xl transition-all border-4 border-transparent hover:border-[#8B4513]/10 flex flex-col group relative overflow-hidden">
+                          {isMe && <div className="absolute top-4 right-4 text-xs font-black text-[#8B4513] bg-[#8B4513]/10 px-3 py-1 rounded-full uppercase tracking-widest">You</div>}
                           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mb-4 custom-shadow group-hover:scale-110 transition-transform">
                             {u.role === "admin" ? "🎩" : u.role === "chef" ? "🍳" : "☕"}
                           </div>
@@ -185,7 +210,7 @@ export default function AdminUsersPage() {
 
                           <div className="flex justify-between items-center mt-auto bg-white/50 rounded-[25px] p-4">
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${badge.color}`}>
-                              {t(`adminUsers.${u.role}`)}
+                              {badge.label}
                             </span>
                             <div className="flex gap-2">
                               <button onClick={() => handleEdit(u)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center custom-shadow hover:scale-110 transition-transform">✏️</button>
@@ -221,7 +246,7 @@ export default function AdminUsersPage() {
                       required
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-medium"
+                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-medium"
                     />
                   </div>
                   <div className="space-y-2">
@@ -231,7 +256,7 @@ export default function AdminUsersPage() {
                       required
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-medium"
+                      className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-medium"
                     />
                   </div>
                   <div className="space-y-2">
@@ -242,7 +267,7 @@ export default function AdminUsersPage() {
                           key={r}
                           type="button"
                           onClick={() => setFormData({ ...formData, role: r as any })}
-                          className={`py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${formData.role === r ? "bg-[#2d5a41] text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}
+                          className={`py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${formData.role === r ? "bg-[#8B4513] text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}
                         >
                           {t(`adminUsers.${r}`)}
                         </button>
@@ -259,7 +284,7 @@ export default function AdminUsersPage() {
                         required={!editingUser}
                         value={formData.password}
                         onChange={e => setFormData({ ...formData, password: e.target.value })}
-                        className="flex-1 bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-mono"
+                        className="flex-1 bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-mono"
                       />
                       <button
                         type="button"
@@ -283,7 +308,7 @@ export default function AdminUsersPage() {
                     <button
                       type="submit"
                       disabled={formLoading}
-                      className="flex-[2] bg-[#2d5a41] text-[#e2e7d8] py-4 rounded-2xl font-bold shadow-xl shadow-[#2d5a41]/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
+                      className="flex-[2] bg-[#8B4513] text-white py-4 rounded-2xl font-bold shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
                     >
                       {formLoading ? t("common.loading") : (editingUser ? t("adminUsers.updateProfile") : t("adminUsers.createAccount"))}
                     </button>
@@ -293,6 +318,29 @@ export default function AdminUsersPage() {
             </div>
           </div>
         )}
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
+        />
       </div>
     </ProtectedRoute>
   )

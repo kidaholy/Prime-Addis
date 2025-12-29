@@ -47,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e2e7d8] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
 
       {/* Language Switcher - Top Right */}
       <div className="absolute top-6 right-6 z-50">
@@ -55,14 +55,14 @@ export default function LoginPage() {
       </div>
 
       {/* Decorative Background Elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-[#f5bc6b] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-      <div className="absolute top-10 right-10 w-32 h-32 bg-[#93c5fd] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-10 left-10 w-32 h-32 bg-[#D2691E] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+      <div className="absolute top-10 right-10 w-32 h-32 bg-[#CD853F] rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
       <div className="absolute -bottom-8 left-20 w-32 h-32 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full z-10">
 
         {/* Brand Card */}
-        <div className="bg-[#2d5a41] rounded-[50px] p-10 flex flex-col justify-between text-[#e2e7d8] custom-shadow relative overflow-hidden min-h-[500px] group">
+        <div className="bg-[#8B4513] rounded-[50px] p-10 flex flex-col justify-between text-white custom-shadow relative overflow-hidden min-h-[500px] group">
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
               <Logo size="lg" showText={true} textColor="text-[#e2e7d8]" />
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#f3f4f6] px-6 py-4 rounded-2xl font-medium focus:outline-none focus:ring-4 focus:ring-[#e2e7d8] focus:bg-white transition-all text-[#1a1a1a]"
+                className="w-full bg-[#f3f4f6] px-6 py-4 rounded-2xl font-medium focus:outline-none focus:ring-4 focus:ring-white focus:bg-white transition-all text-[#1a1a1a]"
                 placeholder="chef@primeaddis.com"
                 required
               />
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f3f4f6] px-6 py-4 rounded-2xl font-medium focus:outline-none focus:ring-4 focus:ring-[#e2e7d8] focus:bg-white transition-all text-[#1a1a1a]"
+                className="w-full bg-[#f3f4f6] px-6 py-4 rounded-2xl font-medium focus:outline-none focus:ring-4 focus:ring-white focus:bg-white transition-all text-[#1a1a1a]"
                 placeholder="••••••••"
                 required
               />
@@ -126,7 +126,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1a1a1a] text-white font-bold text-lg py-4 rounded-2xl hover:bg-[#f5bc6b] hover:text-[#1a1a1a] hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg bubbly-button"
+              className="w-full bg-[#1a1a1a] text-white font-bold text-lg py-4 rounded-2xl hover:bg-[#D2691E] hover:text-[#1a1a1a] hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg bubbly-button"
             >
               {loading ? t("login.brewing") : t("login.logIn")}
             </button>

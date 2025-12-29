@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface OrderItem {
   menuItemId: string
@@ -31,6 +33,7 @@ export default function KitchenDisplayPage() {
   const [previousOrderCount, setPreviousOrderCount] = useState(0)
   const { token } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
   useEffect(() => {
     fetchOrders()
@@ -100,9 +103,15 @@ export default function KitchenDisplayPage() {
   }
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!confirm(t("common.areYouSure") || "Are you sure?")) {
-      return
-    }
+    const confirmed = await confirm({
+      title: "Cancel Order",
+      message: "Are you sure you want to cancel this order?\n\nThis action cannot be undone.",
+      type: "warning",
+      confirmText: "Cancel Order",
+      cancelText: "Keep Order"
+    })
+    
+    if (!confirmed) return
 
     try {
       // Optimistic update
@@ -122,11 +131,19 @@ export default function KitchenDisplayPage() {
         localStorage.setItem('orderUpdated', Date.now().toString())
       } else {
         fetchOrders()
-        alert(t("common.error") || "Error")
+        notify({
+          title: "Error",
+          message: "Failed to cancel the order. Please try again.",
+          type: "error"
+        })
       }
     } catch (err) {
       fetchOrders()
-      alert(t("common.error") || "Error")
+      notify({
+        title: "Error",
+        message: "An error occurred while cancelling the order.",
+        type: "error"
+      })
     }
   }
 
@@ -165,12 +182,12 @@ export default function KitchenDisplayPage() {
 
   return (
     <ProtectedRoute requiredRoles={["chef"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
           <div className="mb-6">
-            <div className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow flex flex-col md:flex-row justify-between items-center gap-6 text-[#e2e7d8]">
+            <div className="bg-[#8B4513] rounded-[40px] p-8 custom-shadow flex flex-col md:flex-row justify-between items-center gap-6 text-white">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-4xl">🍳</div>
                 <div>
@@ -195,7 +212,7 @@ export default function KitchenDisplayPage() {
           </div>
 
           {newOrderAlert && (
-            <div className="mb-6 p-4 bg-[#f5bc6b] text-white rounded-[20px] shadow-2xl animate-pulse flex items-center justify-between border-4 border-white custom-shadow transform scale-105 transition-transform">
+            <div className="mb-6 p-4 bg-[#D2691E] text-white rounded-[20px] shadow-2xl animate-pulse flex items-center justify-between border-4 border-white custom-shadow transform scale-105 transition-transform">
               <div className="flex items-center gap-3">
                 <span className="text-3xl animate-bounce">🔔</span>
                 <div>
@@ -278,6 +295,29 @@ export default function KitchenDisplayPage() {
             </div>
           )}
         </div>
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
+        />
       </div>
     </ProtectedRoute>
   )
@@ -353,7 +393,7 @@ function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentCol
           {order.status === "preparing" && (
             <button
               onClick={() => onStatusChange(order._id, "ready")}
-              className="flex-1 bg-[#2d5a41] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-[#2d5a41]/20 transform hover:scale-105 active:scale-95"
+              className="flex-1 bg-[#8B4513] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-[#8B4513]/20 transform hover:scale-105 active:scale-95"
             >
               {t("chef.markReady")}
             </button>

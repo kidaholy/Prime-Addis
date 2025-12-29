@@ -8,6 +8,8 @@ import { MenuItemCard } from "@/components/menu-item-card"
 import { OrderAnimation } from "@/components/order-animation"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface MenuItem {
   _id: string
@@ -38,6 +40,7 @@ export default function CashierPOSPage() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   const { token, user } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
   // Fetch menu items from API
   useEffect(() => {
@@ -151,10 +154,18 @@ export default function CashierPOSPage() {
           setShowOrderAnimation(false)
         }, 4000)
       } else {
-        alert(t("cashier.failedToCreateOrder"))
+        notify({
+          title: "Order Failed",
+          message: "Failed to create the order. Please try again.",
+          type: "error"
+        })
       }
     } catch (err) {
-      alert(t("cashier.failedToCreateOrder"))
+      notify({
+        title: "Error",
+        message: "Failed to create order. Please check your connection and try again.",
+        type: "error"
+      })
     } finally {
       setIsCheckoutLoading(false)
     }
@@ -166,7 +177,7 @@ export default function CashierPOSPage() {
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
@@ -274,6 +285,29 @@ export default function CashierPOSPage() {
             </div>
           </div>
         )}
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
+        />
       </div>
     </ProtectedRoute>
   )

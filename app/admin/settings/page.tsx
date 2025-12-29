@@ -9,6 +9,8 @@ import { useSettings } from "@/context/settings-context"
 import { Logo } from "@/components/logo"
 import { compressImage, validateImageFile, formatFileSize, getBase64Size } from "@/lib/utils/image-utils"
 import { Save, Upload, Link as LinkIcon, Info, CheckCircle2 } from "lucide-react"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface AdminSettings {
   logo_url: string
@@ -20,6 +22,7 @@ export default function AdminSettingsPage() {
   const { token } = useAuth()
   const { t } = useLanguage()
   const { settings, refreshSettings } = useSettings()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
   const [formData, setFormData] = useState<AdminSettings>({
     logo_url: "",
     app_name: "Prime Addis",
@@ -77,10 +80,18 @@ export default function AdminSettingsPage() {
 
       // Refresh settings in context
       await refreshSettings()
-      alert(t("adminSettings.saveSuccessMessage"))
+      notify({
+        title: "Settings Saved",
+        message: "Your application settings have been updated successfully.",
+        type: "success"
+      })
     } catch (error: any) {
       console.error("Failed to save settings:", error)
-      alert(`${t("adminSettings.failedToSaveSettings")}. ${error.message || t("adminSettings.pleaseTryAgain")}`)
+      notify({
+        title: "Save Failed",
+        message: error.message || "Failed to save settings. Please try again.",
+        type: "error"
+      })
     } finally {
       setSaving(false)
     }
@@ -93,7 +104,11 @@ export default function AdminSettingsPage() {
     // Validate file
     const validation = validateImageFile(file)
     if (!validation.valid) {
-      alert(validation.error)
+      notify({
+        title: "Invalid Image",
+        message: validation.error || "Please select a valid image file",
+        type: "error"
+      })
       return
     }
 
@@ -110,7 +125,11 @@ export default function AdminSettingsPage() {
       // Check final size
       const finalSize = getBase64Size(compressedImage)
       if (finalSize > 500 * 1024) { // 500KB limit for base64
-        alert(t("adminSettings.compressedImageTooLarge"))
+        notify({
+          title: "Image Too Large",
+          message: "The compressed image is still too large. Please try a smaller image.",
+          type: "error"
+        })
         setUploading(false)
         return
       }
@@ -118,21 +137,33 @@ export default function AdminSettingsPage() {
       setFormData({ ...formData, logo_url: compressedImage })
     } catch (error) {
       console.error('Failed to process image:', error)
-      alert(t("adminSettings.processImageError"))
+      notify({
+        title: "Image Processing Failed",
+        message: "Failed to process the selected image. Please try again.",
+        type: "error"
+      })
     } finally {
       setUploading(false)
     }
   }
 
-  const handleRemoveLogo = () => {
-    if (confirm(t("adminSettings.confirmRemoveLogo"))) {
+  const handleRemoveLogo = async () => {
+    const confirmed = await confirm({
+      title: "Remove Logo",
+      message: "Are you sure you want to remove the current logo?\n\nThis will reset it to the default image.",
+      type: "warning",
+      confirmText: "Remove Logo",
+      cancelText: "Cancel"
+    })
+    
+    if (confirmed) {
       setFormData({ ...formData, logo_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&h=200&fit=crop&crop=center' })
     }
   }
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
@@ -185,7 +216,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
+              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold text-[#1a1a1a] mb-4 flex items-center gap-2">
                     <Info className="w-5 h-5" />
@@ -244,7 +275,7 @@ export default function AdminSettingsPage() {
                           type="button"
                           onClick={() => setUploadMethod("url")}
                           className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMethod === "url"
-                            ? "bg-white text-[#2d5a41] shadow-sm"
+                            ? "bg-white text-[#8B4513] shadow-sm"
                             : "text-gray-400 hover:text-gray-600"
                             }`}
                         >
@@ -254,7 +285,7 @@ export default function AdminSettingsPage() {
                           type="button"
                           onClick={() => setUploadMethod("file")}
                           className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMethod === "file"
-                            ? "bg-white text-[#2d5a41] shadow-sm"
+                            ? "bg-white text-[#8B4513] shadow-sm"
                             : "text-gray-400 hover:text-gray-600"
                             }`}
                         >
@@ -269,10 +300,10 @@ export default function AdminSettingsPage() {
                             type="url"
                             value={formData.logo_url.startsWith('data:') ? '' : formData.logo_url}
                             onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#2d5a41]/10 focus:border-[#2d5a41]/20 transition-all font-medium"
+                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#8B4513]/10 focus:border-[#8B4513]/20 transition-all font-medium"
                             placeholder={t("adminSettings.logoUrlPlaceholder")}
                           />
-                          <p className="text-xs text-[#2d5a41] font-bold flex items-center gap-2 ml-2">
+                          <p className="text-xs text-[#8B4513] font-bold flex items-center gap-2 ml-2">
                             <Info className="w-3 h-3" />
                             {t("adminSettings.urlFaviconHint")}
                           </p>
@@ -288,9 +319,9 @@ export default function AdminSettingsPage() {
                               disabled={uploading}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
-                            <div className="bg-gray-50 border-2 border-dashed border-gray-100 rounded-2xl px-6 py-10 transition-all group-hover:bg-gray-100/50 group-hover:border-[#2d5a41]/20 flex flex-col items-center gap-3">
+                            <div className="bg-gray-50 border-2 border-dashed border-gray-100 rounded-2xl px-6 py-10 transition-all group-hover:bg-gray-100/50 group-hover:border-[#8B4513]/20 flex flex-col items-center gap-3">
                               <div className="p-3 bg-white rounded-full custom-shadow">
-                                <Upload className="w-6 h-6 text-[#2d5a41]" />
+                                <Upload className="w-6 h-6 text-[#8B4513]" />
                               </div>
                               <p className="text-sm font-bold text-slate-800">{t("adminSettings.uploadFile")}</p>
                               {uploading && (
@@ -298,7 +329,7 @@ export default function AdminSettingsPage() {
                               )}
                             </div>
                           </div>
-                          <p className="text-xs text-[#2d5a41] font-bold flex items-center gap-2 ml-2">
+                          <p className="text-xs text-[#8B4513] font-bold flex items-center gap-2 ml-2">
                             <Info className="w-3 h-3" />
                             {t("adminSettings.fileFaviconHint")}
                           </p>
@@ -346,11 +377,11 @@ export default function AdminSettingsPage() {
                         type="text"
                         value={formData.app_name}
                         onChange={(e) => setFormData({ ...formData, app_name: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#2d5a41]/10 focus:border-[#2d5a41]/20 transition-all font-bold"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#8B4513]/10 focus:border-[#8B4513]/20 transition-all font-bold"
                         placeholder={t("adminSettings.appNamePlaceholder")}
                         required
                       />
-                      <p className="text-xs text-[#2d5a41] font-bold flex items-center gap-2 ml-2">
+                      <p className="text-xs text-[#8B4513] font-bold flex items-center gap-2 ml-2">
                         <Info className="w-3 h-3" />
                         {t("adminSettings.appNameHint")}
                       </p>
@@ -365,7 +396,7 @@ export default function AdminSettingsPage() {
                         type="text"
                         value={formData.app_tagline}
                         onChange={(e) => setFormData({ ...formData, app_tagline: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#2d5a41]/10 focus:border-[#2d5a41]/20 transition-all font-medium text-slate-600"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#8B4513]/10 focus:border-[#8B4513]/20 transition-all font-medium text-slate-600"
                         placeholder={t("adminSettings.appTaglinePlaceholder")}
                         required
                       />
@@ -379,7 +410,7 @@ export default function AdminSettingsPage() {
                       <button
                         type="submit"
                         disabled={saving}
-                        className="bg-[#2d5a41] text-white px-10 py-4 rounded-2xl font-bold transition-all shadow-xl hover:shadow-[#2d5a41]/20 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:transform-none flex items-center gap-3"
+                        className="bg-[#8B4513] text-white px-10 py-4 rounded-2xl font-bold transition-all shadow-xl hover:shadow-[#8B4513]/20 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:transform-none flex items-center gap-3"
                       >
                         {saving ? (
                           <>
@@ -400,6 +431,29 @@ export default function AdminSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
+        />
       </div>
     </ProtectedRoute>
   )

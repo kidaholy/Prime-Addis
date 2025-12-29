@@ -45,22 +45,22 @@ export default function TransactionsPage() {
 
   return (
     <ProtectedRoute requiredRoles={["cashier"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#2d5a41]">
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#8B4513]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Sales</p>
-              <h3 className="text-3xl font-black text-[#2d5a41]">{totalRevenue.toFixed(0)} {t("common.currencyBr")}</h3>
+              <h3 className="text-3xl font-black text-[#8B4513]">{totalRevenue.toFixed(0)} {t("common.currencyBr")}</h3>
             </div>
-            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b]">
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#D2691E]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Volume</p>
               <h3 className="text-3xl font-black text-[#1a1a1a]">{orders.length}</h3>
             </div>
-            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#93c5fd]">
+            <div className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#CD853F]">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Average Ticket</p>
-              <h3 className="text-3xl font-black text-blue-800">{avgTransaction.toFixed(0)} {t("common.currencyBr")}</h3>
+              <h3 className="text-3xl font-black text-[#CD853F]">{avgTransaction.toFixed(0)} {t("common.currencyBr")}</h3>
             </div>
           </div>
 
@@ -75,7 +75,7 @@ export default function TransactionsPage() {
             ) : (
               <div className="space-y-4">
                 {orders.map((o) => (
-                  <div key={o._id} className="bg-gray-50 rounded-[30px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#e2e7d8]/20 transition-colors border border-transparent hover:border-[#2d5a41]/10">
+                  <div key={o._id} className="bg-gray-50 rounded-[30px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-white/20 transition-colors border border-transparent hover:border-[#8B4513]/10">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl custom-shadow">🧾</div>
                       <div>
@@ -85,11 +85,11 @@ export default function TransactionsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.status === 'completed' ? 'bg-[#e2e7d8] text-[#2d5a41]' : 'bg-[#f5bc6b] text-white'
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.status === 'completed' ? 'bg-white text-[#8B4513]' : 'bg-[#D2691E] text-white'
                         }`}>
                         {o.status}
                       </span>
-                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.paymentStatus === 'paid' ? 'bg-[#93c5fd] text-white' : 'bg-gray-100 text-gray-400'
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${o.paymentStatus === 'paid' ? 'bg-[#CD853F] text-white' : 'bg-gray-100 text-gray-400'
                         }`}>
                         {o.paymentStatus || 'pending'}
                       </span>

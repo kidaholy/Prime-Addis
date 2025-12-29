@@ -60,7 +60,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fredoka.className} antialiased bg-[#e2e7d8] overflow-x-hidden`} suppressHydrationWarning>
+      <body className={`${fredoka.className} antialiased bg-white overflow-x-hidden`} suppressHydrationWarning>
         <LanguageProvider>
           <ThemeProvider>
             <SettingsProvider>

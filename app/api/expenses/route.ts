@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url)
         const date = searchParams.get("date")
-        const period = searchParams.get("period") || "month"
+        const period = searchParams.get("period") || "today"
 
         const token = request.headers.get("authorization")?.replace("Bearer ", "")
         if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
             targetDate.setUTCHours(0, 0, 0, 0)
             query.date = targetDate
         } else {
-            // Period-based query - default to last 30 days for admin view
+            // Period-based query
             const now = new Date()
             let startDate = new Date()
             let endDate = new Date()
@@ -50,7 +50,6 @@ export async function GET(request: Request) {
                     endDate.setUTCHours(23, 59, 59, 999)
                     break
                 case "month":
-                default:
                     startDate = new Date(now.getFullYear(), now.getMonth(), 1)
                     endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
                     break
@@ -69,133 +68,8 @@ export async function GET(request: Request) {
 
         return NextResponse.json(serializedExpenses)
     } catch (error: any) {
-        console.error("❌ Get admin expenses error:", error)
+        console.error("❌ Get expenses error:", error)
         return NextResponse.json({ message: error.message || "Failed to get expenses" }, { status: 500 })
-    }
-}
-
-// POST create/update daily expense with stock integration
-export async function POST(request: Request) {
-    try {
-        const token = request.headers.get("authorization")?.replace("Bearer ", "")
-        if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-
-        const decoded = jwt.verify(token, JWT_SECRET) as any
-        if (decoded.role !== "admin" && decoded.role !== "super-admin") {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
-        }
-
-        await connectDB()
-
-        const body = await request.json()
-        const { date, oxCost, oxQuantity, otherExpenses, items, description } = body
-
-        // Validate required fields
-        if (!date) {
-            return NextResponse.json({ message: "Date is required" }, { status: 400 })
-        }
-
-        // Normalize date to midnight UTC
-        const expenseDate = new Date(date)
-        expenseDate.setUTCHours(0, 0, 0, 0)
-
-        // Check if expense already exists for this date
-        const existingExpense = await DailyExpense.findOne({ date: expenseDate })
-
-        // Calculate total other expenses from items
-        const calculatedOtherExpenses = (items || []).reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
-
-        const expenseData = {
-            date: expenseDate,
-            oxCost: oxCost || 0,
-            oxQuantity: oxQuantity || 0,
-            otherExpenses: calculatedOtherExpenses,
-            items: items || [],
-            description: description || ""
-        }
-
-        let expense
-        if (existingExpense) {
-            // Update existing expense
-            expense = await DailyExpense.findOneAndUpdate(
-                { date: expenseDate },
-                expenseData,
-                { new: true, runValidators: true }
-            )
-        } else {
-            // Create new expense
-            expense = await DailyExpense.create(expenseData)
-        }
-
-        // 🔗 BUSINESS LOGIC: Update stock quantities based on purchases
-        if (oxQuantity > 0) {
-            // Find active ox stock item and update quantity
-            const oxStock = await Stock.findOne({ 
-                name: { $regex: /^ox$/i },
-                status: { $ne: 'finished' }
-            })
-            
-            if (oxStock) {
-                oxStock.quantity = (oxStock.quantity || 0) + oxQuantity
-                await oxStock.save()
-            } else {
-                // Create new ox stock if none exists
-                await Stock.create({
-                    name: 'Ox',
-                    category: 'meat',
-                    quantity: oxQuantity,
-                    unit: 'head',
-                    unitCost: oxQuantity > 0 ? (oxCost / oxQuantity) : 0,
-                    trackQuantity: true,
-                    showStatus: true,
-                    status: 'active'
-                })
-            }
-        }
-
-        // Update other stock items based on expense items
-        if (items && items.length > 0) {
-            for (const item of items) {
-                if (item.quantity > 0 && item.name) {
-                    // Try to find existing stock item
-                    let stockItem = await Stock.findOne({ 
-                        name: { $regex: new RegExp(`^${item.name}$`, 'i') },
-                        status: { $ne: 'finished' }
-                    })
-                    
-                    if (stockItem) {
-                        // Update existing stock
-                        stockItem.quantity = (stockItem.quantity || 0) + item.quantity
-                        if (item.amount > 0 && item.quantity > 0) {
-                            stockItem.unitCost = item.amount / item.quantity
-                        }
-                        await stockItem.save()
-                    } else {
-                        // Create new stock item
-                        await Stock.create({
-                            name: item.name,
-                            category: 'supplies',
-                            quantity: item.quantity,
-                            unit: item.unit || 'pcs',
-                            unitCost: item.quantity > 0 ? (item.amount / item.quantity) : 0,
-                            trackQuantity: true,
-                            showStatus: true,
-                            status: 'active'
-                        })
-                    }
-                }
-            }
-        }
-
-        const serializedExpense = {
-            ...expense.toObject(),
-            _id: expense._id.toString()
-        }
-
-        return NextResponse.json(serializedExpense, { status: existingExpense ? 200 : 201 })
-    } catch (error: any) {
-        console.error("❌ Create/Update admin expense error:", error)
-        return NextResponse.json({ message: error.message || "Failed to save expense" }, { status: 500 })
     }
 }
 
@@ -226,7 +100,90 @@ export async function DELETE(request: Request) {
 
         return NextResponse.json({ message: "Expense deleted successfully" })
     } catch (error: any) {
-        console.error("❌ Delete admin expense error:", error)
+        console.error("❌ Delete expense error:", error)
         return NextResponse.json({ message: error.message || "Failed to delete expense" }, { status: 500 })
+    }
+}
+
+// POST create/update daily expense
+export async function POST(request: Request) {
+    try {
+        const token = request.headers.get("authorization")?.replace("Bearer ", "")
+        if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+
+        const decoded = jwt.verify(token, JWT_SECRET) as any
+        if (decoded.role !== "admin" && decoded.role !== "super-admin") {
+            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+        }
+
+        await connectDB()
+
+        const body = await request.json()
+        const { date, oxCost, oxQuantity, otherExpenses, items, description } = body
+
+        // Validate required fields
+        if (!date) {
+            return NextResponse.json({ message: "Date is required" }, { status: 400 })
+        }
+
+        // Normalize date to midnight UTC
+        const expenseDate = new Date(date)
+        expenseDate.setUTCHours(0, 0, 0, 0)
+
+        // Check if expense already exists for this date
+        const existingExpense = await DailyExpense.findOne({ date: expenseDate })
+
+        const expenseData = {
+            date: expenseDate,
+            oxCost: oxCost || 0,
+            oxQuantity: oxQuantity || 0,
+            otherExpenses: otherExpenses || 0,
+            items: items || [],
+            description: description || ""
+        }
+
+        let expense
+        if (existingExpense) {
+            // Update existing expense
+            expense = await DailyExpense.findOneAndUpdate(
+                { date: expenseDate },
+                expenseData,
+                { new: true, runValidators: true }
+            )
+        } else {
+            // Create new expense
+            expense = await DailyExpense.create(expenseData)
+        }
+
+        // Update stock quantities based on purchases
+        if (oxQuantity > 0) {
+            // Find ox stock item and update quantity
+            await Stock.findOneAndUpdate(
+                { name: { $regex: /^ox/i } },
+                { $inc: { quantity: oxQuantity } }
+            )
+        }
+
+        // Update other stock items
+        if (items && items.length > 0) {
+            for (const item of items) {
+                if (item.quantity > 0) {
+                    await Stock.findOneAndUpdate(
+                        { name: { $regex: new RegExp(`^${item.name}`, 'i') } },
+                        { $inc: { quantity: item.quantity } }
+                    )
+                }
+            }
+        }
+
+        const serializedExpense = {
+            ...expense.toObject(),
+            _id: expense._id.toString()
+        }
+
+        return NextResponse.json(serializedExpense, { status: existingExpense ? 200 : 201 })
+    } catch (error: any) {
+        console.error("❌ Create/Update expense error:", error)
+        return NextResponse.json({ message: error.message || "Failed to save expense" }, { status: 500 })
     }
 }

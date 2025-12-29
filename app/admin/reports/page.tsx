@@ -5,19 +5,21 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ReportExporter, ProfitCalculator } from "@/lib/export-utils"
+import { Download, FileText, Printer, Calendar, TrendingUp, Package, DollarSign } from "lucide-react"
 import Link from "next/link"
 
 const StatCard = ({ label, value, icon, color, subtext }: { label: string, value: string, icon: string, color: string, subtext: string }) => {
   const colorClasses: { [key: string]: string } = {
-    emerald: "border-[#2d5a41] text-[#2d5a41]",
-    orange: "border-[#f5bc6b] text-[#1a1a1a]",
-    blue: "border-[#93c5fd] text-blue-800",
+    emerald: "border-[#8B4513] text-[#8B4513]",
+    orange: "border-[#D2691E] text-[#1a1a1a]",
+    blue: "border-[#CD853F] text-blue-800",
     purple: "border-purple-500 text-purple-600",
     indigo: "border-indigo-400 text-indigo-600",
   };
   const subtextColorClasses: { [key: string]: string } = {
-    emerald: "text-[#2d5a41]",
-    orange: "text-[#f5bc6b]",
+    emerald: "text-[#8B4513]",
+    orange: "text-[#D2691E]",
     blue: "text-blue-400",
     purple: "text-purple-400",
     indigo: "text-indigo-400",
@@ -54,45 +56,77 @@ export default function ReportsPage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [stockItems, setStockItems] = useState<any[]>([])
+  const [periodData, setPeriodData] = useState<any>(null)
+  const [stockUsageData, setStockUsageData] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
   const { token } = useAuth()
   const { t } = useLanguage()
 
-  const [periodData, setPeriodData] = useState<any>(null)
   useEffect(() => {
     fetchReportData()
     fetchStockItems()
     fetchPeriodSummary()
+    fetchStockUsage()
   }, [token, timeRange])
+
+  const fetchWithTimeout = async (url: string, options: any = {}, timeout = 10000) => {
+    const controller = new AbortController()
+    const id = setTimeout(() => controller.abort(), timeout)
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal })
+      clearTimeout(id)
+      return response
+    } catch (err) {
+      clearTimeout(id)
+      throw err
+    }
+  }
 
   const fetchPeriodSummary = async () => {
     try {
-      const response = await fetch(`/api/reports/sales?period=${timeRange}`, {
+      const response = await fetchWithTimeout(`/api/reports/sales?period=${timeRange}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (response.ok) {
         setPeriodData(await response.json())
       }
     } catch (err) {
-      console.error("Failed to fetch summary")
+      console.error("Failed to fetch summary:", err)
+    }
+  }
+
+  const fetchStockUsage = async () => {
+    try {
+      const response = await fetchWithTimeout(`/api/reports/stock-usage?period=${timeRange}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        setStockUsageData(await response.json())
+      }
+    } catch (err) {
+      console.error("Failed to fetch stock usage:", err)
     }
   }
 
   const fetchReportData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await fetch("/api/orders", {
+      const response = await fetchWithTimeout("/api/orders", {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
       if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
+        setOrders(await response.json());
+      } else {
+        setError("Failed to load orders");
       }
-    } catch (err) {
-      console.error("Failed to load report data")
+    } catch (err: any) {
+      console.error("Failed to load orders:", err);
+      setError(err.name === 'AbortError' ? "Request timed out" : "Failed to load report data");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const fetchStockItems = async () => {
     try {
@@ -143,6 +177,13 @@ export default function ReportsPage() {
   const averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0
   const totalNetWorth = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
+  // Calculate comprehensive profit using the business logic
+  const profitData = periodData ? ProfitCalculator.calculateNetProfit(
+    periodData.summary.totalRevenue,
+    periodData.summary,
+    stockItems
+  ) : null
+
   const stats = {
     totalRevenue: totalRevenue,
     completedOrders: completedOrders,
@@ -157,27 +198,219 @@ export default function ReportsPage() {
     }
   }
 
-  const exportToCSV = () => {
-    const csvHeaders = ['Order Number', 'Date', 'Status', 'Total Amount', 'Payment Method', 'Items Count']
-    const csvData = filteredOrders.map(order => [
-      order.orderNumber,
-      new Date(order.createdAt).toLocaleDateString(),
-      order.status,
-      order.totalAmount.toFixed(2),
-      order.paymentMethod || 'cash',
-      order.items?.length || 0
-    ])
-    const csvContent = [csvHeaders.join(','), ...csvData.map(row => row.join(','))].join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `prime-addis-report-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
+  // Enhanced export functions
+  const exportSummaryCSV = () => {
+    if (!periodData || !profitData) return
+
+    const exportData = {
+      title: "Business Summary Report",
+      period: timeRange,
+      headers: ["Metric", "Value", "Unit"],
+      data: [
+        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
+        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
+        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
+        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
+        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" },
+        { Metric: "Total Orders", Value: stats.totalOrders.toString(), Unit: "Count" },
+        { Metric: "Completed Orders", Value: stats.completedOrders.toString(), Unit: "Count" },
+        { Metric: "Average Order Value", Value: stats.averageOrderValue.toFixed(2), Unit: "ETB" }
+      ],
+      summary: {
+        "Report Period": timeRange.toUpperCase(),
+        "Generated Date": new Date().toLocaleDateString(),
+        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
+        "Formula": "Orders - (Assets + Ox)",
+        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
+      }
+    }
+
+    ReportExporter.exportToCSV(exportData)
+  }
+
+  const exportSummaryPDF = () => {
+    if (!periodData || !profitData) return
+
+    const exportData = {
+      title: "Business Summary Report",
+      period: timeRange,
+      headers: ["Metric", "Value", "Unit"],
+      data: [
+        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
+        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
+        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
+        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
+        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
+      ],
+      summary: {
+        "Report Period": timeRange.toUpperCase(),
+        "Generated Date": new Date().toLocaleDateString(),
+        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
+        "Formula": "Orders - (Assets + Ox)",
+        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
+      },
+      metadata: {
+        companyName: "Prime Addis Coffee"
+      }
+    }
+
+    ReportExporter.exportToPDF(exportData)
+  }
+
+  const exportSummaryWord = () => {
+    if (!periodData || !profitData) return
+
+    const exportData = {
+      title: "Business Summary Report",
+      period: timeRange,
+      headers: ["Metric", "Value", "Unit"],
+      data: [
+        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
+        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
+        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
+        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
+        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
+        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
+      ],
+      summary: {
+        "Report Period": timeRange.toUpperCase(),
+        "Generated Date": new Date().toLocaleDateString(),
+        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
+        "Formula": "Orders - (Assets + Ox)",
+        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
+      },
+      metadata: {
+        companyName: "Prime Addis Coffee"
+      }
+    }
+
+    ReportExporter.exportToWord(exportData)
+  }
+
+  const exportDetailedWord = () => {
+    if (!periodData || !profitData || !stockUsageData) return
+
+    const exportData: any = {
+      title: "Comprehensive Business Report",
+      period: timeRange,
+      sections: [
+        {
+          title: "1. Business Summary",
+          summary: {
+            "Report Period": timeRange.toUpperCase(),
+            "Total Revenue": `${profitData.revenue.toLocaleString()} ETB`,
+            "Total Investment": `${profitData.totalInvestment.toLocaleString()} ETB`,
+            "Net Worth": `${profitData.netProfit.toLocaleString()} ETB`,
+            "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`,
+            "Total Orders": stats.totalOrders.toString(),
+            "Completed Orders": stats.completedOrders.toString(),
+          },
+          content: [
+            "This section provides a high-level overview of the business performance during the selected period.",
+            "Revenue is calculated based on all orders (completed and pending).",
+            "Investment includes Ox costs, operational expenses, and physical stock value."
+          ]
+        },
+        {
+          title: "2. Net Worth Analysis",
+          headers: ["Component", "Amount (ETB)", "Description"],
+          data: [
+            { "Component": "Total Revenue", "Amount (ETB)": profitData.revenue.toFixed(2), "Description": "Income from all orders" },
+            { "Component": "Ox Costs", "Amount (ETB)": `-${profitData.oxCost.toFixed(2)}`, "Description": "Cost of purchased oxen" },
+            { "Component": "Operational Expenses", "Amount (ETB)": `-${profitData.otherExpenses.toFixed(2)}`, "Description": "Other business expenses" },
+            { "Component": "Stock Investment", "Amount (ETB)": `-${profitData.totalStockValue.toFixed(2)}`, "Description": "Value of current physical stock" },
+            { "Component": "Final Net Worth", "Amount (ETB)": profitData.netProfit.toFixed(2), "Description": "Revenue - (Ox + Expenses + Stock)" }
+          ]
+        },
+        {
+          title: "3. Detailed Orders List",
+          headers: ["Order #", "Date", "Status", "Amount (ETB)"],
+          data: filteredOrders.map(o => ({
+            "Order #": o.orderNumber,
+            "Date": new Date(o.createdAt).toLocaleDateString(),
+            "Status": o.status,
+            "Amount (ETB)": o.totalAmount.toFixed(2)
+          })).slice(0, 100), // Limit to 100 for doc sanity
+          content: filteredOrders.length > 100 ? ["Note: Only showing the first 100 orders in this document."] : []
+        },
+        {
+          title: "4. Stock Consumption Analysis",
+          headers: ["Item", "Consumed", "Remaining", "Value (ETB)"],
+          data: stockUsageData.stockAnalysis.map((item: any) => ({
+            "Item": item.name,
+            "Consumed": `${item.consumed} ${item.unit}`,
+            "Remaining": `${item.remaining} ${item.unit}`,
+            "Value (ETB)": item.stockValue.toFixed(2)
+          }))
+        }
+      ],
+      metadata: {
+        companyName: "Prime Addis Coffee"
+      }
+    }
+
+    ReportExporter.exportComprehensiveToWord(exportData)
+  }
+
+  const exportOrdersCSV = () => {
+    const exportData = {
+      title: "Orders Report",
+      period: timeRange,
+      headers: ["Order Number", "Date", "Status", "Total Amount", "Payment Method", "Items Count"],
+      data: filteredOrders.map(order => ({
+        "Order Number": order.orderNumber,
+        "Date": new Date(order.createdAt).toLocaleDateString(),
+        "Status": order.status,
+        "Total Amount": order.totalAmount.toFixed(2),
+        "Payment Method": order.paymentMethod || 'cash',
+        "Items Count": order.items?.length || 0
+      }))
+    }
+
+    ReportExporter.exportToCSV(exportData)
+  }
+
+  const exportStockCSV = () => {
+    if (!stockUsageData) return
+
+    const exportData = {
+      title: "Comprehensive Stock Usage Report",
+      period: timeRange,
+      headers: ["Stock Item", "Category", "Supplier", "Unit Cost", "Purchased", "Consumed", "Remaining", "Net Stock", "Stock Value", "Unit", "Status"],
+      data: stockUsageData.stockAnalysis.map((item: any) => ({
+        "Stock Item": item.name,
+        "Category": item.category,
+        "Supplier": item.supplier || 'N/A',
+        "Unit Cost": (item.unitCost || 0).toFixed(2),
+        "Purchased": item.purchased.toString(),
+        "Consumed": item.consumed.toString(),
+        "Remaining": item.remaining.toString(),
+        "Net Stock": item.netStock.toString(),
+        "Stock Value": (item.stockValue || 0).toFixed(2),
+        "Unit": item.unit,
+        "Status": item.status || 'active'
+      })),
+      summary: {
+        "Total Revenue": `$${(stockUsageData.summary.totalRevenue || 0).toLocaleString()}`,
+        "Total Stock Value": `$${(stockUsageData.summary.totalStockValue || 0).toLocaleString()}`,
+        "Average Order Value": `$${(stockUsageData.revenue?.averageOrderValue || 0).toFixed(2)}`,
+        "Total Beef Consumed": `${stockUsageData.summary.totalBeef.toFixed(1)} kg`,
+        "Total Milk Consumed": `${stockUsageData.summary.totalMilk.toFixed(1)} liters`,
+        "Total Drinks Consumed": `${stockUsageData.summary.totalDrinks} pieces`
+      }
+    }
+
+    ReportExporter.exportToCSV(exportData)
   }
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
@@ -195,7 +428,7 @@ export default function ReportsPage() {
                     <button
                       key={range.id}
                       onClick={() => setTimeRange(range.id)}
-                      className={`w-full py-4 rounded-[25px] font-bold transition-all duration-300 capitalize ${timeRange === range.id ? "bg-[#2d5a41] text-white shadow-lg scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      className={`w-full py-4 rounded-[25px] font-bold transition-all duration-300 capitalize ${timeRange === range.id ? "bg-[#8B4513] text-white shadow-lg scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                         }`}
                     >
                       {range.label}
@@ -204,14 +437,60 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
+              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
                 <h3 className="text-xl font-bold text-[#1a1a1a]">{t("adminReports.managementTools")}</h3>
-                <button onClick={exportToCSV} className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow">
-                  <span>📥</span> {t("adminReports.downloadCsv")}
-                </button>
-                <button onClick={() => window.print()} className="w-full bg-black/10 text-black/60 font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:bg-black/20 transition-colors">
-                  <span>🖨️</span> {t("adminReports.printPage")}
-                </button>
+
+                {/* Enhanced Export Options */}
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={exportDetailedWord}
+                    className="w-full bg-[#8B4513] text-white font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg border-b-4 border-[#5D2E0A]"
+                  >
+                    <FileText size={20} /> Export Detailed Word
+                  </button>
+
+                  <button
+                    onClick={exportSummaryWord}
+                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
+                  >
+                    <Download size={20} /> Export Summary Word
+                  </button>
+
+                  <button
+                    onClick={exportSummaryPDF}
+                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
+                  >
+                    <FileText size={20} /> Export Summary PDF
+                  </button>
+
+                  <button
+                    onClick={exportSummaryCSV}
+                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
+                  >
+                    <Download size={20} /> Export Summary CSV
+                  </button>
+
+                  <button
+                    onClick={exportOrdersCSV}
+                    className="w-full bg-black/10 text-black/70 font-bold py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-black/20 transition-colors"
+                  >
+                    <Package size={18} /> Orders CSV
+                  </button>
+
+                  <button
+                    onClick={exportStockCSV}
+                    className="w-full bg-black/10 text-black/70 font-bold py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-black/20 transition-colors"
+                  >
+                    <TrendingUp size={18} /> Stock CSV
+                  </button>
+
+                  <button
+                    onClick={() => window.print()}
+                    className="w-full bg-black/10 text-black/60 font-bold py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-black/20 transition-colors"
+                  >
+                    <Printer size={18} /> {t("adminReports.printPage")}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -219,22 +498,24 @@ export default function ReportsPage() {
             <div className="lg:col-span-9 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
+
+                {/* Enhanced Net Profit Calculation: Orders - (Asset + Ox) */}
                 {(() => {
-                  const oxStockValue = stockItems.filter(i => i.name.toLowerCase() === 'ox').reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0);
-                  const physicalStockValue = stats.inventoryValue - oxStockValue;
-                  const totalInvestment = (periodData?.summary?.totalExpenses || 0) + physicalStockValue;
-                  const netRecovery = stats.totalRevenue - totalInvestment;
+                  if (!profitData) {
+                    return <StatCard label="Net Worth" value="Loading..." icon="💎" color="purple" subtext="Calculating..." />
+                  }
 
                   return (
                     <StatCard
-                      label="Inventory Net"
-                      value={`${netRecovery.toLocaleString()} ${t("common.currencyBr")}`}
+                      label="Net Worth"
+                      value={`${profitData.netProfit.toLocaleString()} ${t("common.currencyBr")}`}
                       icon="💎"
-                      color="purple"
-                      subtext="Orders - (Diary + Assets)"
+                      color={profitData.netProfit >= 0 ? "purple" : "orange"}
+                      subtext={`${profitData.profitMargin.toFixed(1)}% margin (Orders - Assets - Ox)`}
                     />
                   );
                 })()}
+
                 <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.estimatedMarketValue")}</p>
@@ -246,11 +527,11 @@ export default function ReportsPage() {
                 </Link>
 
                 {/* New Report Links */}
-                <Link href="/admin/reports/orders" className="bg-[#2d5a41] rounded-[40px] p-8 custom-shadow hover:scale-105 transition-transform group relative overflow-hidden">
+                <Link href="/admin/reports/orders" className="bg-[#8B4513] rounded-[40px] p-8 custom-shadow hover:scale-105 transition-transform group relative overflow-hidden">
                   <div className="relative z-10">
-                    <p className="text-xs font-bold text-[#e2e7d8] opacity-60 uppercase tracking-widest mb-1">Transaction History</p>
+                    <p className="text-xs font-bold text-white opacity-60 uppercase tracking-widest mb-1">Transaction History</p>
                     <h3 className="text-2xl font-black text-white mb-2">Orders Report</h3>
-                    <p className="text-xs text-[#e2e7d8] font-medium flex items-center gap-2">
+                    <p className="text-xs text-white font-medium flex items-center gap-2">
                       View Details <span className="text-white group-hover:translate-x-1 transition-transform">→</span>
                     </p>
                   </div>
@@ -259,11 +540,11 @@ export default function ReportsPage() {
                   </div>
                 </Link>
 
-                <Link href="/admin/reports/stock" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#f5bc6b] hover:scale-105 transition-transform group relative overflow-hidden">
+                <Link href="/admin/reports/stock" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#D2691E] hover:scale-105 transition-transform group relative overflow-hidden">
                   <div className="relative z-10">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Consumption Analysis</p>
                     <h3 className="text-2xl font-black text-slate-800 mb-2">Stock Usage</h3>
-                    <p className="text-xs text-[#f5bc6b] font-bold flex items-center gap-2">
+                    <p className="text-xs text-[#D2691E] font-bold flex items-center gap-2">
                       View Details <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </p>
                   </div>
@@ -276,9 +557,9 @@ export default function ReportsPage() {
               <div className="bg-white rounded-[40px] p-8 custom-shadow">
                 <h3 className="text-2xl font-bold mb-8 bubbly-text">{t("adminReports.distribution")}</h3>
                 <div className="space-y-6">
-                  <StatusProgress label={t("chef.pending")} count={stats.statusDistribution.pending} total={stats.totalOrders} color="#f5bc6b" />
-                  <StatusProgress label={t("chef.preparing")} count={stats.statusDistribution.preparing} total={stats.totalOrders} color="#93c5fd" />
-                  <StatusProgress label={t("chef.ready")} count={stats.statusDistribution.ready} total={stats.totalOrders} color="#2d5a41" />
+                  <StatusProgress label={t("chef.pending")} count={stats.statusDistribution.pending} total={stats.totalOrders} color="#D2691E" />
+                  <StatusProgress label={t("chef.preparing")} count={stats.statusDistribution.preparing} total={stats.totalOrders} color="#CD853F" />
+                  <StatusProgress label={t("chef.ready")} count={stats.statusDistribution.ready} total={stats.totalOrders} color="#8B4513" />
                   <StatusProgress label={t("chef.complete")} count={stats.statusDistribution.completed} total={stats.totalOrders} color="#e5e7eb" />
                 </div>
               </div>

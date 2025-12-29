@@ -8,6 +8,8 @@ import { useAuth } from "@/context/auth-context"
 
 import { useLanguage } from "@/context/language-context"
 import { compressImage, validateImageFile } from "@/lib/utils/image-utils"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface MenuItem {
   _id: string
@@ -69,6 +71,7 @@ export default function AdminMenuPage() {
   const [imageInputType, setImageInputType] = useState<'file' | 'url'>('file')
   const { token } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
   const [categories, setCategories] = useState<any[]>([])
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -133,7 +136,15 @@ export default function AdminMenuPage() {
   }
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm("Are you sure? Menu items in this category will still exist but the category filter will be gone.")) return
+    const confirmed = await confirm({
+      title: "Delete Category",
+      message: "Are you sure you want to delete this category?\n\nMenu items in this category will still exist but the category filter will be gone.",
+      type: "warning",
+      confirmText: "Delete Category",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -198,7 +209,11 @@ export default function AdminMenuPage() {
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name || !formData.category || !formData.price) {
-      alert("Please fill in all required fields")
+      notify({
+        title: "Missing Information",
+        message: "Please fill in all required fields (Name, Category, and Price).",
+        type: "error"
+      })
       return
     }
 
@@ -221,10 +236,21 @@ export default function AdminMenuPage() {
 
       if (response.ok) {
         const responseData = await response.json()
-
+        notify({
+          title: editingItem ? "Menu Item Updated" : "Menu Item Created",
+          message: editingItem ? "Menu item has been updated successfully." : "New menu item has been added successfully.",
+          type: "success"
+        })
         resetForm()
         setTimeout(() => fetchMenuItems(), 500)
         localStorage.setItem('menuUpdated', Date.now().toString())
+      } else {
+        const errorData = await response.json()
+        notify({
+          title: "Save Failed",
+          message: errorData.message || "Failed to save menu item",
+          type: "error"
+        })
       }
     } catch (error) {
       console.error("Error saving menu item:", error)
@@ -240,7 +266,11 @@ export default function AdminMenuPage() {
     // Validate
     const { valid, error } = validateImageFile(file)
     if (!valid) {
-      alert(error)
+      notify({
+        title: "Invalid Image",
+        message: error || "Please select a valid image file",
+        type: "error"
+      })
       return
     }
 
@@ -254,7 +284,11 @@ export default function AdminMenuPage() {
       setFormData(prev => ({ ...prev, image: compressedImage }))
     } catch (err) {
       console.error("Image processing failed:", err)
-      alert("Failed to process image")
+      notify({
+        title: "Image Processing Failed",
+        message: "Failed to process the selected image. Please try again.",
+        type: "error"
+      })
     } finally {
       setImageProcessing(false)
     }
@@ -279,7 +313,15 @@ export default function AdminMenuPage() {
   }
 
   const handleDelete = async (item: MenuItem) => {
-    if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return
+    const confirmed = await confirm({
+      title: "Delete Menu Item",
+      message: `Are you sure you want to delete "${item.name}"?\n\nThis action cannot be undone.`,
+      type: "danger",
+      confirmText: "Delete Item",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
 
     try {
       const response = await fetch(`/api/admin/menu/${item._id}`, {
@@ -309,7 +351,7 @@ export default function AdminMenuPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
@@ -321,20 +363,20 @@ export default function AdminMenuPage() {
                 <h2 className="text-2xl font-bold mb-4 bubbly-text">{t("adminMenu.actions")}</h2>
                 <button
                   onClick={() => { resetForm(); setShowCreateForm(true); }}
-                  className="w-full bg-[#f5bc6b] text-[#1a1a1a] font-bold py-4 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 bubbly-button mb-3"
+                  className="w-full bg-[#D2691E] text-white font-bold py-4 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 bubbly-button mb-3"
                 >
                   ➕ {t("adminMenu.addNewItem")}
                 </button>
                 <button
                   onClick={() => setShowCategoryManager(true)}
-                  className="w-full bg-[#2d5a41] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm"
+                  className="w-full bg-[#8B4513] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm"
                 >
                   📁 {t("adminMenu.manageCategories")}
                 </button>
               </div>
 
               {/* Filters Card */}
-              <div className="bg-[#2d5a41] rounded-[40px] p-6 custom-shadow text-[#e2e7d8]">
+              <div className="bg-[#8B4513] rounded-[40px] p-6 custom-shadow text-white">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <span>🔍</span> {t("adminMenu.filters")}
                 </h2>
@@ -345,7 +387,7 @@ export default function AdminMenuPage() {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#f5bc6b] placeholder:text-white/30"
+                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D2691E] placeholder:text-white/30"
                       placeholder={t("adminMenu.searchPlaceholder")}
                     />
                   </div>
@@ -354,7 +396,7 @@ export default function AdminMenuPage() {
                     <select
                       value={categoryFilter}
                       onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#f5bc6b] appearance-none cursor-pointer"
+                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D2691E] appearance-none cursor-pointer"
                     >
                       <option value="all" className="bg-[#2d5a41]">{t("adminMenu.allCategories")}</option>
                       {categories.map((cat: any) => (
@@ -374,7 +416,7 @@ export default function AdminMenuPage() {
                     <h1 className="text-3xl font-bold bubbly-text">{t("adminMenu.title")}</h1>
                     <p className="text-gray-500 font-medium">{t("adminMenu.subtitle")}</p>
                   </div>
-                  <div className="bg-[#e2e7d8] px-4 py-2 rounded-full font-bold text-[#2d5a41] text-sm">
+                  <div className="bg-white px-4 py-2 rounded-full font-bold text-[#8B4513] text-sm">
                     {filteredItems.length} {t("adminMenu.itemsFound")}
                   </div>
                 </div>
@@ -410,7 +452,7 @@ export default function AdminMenuPage() {
 
                         <div className="p-5 flex-1 flex flex-col">
                           <h3 className="font-bold text-lg mb-1 truncate">{item.name}</h3>
-                          <p className="text-xs font-bold text-[#2d5a41] uppercase tracking-wider mb-3">{item.category}</p>
+                          <p className="text-xs font-bold text-[#8B4513] uppercase tracking-wider mb-3">{item.category}</p>
                           <p className="text-2xl font-black text-gray-800 mb-4">{item.price} {t("common.currencyBr")}</p>
 
                           <div className="flex gap-2 mt-auto">
@@ -717,6 +759,29 @@ export default function AdminMenuPage() {
           value={newCategoryName}
           onChange={setNewCategoryName}
           t={t}
+        />
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
         />
       </div>
     </ProtectedRoute>

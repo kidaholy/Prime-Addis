@@ -68,16 +68,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Valid total amount is required" }, { status: 400 })
     }
 
-    // 🔬 Validation: Check if any item is linked to "Finished" stock
+    // 🔬 BUSINESS LOGIC: Validate stock availability and check consumption requirements
     const menuItemIds = items.map(i => i.menuItemId)
     const linkedMenuItems = await MenuItem.find({ _id: { $in: menuItemIds } }).populate('stockItemId')
 
+    // Check if any linked stock is finished
     for (const menuData of linkedMenuItems) {
       if ((menuData.stockItemId as any)?.status === 'finished') {
         return NextResponse.json({
           message: `Order Failed: ${menuData.name} is currently out of stock (Finished).`,
           outOfStockItem: menuData.name
         }, { status: 400 })
+      }
+    }
+
+    // 🔗 BUSINESS LOGIC: Calculate total stock consumption for this order
+    const stockConsumptionMap = new Map()
+    
+    for (const orderItem of items) {
+      const menuData = linkedMenuItems.find(m => m._id.toString() === orderItem.menuItemId)
+      if (menuData && menuData.stockItemId && menuData.reportQuantity > 0) {
+        const stockId = (menuData.stockItemId as any)._id.toString()
+        const consumptionAmount = menuData.reportQuantity * orderItem.quantity
+        
+        if (stockConsumptionMap.has(stockId)) {
+          stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
+        } else {
+          stockConsumptionMap.set(stockId, consumptionAmount)
+        }
+      }
+    }
+
+    // Validate sufficient stock quantities
+    for (const [stockId, requiredAmount] of stockConsumptionMap) {
+      const stockItem = await Stock.findById(stockId)
+      if (stockItem && stockItem.trackQuantity) {
+        if ((stockItem.quantity || 0) < requiredAmount) {
+          return NextResponse.json({
+            message: `Insufficient stock: ${stockItem.name}. Required: ${requiredAmount} ${stockItem.unit}, Available: ${stockItem.quantity || 0} ${stockItem.unit}`,
+            insufficientStock: stockItem.name
+          }, { status: 400 })
+        }
       }
     }
 

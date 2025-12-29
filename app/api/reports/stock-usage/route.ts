@@ -120,10 +120,13 @@ export async function GET(request: Request) {
             }
         }
 
-        // 7. Combine into full analysis
+        // 7. Calculate total revenue from orders
+        const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0)
+
+        // 8. Combine into full analysis - Include ALL stock items
         const stockAnalysis = stockItems.map(stock => {
             const fullName = stock.name.toLowerCase()
-            // Extract root name (e.g., "Ox (Finished...)" -> "ox")
+            // Extract root name (e.g., "Milk (Finished...)" -> "milk")
             const rootName = fullName.split(' (finished')[0].trim()
 
             const purchased = purchaseStats[rootName] || purchaseStats[fullName] || 0
@@ -133,6 +136,14 @@ export async function GET(request: Request) {
                 .filter(c => c.stockId === stock._id.toString())
                 .reduce((acc, c) => acc + c.quantity, 0)
 
+            // Calculate net stock: Current stock minus consumed (what should remain)
+            const netStock = (stock.quantity || 0) - consumed
+
+            // Calculate stock value
+            const stockValue = (stock.quantity || 0) * (stock.unitCost || 0)
+            const purchaseValue = purchased * (stock.unitCost || 0)
+            const consumedValue = consumed * (stock.unitCost || 0)
+
             return {
                 id: stock._id,
                 name: stock.name,
@@ -140,12 +151,23 @@ export async function GET(request: Request) {
                 unit: stock.unit,
                 purchased,
                 consumed,
-                remaining: stock.quantity,
+                remaining: stock.quantity || 0, // Current stock
+                netStock, // Stock minus ordered consumption
                 minLimit: stock.minLimit,
-                unitCost: stock.unitCost,
-                status: stock.status
+                unitCost: stock.unitCost || 0,
+                stockValue,
+                purchaseValue,
+                consumedValue,
+                status: stock.status,
+                supplier: stock.supplier || 'N/A',
+                lastUpdated: stock.updatedAt
             }
         })
+
+        // 9. Calculate totals
+        const totalStockValue = stockAnalysis.reduce((sum, item) => sum + item.stockValue, 0)
+        const totalPurchaseValue = stockAnalysis.reduce((sum, item) => sum + item.purchaseValue, 0)
+        const totalConsumedValue = stockAnalysis.reduce((sum, item) => sum + item.consumedValue, 0)
 
         return NextResponse.json({
             period,
@@ -155,10 +177,23 @@ export async function GET(request: Request) {
                 totalBeef: usageStats['kg'].total,
                 totalMilk: usageStats['liter'].total,
                 totalDrinks: usageStats['piece'].total,
-                totalOrders: orders.length
+                totalOrders: orders.length,
+                totalRevenue,
+                totalStockValue,
+                totalPurchaseValue,
+                totalConsumedValue
             },
             stockAnalysis,
-            usage: Object.values(usageStats)
+            usage: Object.values(usageStats),
+            revenue: {
+                totalRevenue,
+                averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
+                revenuePerUnit: {
+                    beef: usageStats['kg'].total > 0 ? totalRevenue / usageStats['kg'].total : 0,
+                    milk: usageStats['liter'].total > 0 ? totalRevenue / usageStats['liter'].total : 0,
+                    drinks: usageStats['piece'].total > 0 ? totalRevenue / usageStats['piece'].total : 0
+                }
+            }
         })
 
     } catch (error: any) {

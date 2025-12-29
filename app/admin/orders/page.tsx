@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
+import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface Order {
   _id: string
@@ -19,6 +21,7 @@ interface Order {
 export default function AdminOrdersPage() {
   const { token } = useAuth()
   const { t } = useLanguage()
+  const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
@@ -56,9 +59,15 @@ export default function AdminOrdersPage() {
   }
 
   const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
-    if (!confirm(`Are you sure you want to delete Order #${orderNumber}? This action cannot be undone.`)) {
-      return
-    }
+    const confirmed = await confirm({
+      title: "Delete Order",
+      message: `Are you sure you want to delete Order #${orderNumber}?\n\nThis action cannot be undone.`,
+      type: "danger",
+      confirmText: "Delete Order",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
 
     setDeleting(orderId)
     try {
@@ -72,27 +81,51 @@ export default function AdminOrdersPage() {
       if (response.ok) {
         // Remove order from local state
         setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId))
-        console.log(`Order #${orderNumber} deleted successfully`)
+        notify({
+          title: "Order Deleted",
+          message: `Order #${orderNumber} has been deleted successfully.`,
+          type: "success"
+        })
       } else {
         const error = await response.json()
-        alert(`Failed to delete order: ${error.message}`)
+        notify({
+          title: "Delete Failed",
+          message: error.message || "Failed to delete order",
+          type: "error"
+        })
       }
     } catch (error) {
       console.error("Failed to delete order:", error)
-      alert("Failed to delete order. Please try again.")
+      notify({
+        title: "Error",
+        message: "Failed to delete order. Please try again.",
+        type: "error"
+      })
     } finally {
       setDeleting(null)
     }
   }
 
   const handleBulkDeleteOrders = async () => {
-    if (!confirm(`Are you sure you want to delete ALL ${orders.length} orders? This action cannot be undone and will clear your entire order history.`)) {
-      return
-    }
+    const confirmed = await confirm({
+      title: "Delete All Orders",
+      message: `Are you sure you want to delete ALL ${orders.length} orders?\n\nThis action cannot be undone and will clear your entire order history.`,
+      type: "danger",
+      confirmText: "Delete All Orders",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
 
-    if (!confirm("This is your final warning! All order data will be permanently lost. Are you absolutely sure?")) {
-      return
-    }
+    const finalConfirmed = await confirm({
+      title: "Final Warning",
+      message: "This is your final warning!\n\nAll order data will be permanently lost.\nAre you absolutely sure?",
+      type: "danger",
+      confirmText: "Yes, Delete Everything",
+      cancelText: "Cancel"
+    })
+    
+    if (!finalConfirmed) return
 
     setBulkDeleting(true)
     try {
@@ -106,14 +139,26 @@ export default function AdminOrdersPage() {
       if (response.ok) {
         const result = await response.json()
         setOrders([])
-        alert(`Successfully deleted ${result.deletedCount} orders`)
+        notify({
+          title: "All Orders Deleted",
+          message: `Successfully deleted ${result.deletedCount} orders.`,
+          type: "success"
+        })
       } else {
         const error = await response.json()
-        alert(`Failed to delete orders: ${error.message}`)
+        notify({
+          title: "Bulk Delete Failed",
+          message: error.message || "Failed to delete orders",
+          type: "error"
+        })
       }
     } catch (error) {
       console.error("Failed to bulk delete orders:", error)
-      alert("Failed to delete orders. Please try again.")
+      notify({
+        title: "Error",
+        message: "Failed to delete orders. Please try again.",
+        type: "error"
+      })
     } finally {
       setBulkDeleting(false)
     }
@@ -131,7 +176,7 @@ export default function AdminOrdersPage() {
       case "preparing":
         return { color: "bg-[#93c5fd]/20 text-blue-700", label: t("adminOrders.cooking"), icon: "🍳" }
       case "ready":
-        return { color: "bg-[#e2e7d8] text-[#2d5a41]", label: t("adminOrders.ready"), icon: "✅" }
+        return { color: "bg-white text-[#8B4513]", label: t("adminOrders.ready"), icon: "✅" }
       case "completed":
         return { color: "bg-gray-100 text-gray-500", label: t("adminOrders.served"), icon: "🍽️" }
       case "cancelled":
@@ -150,7 +195,7 @@ export default function AdminOrdersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-[#e2e7d8] p-4 font-sans text-slate-800">
+      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
         <div className="max-w-7xl mx-auto">
           <BentoNavbar />
 
@@ -170,7 +215,7 @@ export default function AdminOrdersPage() {
                       key={item.id}
                       onClick={() => setFilter(item.id)}
                       className={`w-full flex items-center justify-between p-4 rounded-[25px] font-bold transition-all duration-300 ${filter === item.id
-                        ? "bg-[#2d5a41] text-white shadow-lg scale-105"
+                        ? "bg-[#8B4513] text-white shadow-lg scale-105"
                         : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                         }`}
                     >
@@ -186,7 +231,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-[#f5bc6b] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
+              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">{t("adminOrders.needInsights")}</h3>
                   <p className="text-sm font-medium text-[#1a1a1a]/70">{t("adminOrders.checkDailyReports")}</p>
@@ -261,7 +306,7 @@ export default function AdminOrdersPage() {
                             {order.items.map((item, idx) => (
                               <div key={idx} className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600 font-bold">
-                                  <span className="text-[#2d5a41]">{item.quantity}×</span> {item.name}
+                                  <span className="text-[#8B4513]">{item.quantity}×</span> {item.name}
                                 </span>
                                 <span className="font-bold text-gray-400">{(item.price * item.quantity).toFixed(0)} {t("common.currencyBr")}</span>
                               </div>
@@ -271,7 +316,7 @@ export default function AdminOrdersPage() {
                           <div className="flex justify-between items-center pt-2">
                             <div className="text-sm font-bold text-gray-400">{t("adminOrders.totalAmount")}</div>
                             <div className="flex items-center gap-3">
-                              <div className="text-3xl font-black text-[#2d5a41]">{order.totalAmount.toFixed(0)} {t("common.currencyBr")}</div>
+                              <div className="text-3xl font-black text-[#8B4513]">{order.totalAmount.toFixed(0)} {t("common.currencyBr")}</div>
                               <button
                                 onClick={() => handleDeleteOrder(order._id, order.orderNumber)}
                                 disabled={deleting === order._id}
@@ -295,6 +340,29 @@ export default function AdminOrdersPage() {
             </div>
           </div>
         </div>
+
+        {/* Confirmation and Notification Cards */}
+        <ConfirmationCard
+          isOpen={confirmationState.isOpen}
+          onClose={closeConfirmation}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.options.title}
+          message={confirmationState.options.message}
+          type={confirmationState.options.type}
+          confirmText={confirmationState.options.confirmText}
+          cancelText={confirmationState.options.cancelText}
+          icon={confirmationState.options.icon}
+        />
+
+        <NotificationCard
+          isOpen={notificationState.isOpen}
+          onClose={closeNotification}
+          title={notificationState.options.title}
+          message={notificationState.options.message}
+          type={notificationState.options.type}
+          autoClose={notificationState.options.autoClose}
+          duration={notificationState.options.duration}
+        />
       </div>
     </ProtectedRoute>
   )
