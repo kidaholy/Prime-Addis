@@ -37,7 +37,7 @@ export default function StockUsageReportPage() {
 
     const exportStockCSV = () => {
         if (!data) return
-        
+
         const exportData = {
             title: "Comprehensive Stock Usage Report",
             period: filter,
@@ -67,13 +67,13 @@ export default function StockUsageReportPage() {
                 "Total Orders": data.summary.totalOrders
             }
         }
-        
+
         ReportExporter.exportToCSV(exportData)
     }
 
     const exportStockPDF = () => {
         if (!data) return
-        
+
         const exportData = {
             title: "Comprehensive Stock Usage Report",
             period: filter,
@@ -101,13 +101,13 @@ export default function StockUsageReportPage() {
                 companyName: "Prime Addis Coffee"
             }
         }
-        
+
         ReportExporter.exportToPDF(exportData)
     }
 
     const exportStockWord = () => {
         if (!data) return
-        
+
         const exportData = {
             title: "Comprehensive Stock Usage Report",
             period: filter,
@@ -140,7 +140,7 @@ export default function StockUsageReportPage() {
                 companyName: "Prime Addis Coffee"
             }
         }
-        
+
         ReportExporter.exportToWord(exportData)
     }
 
@@ -171,9 +171,17 @@ export default function StockUsageReportPage() {
                                     </button>
                                 ))}
                             </div>
-                            
+
                             {/* Enhanced Export Options */}
                             <div className="flex gap-2">
+                                <button
+                                    onClick={exportStockWord}
+                                    className="bg-[#1a1a1a] text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
+                                >
+                                    <FileText size={20} />
+                                    <span className="hidden md:inline font-bold">DOC</span>
+                                </button>
+
                                 <button
                                     onClick={exportStockPDF}
                                     className="bg-[#8B4513] text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
@@ -181,7 +189,7 @@ export default function StockUsageReportPage() {
                                     <FileText size={20} />
                                     <span className="hidden md:inline font-bold">PDF</span>
                                 </button>
-                                
+
                                 <button
                                     onClick={exportStockCSV}
                                     className="bg-[#D2691E] text-white p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100 flex items-center gap-2"
@@ -189,7 +197,7 @@ export default function StockUsageReportPage() {
                                     <Download size={20} />
                                     <span className="hidden md:inline font-bold">CSV</span>
                                 </button>
-                                
+
                                 <button
                                     onClick={() => window.print()}
                                     className="bg-white text-[#8B4513] p-4 rounded-[20px] shadow-sm hover:scale-105 transition-transform border border-gray-100"
@@ -415,11 +423,10 @@ export default function StockUsageReportPage() {
                                                         ${item.stockValue.toLocaleString()}
                                                     </td>
                                                     <td className="py-4 text-right pr-4">
-                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                                                            item.status === 'active' ? 'bg-green-100 text-green-600' :
-                                                            item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
-                                                            'bg-yellow-100 text-yellow-600'
-                                                        }`}>
+                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-600' :
+                                                                item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
+                                                                    'bg-yellow-100 text-yellow-600'
+                                                            }`}>
                                                             {item.status || 'active'}
                                                         </span>
                                                     </td>
@@ -441,15 +448,14 @@ export default function StockUsageReportPage() {
                                                     <h4 className="font-black text-slate-800 text-lg">{item.name}</h4>
                                                     <p className="text-xs text-gray-500 uppercase tracking-wider">{item.category}</p>
                                                 </div>
-                                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                                                    item.status === 'active' ? 'bg-green-100 text-green-600' :
-                                                    item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
-                                                    'bg-yellow-100 text-yellow-600'
-                                                }`}>
+                                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-600' :
+                                                        item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
+                                                            'bg-yellow-100 text-yellow-600'
+                                                    }`}>
                                                     {item.status || 'active'}
                                                 </span>
                                             </div>
-                                            
+
                                             <div className="space-y-3">
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-gray-500">Current Stock:</span>
@@ -477,7 +483,7 @@ export default function StockUsageReportPage() {
                                                     <span className="text-xs text-gray-500">Supplier:</span>
                                                     <span className="text-xs text-gray-700">{item.supplier}</span>
                                                 </div>
-                                                
+
                                                 {item.remaining <= (item.minLimit || 0) && item.status !== 'finished' && (
                                                     <div className="bg-red-50 border border-red-200 rounded-2xl p-3 mt-3">
                                                         <p className="text-xs font-bold text-red-600 uppercase tracking-wider">⚠️ Low Stock Alert</p>
