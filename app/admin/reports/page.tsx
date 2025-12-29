@@ -52,7 +52,7 @@ const StatusProgress = ({ label, count, total, color }: { label: string, count: 
 };
 
 export default function ReportsPage() {
-  const [timeRange, setTimeRange] = useState("week")
+  const [timeRange, setTimeRange] = useState("month")
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [stockItems, setStockItems] = useState<any[]>([])
@@ -268,32 +268,62 @@ export default function ReportsPage() {
   const exportSummaryWord = () => {
     if (!periodData || !profitData) return
 
-    const exportData = {
+    // Prepare detailed expense data
+    const expenseDetails = periodData.dailyExpenses?.flatMap((exp: any) =>
+      exp.items.map((item: any) => ({
+        Date: new Date(exp.date).toLocaleDateString(),
+        Item: item.name,
+        Quantity: `${item.quantity} ${item.unit}`,
+        Cost: `${item.amount.toLocaleString()} ETB`
+      }))
+    ) || []
+
+    const exportData: ComprehensiveExportData = {
       title: "Business Summary Report",
       period: timeRange,
-      headers: ["Metric", "Value", "Unit"],
-      data: [
-        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
-        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
-        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
-        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
-        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
+      sections: [
+        {
+          title: "Financial Overview",
+          summary: {
+            "Report Period": timeRange.toUpperCase(),
+            "Generated Date": new Date().toLocaleDateString(),
+            "Net Worth": `${profitData.netProfit.toLocaleString()} ETB`,
+            "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
+          },
+          headers: ["Metric", "Value", "Unit"],
+          data: [
+            // 1. Inflow
+            { Metric: "Total Revenue", Value: profitData.revenue.toLocaleString(), Unit: "ETB" },
+            { Metric: "Total Orders", Value: stats.totalOrders.toString(), Unit: "Count" },
+            { Metric: "Completed Orders", Value: stats.completedOrders.toString(), Unit: "Count" },
+            { Metric: "Average Order Value", Value: stats.averageOrderValue.toFixed(2), Unit: "ETB" },
+
+            // 2. Outflow
+            { Metric: "Ox Costs", Value: profitData.oxCost.toLocaleString(), Unit: "ETB" },
+            { Metric: "Other Expenses", Value: profitData.otherExpenses.toLocaleString(), Unit: "ETB" },
+
+            // 3. Assets
+            { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toLocaleString(), Unit: "ETB" },
+            { Metric: "Total Investment", Value: profitData.totalInvestment.toLocaleString(), Unit: "ETB" },
+
+            // 4. Profitability
+            { Metric: "Net Worth", Value: profitData.netProfit.toLocaleString(), Unit: "ETB" },
+            { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
+          ]
+        },
+        // Add Detailed Breakdown if data exists
+        ...(expenseDetails.length > 0 ? [{
+          title: "Expense Details",
+          headers: ["Date", "Item", "Quantity", "Cost"],
+          data: expenseDetails
+        }] : [])
       ],
-      summary: {
-        "Report Period": timeRange.toUpperCase(),
-        "Generated Date": new Date().toLocaleDateString(),
-        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
-        "Formula": "Orders - (Assets + Ox)",
-        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
-      },
       metadata: {
         companyName: "Prime Addis Coffee"
       }
     }
 
-    ReportExporter.exportToWord(exportData)
+    ReportExporter.exportComprehensiveToWord(exportData)
   }
 
 
