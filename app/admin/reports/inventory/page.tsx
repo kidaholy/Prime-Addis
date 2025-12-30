@@ -158,7 +158,7 @@ export default function NetWorthReportPage() {
                 "Total Stock Assets": `${(oxStockValue + otherStockValue).toLocaleString()} ብር`
             },
             metadata: {
-                companyName: settings.app_name || "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 
@@ -195,7 +195,7 @@ export default function NetWorthReportPage() {
                 "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`,
             },
             metadata: {
-                companyName: settings.app_name || "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 

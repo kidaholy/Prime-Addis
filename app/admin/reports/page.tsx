@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { useSettings } from "@/context/settings-context"
 import { ReportExporter, ProfitCalculator, ComprehensiveExportData } from "@/lib/export-utils"
 import { Download, FileText, Printer, Calendar, TrendingUp, Package, DollarSign } from "lucide-react"
 import Link from "next/link"
@@ -61,6 +62,7 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
   const { token } = useAuth()
   const { t } = useLanguage()
+  const { settings } = useSettings()
 
   useEffect(() => {
     fetchReportData()
@@ -254,7 +256,7 @@ export default function ReportsPage() {
         "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
       },
       metadata: {
-        companyName: "Prime Addis Coffee"
+        companyName: settings.app_name || "Prime Addis"
       }
     }
 
@@ -315,7 +317,7 @@ export default function ReportsPage() {
         }] : [])
       ],
       metadata: {
-        companyName: "Prime Addis Coffee"
+        companyName: settings.app_name || "Prime Addis"
       }
     }
 

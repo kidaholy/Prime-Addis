@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/context/auth-context"
+import { useSettings } from "@/context/settings-context"
 import { ReportExporter } from "@/lib/export-utils"
 import { ArrowLeft, Printer, Package, TrendingDown, TrendingUp, Download, FileText } from "lucide-react"
 import Link from "next/link"
@@ -13,6 +14,7 @@ export default function StockUsageReportPage() {
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const { token } = useAuth()
+    const { settings } = useSettings()
 
     useEffect(() => {
         if (token) fetchReport()
@@ -98,7 +100,7 @@ export default function StockUsageReportPage() {
                 "Total Drinks Consumed": `${data.summary.totalDrinks} pieces`
             },
             metadata: {
-                companyName: "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 
@@ -137,7 +139,7 @@ export default function StockUsageReportPage() {
                 "Total Orders": data.summary.totalOrders
             },
             metadata: {
-                companyName: "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 

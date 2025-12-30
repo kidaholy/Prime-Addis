@@ -53,50 +53,7 @@
   --shadow-xl: 0 20px 25px -5px rgba(45, 27, 20, 0.1), 0 10px 10px -5px rgba(45, 27, 20, 0.04);
 }
 
-.dark {
-  /* Prime Addis Coffee - Dark Theme */
-  /* Evening coffee shop ambiance with deep coffee tones */
-  
-  --primary: #1A0F0A;           /* Deep espresso */
-  --primary-foreground: #F7F3F0; /* Warm cream */
-  --primary-light: #2D1B14;     /* Coffee brown */
-  --primary-dark: #0D0704;      /* Almost black */
-
-  --secondary: #B8956A;         /* Muted gold */
-  --secondary-foreground: #1A0F0A;
-  --secondary-light: #D4A574;   /* Lighter gold */
-
-  --background: #0D0704;        /* Deep coffee black */
-  --foreground: #F7F3F0;        /* Cream text */
-  --card: #1A0F0A;              /* Dark coffee cards */
-  --card-foreground: #F7F3F0;   /* Cream text on cards */
-  --muted: #2D1B14;             /* Coffee brown muted */
-  --muted-foreground: #B8956A;  /* Gold muted text */
-  --border: #3D2B1E;            /* Coffee border */
-  --input: #2D1B14;             /* Dark coffee inputs */
-
-  --accent: #E6B800;            /* Bright Ethiopian gold */
-  --accent-foreground: #0D0704; /* Dark text on gold */
-
-  --success: #16A34A;           /* Dark green */
-  --warning: #D97706;           /* Dark amber */
-  --danger: #DC2626;            /* Dark red */
-  --info: #2563EB;              /* Dark blue */
-
-  --destructive: #DC2626;
-  --destructive-foreground: #F7F3F0;
-  --ring: #E6B800;              /* Gold focus ring */
-  
-  /* Dark sidebar */
-  --sidebar: #0D0704;           /* Deep black sidebar */
-  --sidebar-foreground: #F7F3F0; /* Cream text */
-  --sidebar-primary: #E6B800;   /* Bright gold */
-  --sidebar-primary-foreground: #0D0704;
-  --sidebar-accent: #1A0F0A;    /* Dark coffee */
-  --sidebar-accent-foreground: #F7F3F0;
-  --sidebar-border: #2D1B14;    /* Coffee border */
-  --sidebar-ring: #E6B800;      /* Gold ring */
-}
+/* Dark theme removed - application now uses light theme only */
 
 @theme inline {
   --font-sans: "Geist", "Geist Fallback";

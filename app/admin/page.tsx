@@ -5,27 +5,20 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
-import { BusinessMetricsDashboard } from "@/components/business-metrics-dashboard"
-import { useBusinessMetrics, useRealtimeMetrics, MetricsUtils } from "@/hooks/use-business-metrics"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useBusinessMetrics, MetricsUtils } from "@/hooks/use-business-metrics"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { 
-  TrendingUp, 
-  TrendingDown, 
   DollarSign, 
   ShoppingCart, 
-  Users, 
   Package, 
   AlertTriangle,
   RefreshCw,
   BarChart3,
-  PieChart as PieChartIcon,
-  Clock,
-  Target
+  Printer
 } from 'lucide-react'
+import { PrinterSetup } from "@/components/printer-setup"
 
 interface DashboardStats {
   totalOrders: number
@@ -39,19 +32,22 @@ interface DashboardStats {
 }
 
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'realtime' | 'analytics'>('overview')
   const { token } = useAuth()
   const { t } = useLanguage()
+  const [showPrinterSetup, setShowPrinterSetup] = useState(false)
   
-  // Use comprehensive business metrics
+  // Force light theme always
+  useEffect(() => {
+    document.documentElement.classList.remove('dark')
+    document.documentElement.classList.add('light')
+  }, [])
+  
+  // Use basic business metrics
   const { metrics, loading, error, refresh, lastUpdated } = useBusinessMetrics({
     period: 'today',
     autoRefresh: true,
-    refreshInterval: 30000
+    refreshInterval: 60000 // Refresh every minute
   })
-
-  // Real-time metrics for live updates
-  const { realTimeMetrics } = useRealtimeMetrics()
 
   if (loading && !metrics) {
     return (
@@ -88,341 +84,206 @@ export default function AdminDashboardPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-white p-4 font-sans text-gray-800">
+        <div className="max-w-6xl mx-auto">
           <BentoNavbar />
 
-          {/* Header Section */}
-          <div className="bg-[#8B4513] rounded-[40px] p-8 mb-6 custom-shadow relative overflow-hidden group text-white">
-            <div className="relative z-10 flex justify-between items-center">
+          {/* Simple Header */}
+          <div className="bg-white border-2 border-[#8B4513] rounded-3xl p-6 mb-6 shadow-lg">
+            <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold mb-2 bubbly-text">{t("adminDashboard.title")}</h1>
-                <p className="opacity-90 font-medium">{t("adminDashboard.subtitle")}</p>
+                <h1 className="text-3xl font-bold text-[#8B4513] mb-2">{t("adminDashboard.title")}</h1>
+                <p className="text-gray-600">{t("adminDashboard.subtitle")}</p>
                 {lastUpdated && (
-                  <p className="text-sm opacity-75 mt-2">
+                  <p className="text-sm text-gray-500 mt-2">
                     Last updated: {lastUpdated.toLocaleTimeString()}
                   </p>
                 )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setShowPrinterSetup(true)}
+                  variant="outline"
+                  className="border-[#8B4513] text-[#8B4513] hover:bg-[#8B4513] hover:text-white"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Kitchen Printers
+                </Button>
                 <Button 
                   onClick={refresh} 
-                  variant="outline" 
-                  size="sm"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="bg-[#8B4513] hover:bg-[#D2691E] text-white"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
                 </Button>
               </div>
             </div>
-            <div className="absolute right-[-20px] bottom-[-20px] w-48 h-48 bg-[#D2691E] rounded-full opacity-20 group-hover:scale-125 transition-transform duration-500"></div>
           </div>
 
-          {/* Real-time Metrics Overview */}
+          {/* Simple Metrics Cards */}
           {metrics && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-              <MetricCard 
-                icon={<DollarSign className="h-6 w-6" />}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <SimpleMetricCard 
+                icon={<DollarSign className="h-8 w-8 text-white" />}
                 label="Today's Revenue"
                 value={MetricsUtils.formatCurrency(metrics.realTimeMetrics.todayRevenue)}
-                growth={metrics.salesAnalytics.revenueGrowth.daily}
-                color="brown"
+                variant="brown"
               />
-              <MetricCard 
-                icon={<ShoppingCart className="h-6 w-6" />}
-                label="Orders"
+              <SimpleMetricCard 
+                icon={<ShoppingCart className="h-8 w-8 text-[#8B4513]" />}
+                label="Total Orders"
                 value={metrics.realTimeMetrics.todayOrders.toString()}
-                subtext={`${metrics.realTimeMetrics.activeOrders} active`}
-                color="orange"
+                variant="white"
               />
-              <MetricCard 
-                icon={<Target className="h-6 w-6" />}
-                label="Completion Rate"
-                value={`${metrics.realTimeMetrics.completionRate.toFixed(1)}%`}
-                color="white"
-              />
-              <MetricCard 
-                icon={<BarChart3 className="h-6 w-6" />}
-                label="Avg Order"
+              <SimpleMetricCard 
+                icon={<BarChart3 className="h-8 w-8 text-white" />}
+                label="Average Order"
                 value={MetricsUtils.formatCurrency(metrics.realTimeMetrics.averageOrderValue)}
-                color="white"
+                variant="brown"
               />
-              <MetricCard 
-                icon={<TrendingUp className="h-6 w-6" />}
-                label="Net Profit"
-                value={MetricsUtils.formatCurrency(metrics.financialOverview.netProfit)}
-                subtext={`${metrics.financialOverview.profitMargin.toFixed(1)}% margin`}
-                color="brown"
-              />
-              <MetricCard 
-                icon={<Package className="h-6 w-6" />}
+              <SimpleMetricCard 
+                icon={<Package className="h-8 w-8 text-[#8B4513]" />}
                 label="Stock Alerts"
                 value={metrics.inventoryInsights.lowStockAlerts.length.toString()}
-                color={metrics.inventoryInsights.lowStockAlerts.length > 0 ? "orange" : "white"}
-                href="/admin/reports/stock"
+                variant="white"
+                isAlert={metrics.inventoryInsights.lowStockAlerts.length > 0}
               />
             </div>
           )}
 
-          {/* Main Dashboard Tabs */}
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="overview" className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4" />
-                <span>Overview</span>
-              </TabsTrigger>
-              <TabsTrigger value="realtime" className="flex items-center space-x-2">
-                <RefreshCw className="h-4 w-4" />
-                <span>Real-time</span>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center space-x-2">
-                <PieChartIcon className="h-4 w-4" />
-                <span>Analytics</span>
-              </TabsTrigger>
-            </TabsList>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Link href="/admin/reports/orders" className="block">
+              <Card className="border-2 border-[#8B4513] bg-[#8B4513] hover:bg-[#D2691E] transition-colors cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <BarChart3 className="h-12 w-12 text-white mx-auto mb-3" />
+                  <h3 className="font-bold text-lg text-white mb-2">View Reports</h3>
+                  <p className="text-white/90 text-sm">Sales, orders, and analytics</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link href="/admin/stock" className="block">
+              <Card className="border-2 border-[#8B4513] bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <Package className="h-12 w-12 text-[#8B4513] mx-auto mb-3" />
+                  <h3 className="font-bold text-lg text-[#8B4513] mb-2">Manage Stock</h3>
+                  <p className="text-[#8B4513]/80 text-sm">Update inventory levels</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link href="/admin/menu" className="block">
+              <Card className="border-2 border-[#8B4513] bg-[#8B4513] hover:bg-[#D2691E] transition-colors cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <ShoppingCart className="h-12 w-12 text-white mx-auto mb-3" />
+                  <h3 className="font-bold text-lg text-white mb-2">Update Menu</h3>
+                  <p className="text-white/90 text-sm">Add or modify items</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
 
-            <TabsContent value="overview" className="mt-6">
-              {metrics && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column - Sales & Operations */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* Top Selling Items */}
-                    <Card className="rounded-[30px] custom-shadow">
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <TrendingUp className="h-5 w-5 text-[#8B4513]" />
-                          <span>Top Selling Items</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {metrics.salesAnalytics.topSellingItems.slice(0, 5).map((item, index) => (
-                            <div key={item.name} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
-                              <div className="flex items-center space-x-3">
-                                <Badge variant="outline" className="w-8 h-8 p-0 flex items-center justify-center bg-[#8B4513] text-white">
-                                  {index + 1}
-                                </Badge>
-                                <div>
-                                  <p className="font-medium">{item.name}</p>
-                                  <p className="text-sm text-gray-500">{item.category}</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-bold text-[#8B4513]">{MetricsUtils.formatCurrency(item.revenue)}</p>
-                                <p className="text-sm text-gray-500">{item.quantity} sold</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Order Status Distribution */}
-                    <Card className="rounded-[30px] custom-shadow">
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <Clock className="h-5 w-5 text-[#D2691E]" />
-                          <span>Order Status</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          {Object.entries(metrics.operationalMetrics.orderStatusDistribution).map(([status, count]) => (
-                            <div key={status} className="text-center p-4 rounded-2xl bg-gray-50">
-                              <div className="text-2xl font-bold text-[#8B4513]">{count}</div>
-                              <div className="text-sm font-medium capitalize text-gray-600">{status}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Right Column - Alerts & Quick Actions */}
-                  <div className="space-y-6">
-                    {/* Stock Alerts */}
-                    <Card className="rounded-[30px] custom-shadow">
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <AlertTriangle className="h-5 w-5 text-orange-500" />
-                            <span>Stock Alerts</span>
-                          </div>
-                          {metrics.inventoryInsights.lowStockAlerts.length > 0 && (
-                            <Badge variant="destructive">
-                              {metrics.inventoryInsights.lowStockAlerts.length}
-                            </Badge>
-                          )}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {metrics.inventoryInsights.lowStockAlerts.length === 0 ? (
-                          <div className="text-center py-6">
-                            <div className="text-4xl mb-2">✅</div>
-                            <p className="text-gray-500">All stock levels healthy</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {metrics.inventoryInsights.lowStockAlerts.slice(0, 3).map((alert, index) => (
-                              <div key={index} className="p-3 bg-red-50 rounded-2xl border border-red-200">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="font-medium text-red-800">{alert.name}</p>
-                                    <p className="text-sm text-red-600">
-                                      {alert.current} {alert.unit} remaining
-                                    </p>
-                                  </div>
-                                  <Badge variant={alert.urgency === 'critical' ? 'destructive' : 'secondary'}>
-                                    {alert.urgency}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ))}
-                            {metrics.inventoryInsights.lowStockAlerts.length > 3 && (
-                              <Link href="/admin/reports/stock" className="block text-center p-2 text-[#8B4513] hover:underline">
-                                View all {metrics.inventoryInsights.lowStockAlerts.length} alerts
-                              </Link>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* Quick Actions */}
-                    <Card className="rounded-[30px] custom-shadow">
-                      <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <Link href="/admin/reports/orders" className="block p-4 rounded-2xl border border-[#8B4513] bg-[#8B4513]/10 text-[#1a1a1a] hover:scale-[1.02] transition-transform">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-bold text-sm">📊 View Detailed Reports</p>
-                              <p className="text-xs opacity-70">Sales, orders, and analytics</p>
-                            </div>
-                            <span className="text-xl">→</span>
-                          </div>
-                        </Link>
-                        <Link href="/admin/stock" className="block p-4 rounded-2xl border border-[#D2691E] bg-[#D2691E]/10 text-[#1a1a1a] hover:scale-[1.02] transition-transform">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-bold text-sm">📦 Manage Inventory</p>
-                              <p className="text-xs opacity-70">Update stock levels</p>
-                            </div>
-                            <span className="text-xl">→</span>
-                          </div>
-                        </Link>
-                        <Link href="/admin/menu" className="block p-4 rounded-2xl border border-[#CD853F] bg-[#CD853F]/10 text-[#1a1a1a] hover:scale-[1.02] transition-transform">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-bold text-sm">🍽️ Update Menu</p>
-                              <p className="text-xs opacity-70">Add or modify items</p>
-                            </div>
-                            <span className="text-xl">→</span>
-                          </div>
-                        </Link>
-                      </CardContent>
-                    </Card>
-
-                    {/* Financial Summary */}
-                    <Card className="rounded-[30px] custom-shadow bg-gradient-to-br from-[#8B4513] to-[#D2691E] text-white">
-                      <CardHeader>
-                        <CardTitle className="text-white">Today's Financial Summary</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="opacity-90">Gross Revenue:</span>
-                            <span className="font-bold">{MetricsUtils.formatCurrency(metrics.financialOverview.grossRevenue)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="opacity-90">Total Expenses:</span>
-                            <span className="font-bold">{MetricsUtils.formatCurrency(metrics.financialOverview.totalExpenses)}</span>
-                          </div>
-                          <div className="border-t border-white/20 pt-3">
-                            <div className="flex justify-between text-lg">
-                              <span>Net Profit:</span>
-                              <span className="font-bold">{MetricsUtils.formatCurrency(metrics.financialOverview.netProfit)}</span>
-                            </div>
-                            <div className="text-sm opacity-75 text-right">
-                              {metrics.financialOverview.profitMargin.toFixed(1)}% margin
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+          {/* Stock Alerts (if any) */}
+          {metrics && metrics.inventoryInsights.lowStockAlerts.length > 0 && (
+            <Card className="border-2 border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-red-800">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span>Stock Alerts ({metrics.inventoryInsights.lowStockAlerts.length})</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {metrics.inventoryInsights.lowStockAlerts.slice(0, 5).map((alert, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-white rounded-lg border border-red-200">
+                      <div>
+                        <p className="font-medium text-red-800">{alert.name}</p>
+                        <p className="text-sm text-red-600">{alert.current} {alert.unit} remaining</p>
+                      </div>
+                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                        {alert.urgency}
+                      </span>
+                    </div>
+                  ))}
+                  {metrics.inventoryInsights.lowStockAlerts.length > 5 && (
+                    <Link href="/admin/reports/stock" className="block text-center p-2 text-red-600 hover:underline">
+                      View all {metrics.inventoryInsights.lowStockAlerts.length} alerts
+                    </Link>
+                  )}
                 </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="realtime" className="mt-6">
-              <BusinessMetricsDashboard variant="realtime" />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="mt-6">
-              <BusinessMetricsDashboard variant="full" />
-            </TabsContent>
-          </Tabs>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {/* Printer Setup Modal */}
+        {showPrinterSetup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              <PrinterSetup onClose={() => setShowPrinterSetup(false)} />
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   )
 }
 
-function MetricCard({ 
+function SimpleMetricCard({ 
   icon, 
   label, 
   value, 
-  growth, 
-  subtext, 
-  color, 
-  href 
+  variant = "white",
+  isAlert = false 
 }: { 
   icon: React.ReactNode
   label: string
   value: string
-  growth?: number
-  subtext?: string
-  color: 'white' | 'brown' | 'orange'
-  href?: string
+  variant?: "brown" | "white"
+  isAlert?: boolean
 }) {
-  const styles = {
-    white: "bg-white text-[#1a1a1a] border border-gray-200",
-    brown: "bg-[#8B4513] text-white",
-    orange: "bg-[#D2691E] text-white"
-  }
-
-  const content = (
-    <div className={`rounded-[30px] p-4 custom-shadow flex flex-col justify-between h-32 ${styles[color]} transition-all hover:scale-105 cursor-pointer`}>
-      <div className="flex items-center justify-between">
-        <div className="text-2xl opacity-80">{icon}</div>
-        {growth !== undefined && (
-          <div className={`flex items-center text-xs font-bold ${growth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {growth >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-            {MetricsUtils.formatPercentage(growth)}
+  // Alert styling overrides variant
+  if (isAlert) {
+    return (
+      <Card className="border-2 border-red-200 bg-red-50 hover:shadow-lg transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            {icon}
+            <AlertTriangle className="h-5 w-5 text-red-500" />
           </div>
-        )}
-      </div>
-      <div className="flex-1 flex flex-col justify-end">
-        <div className="mb-1">
-          <div className="text-2xl font-bold leading-none truncate">{value}</div>
-          {subtext && <div className="text-xs font-medium opacity-70 mt-1">{subtext}</div>}
-        </div>
-        <div className="flex justify-between items-center">
-          <p className="text-xs uppercase font-bold tracking-wide opacity-70 truncate flex-1">
-            {label}
-          </p>
-          {href && <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full ml-1 flex-shrink-0">View</span>}
-        </div>
-      </div>
-    </div>
-  )
-
-  if (href) {
-    return <Link href={href}>{content}</Link>
+          <div className="text-2xl font-bold text-red-800 mb-1">{value}</div>
+          <div className="text-sm text-red-600 font-medium">{label}</div>
+        </CardContent>
+      </Card>
+    )
   }
 
-  return content
+  // Brown variant
+  if (variant === "brown") {
+    return (
+      <Card className="border-2 border-[#8B4513] bg-[#8B4513] hover:shadow-lg transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            {icon}
+          </div>
+          <div className="text-2xl font-bold text-white mb-1">{value}</div>
+          <div className="text-sm text-white/90 font-medium">{label}</div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // White variant (default)
+  return (
+    <Card className="border-2 border-[#8B4513] bg-white hover:shadow-lg transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          {icon}
+        </div>
+        <div className="text-2xl font-bold text-[#8B4513] mb-1">{value}</div>
+        <div className="text-sm text-[#8B4513]/80 font-medium">{label}</div>
+      </CardContent>
+    </Card>
+  )
 }

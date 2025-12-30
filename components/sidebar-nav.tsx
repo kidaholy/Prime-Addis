@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
-import { SidebarThemeToggle } from "@/components/theme-toggle"
 import { Logo } from "@/components/logo"
 import { useState, useEffect } from "react"
 
@@ -88,7 +87,6 @@ export function SidebarNav() {
           </Link>
 
           <div className="flex items-center gap-1.5">
-            <SidebarThemeToggle />
             <button
               id="hamburger-button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -157,10 +155,7 @@ export function SidebarNav() {
               </ul>
 
               <div className="mt-6 space-y-2.5">
-                <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-xs text-sidebar-foreground/70">Theme</span>
-                  <SidebarThemeToggle />
-                </div>
+                {/* Theme section removed - always light theme */}
 
                 <button
                   onClick={() => {
@@ -220,10 +215,7 @@ export function SidebarNav() {
           </ul>
 
           <div className="mt-8 space-y-3">
-            <div className="flex items-center justify-between px-4 py-2">
-              <span className="text-sm text-sidebar-foreground/70">Theme</span>
-              <SidebarThemeToggle />
-            </div>
+            {/* Theme section removed - always light theme */}
 
             <button
               onClick={() => logout()}

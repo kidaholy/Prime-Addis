@@ -16,32 +16,30 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
-  // Initialize theme from localStorage or system preference
+  // Always use light theme - no dark theme
   useEffect(() => {
-    const savedTheme = localStorage.getItem('prime-addis-theme') as Theme
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    const initialTheme = savedTheme || systemTheme
-    
-    setThemeState(initialTheme)
+    setThemeState('light')
     setMounted(true)
   }, [])
 
-  // Apply theme to document
+  // Apply light theme to document
   useEffect(() => {
     if (mounted) {
       const root = document.documentElement
       root.classList.remove('light', 'dark')
-      root.classList.add(theme)
-      localStorage.setItem('prime-addis-theme', theme)
+      root.classList.add('light')
+      localStorage.setItem('prime-addis-theme', 'light')
     }
   }, [theme, mounted])
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light')
+    // Do nothing - always stay light
+    setThemeState('light')
   }
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme)
+    // Always force light theme
+    setThemeState('light')
   }
 
   // Prevent hydration mismatch

@@ -3,16 +3,22 @@
 import { useEffect, useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/context/auth-context"
+import { useSettings } from "@/context/settings-context"
 import { ReportExporter } from "@/lib/export-utils"
-import { ArrowLeft, Download, FileText, Printer } from "lucide-react"
+import { OrderDetailsModal } from "@/components/order-details-modal"
+import { ArrowLeft, Download, FileText, Printer, Eye } from "lucide-react"
 import Link from "next/link"
 
 export default function OrdersReportPage() {
     const [filter, setFilter] = useState("today")
+    const [statusFilter, setStatusFilter] = useState("all")
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [selectedOrder, setSelectedOrder] = useState<any>(null)
+    const [showOrderDetails, setShowOrderDetails] = useState(false)
     const { token } = useAuth()
+    const { settings } = useSettings()
 
     useEffect(() => {
         if (token) {
@@ -57,15 +63,19 @@ export default function OrdersReportPage() {
     const exportCSV = () => {
         if (!data || !data.orders) return
 
+        const ordersToExport = statusFilter === "all" ? data.orders : filteredOrders
+
         const exportData = {
-            title: "Orders Report",
+            title: `Orders Report${statusFilter !== "all" ? ` - ${statusFilter.toUpperCase()} Orders` : ""}`,
             period: filter,
-            headers: ["Order ID", "Date", "Status", "Items", "Total", "Payment Method"],
-            data: data.orders.map((o: any) => ({
+            headers: ["Order ID", "Date", "Status", "Menu Items", "Quantities", "Item Prices", "Total", "Payment Method"],
+            data: ordersToExport.map((o: any) => ({
                 "Order ID": o.orderNumber,
                 "Date": new Date(o.createdAt).toLocaleDateString(),
                 "Status": o.status,
-                "Items": o.items.map((i: any) => `${i.quantity}x ${i.name}`).join(", "),
+                "Menu Items": o.items.map((i: any) => i.name).join(" | "),
+                "Quantities": o.items.map((i: any) => `${i.name}: ${i.quantity}`).join(" | "),
+                "Item Prices": o.items.map((i: any) => `${i.name}: ${i.price} ብር`).join(" | "),
                 "Total": `${o.totalAmount} ብር`,
                 "Payment Method": o.paymentMethod
             })),
@@ -73,7 +83,8 @@ export default function OrdersReportPage() {
                 "Total Orders": data.orders.length,
                 "Completed Orders": data.orders.filter((o: any) => o.status === 'completed').length,
                 "Pending Orders": data.orders.filter((o: any) => o.status === 'pending').length,
-                "Cancelled Orders": data.orders.filter((o: any) => o.status === 'cancelled').length
+                "Cancelled Orders": data.orders.filter((o: any) => o.status === 'cancelled').length,
+                "Filtered Results": statusFilter !== "all" ? `${ordersToExport.length} ${statusFilter} orders` : "All orders shown"
             }
         }
 
@@ -83,24 +94,28 @@ export default function OrdersReportPage() {
     const exportPDF = () => {
         if (!data || !data.orders) return
 
+        const ordersToExport = statusFilter === "all" ? data.orders : filteredOrders
+
         const exportData = {
-            title: "Orders Report",
+            title: `Orders Report${statusFilter !== "all" ? ` - ${statusFilter.toUpperCase()} Orders` : ""}`,
             period: filter,
-            headers: ["Order ID", "Date", "Status", "Items", "Total", "Payment Method"],
-            data: data.orders.map((o: any) => ({
+            headers: ["Order ID", "Date", "Status", "Menu Items", "Quantities", "Total", "Payment Method"],
+            data: ordersToExport.map((o: any) => ({
                 "Order ID": o.orderNumber,
                 "Date": new Date(o.createdAt).toLocaleDateString(),
                 "Status": o.status,
-                "Items": o.items.map((i: any) => `${i.quantity}x ${i.name}`).join(", "),
+                "Menu Items": o.items.map((i: any) => i.name).join(", "),
+                "Quantities": o.items.map((i: any) => `${i.quantity}x ${i.name}`).join(", "),
                 "Total": `${o.totalAmount} ብር`,
                 "Payment Method": o.paymentMethod
             })),
             summary: {
                 "Total Orders": data.orders.length,
-                "Completed Orders": data.orders.filter((o: any) => o.status === 'completed').length
+                "Completed Orders": data.orders.filter((o: any) => o.status === 'completed').length,
+                "Filtered Results": statusFilter !== "all" ? `${ordersToExport.length} ${statusFilter} orders` : "All orders shown"
             },
             metadata: {
-                companyName: "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 
@@ -110,15 +125,18 @@ export default function OrdersReportPage() {
     const exportWord = () => {
         if (!data || !data.orders) return
 
+        const ordersToExport = statusFilter === "all" ? data.orders : filteredOrders
+
         const exportData = {
-            title: "Orders Report",
+            title: `Orders Report${statusFilter !== "all" ? ` - ${statusFilter.toUpperCase()} Orders` : ""}`,
             period: filter,
-            headers: ["Order ID", "Date", "Status", "Items", "Total", "Payment Method"],
-            data: data.orders.map((o: any) => ({
+            headers: ["Order ID", "Date", "Status", "Menu Items", "Quantities", "Total", "Payment Method"],
+            data: ordersToExport.map((o: any) => ({
                 "Order ID": o.orderNumber,
                 "Date": new Date(o.createdAt).toLocaleDateString(),
                 "Status": o.status,
-                "Items": o.items.map((i: any) => `${i.quantity}x ${i.name}`).join(", "),
+                "Menu Items": o.items.map((i: any) => i.name).join(", "),
+                "Quantities": o.items.map((i: any) => `${i.quantity}x ${i.name}`).join(", "),
                 "Total": `${o.totalAmount} ብር`,
                 "Payment Method": o.paymentMethod
             })),
@@ -126,15 +144,27 @@ export default function OrdersReportPage() {
                 "Total Orders": data.orders.length,
                 "Completed Orders": data.orders.filter((o: any) => o.status === 'completed').length,
                 "Pending Orders": data.orders.filter((o: any) => o.status === 'pending').length,
-                "Cancelled Orders": data.orders.filter((o: any) => o.status === 'cancelled').length
+                "Cancelled Orders": data.orders.filter((o: any) => o.status === 'cancelled').length,
+                "Filtered Results": statusFilter !== "all" ? `${ordersToExport.length} ${statusFilter} orders` : "All orders shown"
             },
             metadata: {
-                companyName: "Prime Addis Coffee"
+                companyName: settings.app_name || "Prime Addis"
             }
         }
 
         ReportExporter.exportToWord(exportData)
     }
+
+    const handleViewOrder = (order: any) => {
+        setSelectedOrder(order)
+        setShowOrderDetails(true)
+    }
+
+    // Filter orders based on status filter
+    const filteredOrders = data?.orders?.filter((order: any) => {
+        if (statusFilter === "all") return true
+        return order.status === statusFilter
+    }) || []
 
     return (
         <ProtectedRoute requiredRoles={["admin"]}>
@@ -160,6 +190,26 @@ export default function OrdersReportPage() {
                                             }`}
                                     >
                                         {f}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="flex gap-2 bg-white p-1.5 rounded-[20px] shadow-sm">
+                                {[
+                                    { key: "all", label: "All", icon: "📋" },
+                                    { key: "completed", label: "Completed", icon: "✅" },
+                                    { key: "pending", label: "Pending", icon: "⏳" },
+                                    { key: "cancelled", label: "Cancelled", icon: "❌" }
+                                ].map((status) => (
+                                    <button
+                                        key={status.key}
+                                        onClick={() => setStatusFilter(status.key)}
+                                        className={`px-3 py-2 rounded-[15px] text-xs font-bold transition-all flex items-center space-x-1 ${statusFilter === status.key ? "bg-[#D2691E] text-white shadow-md" : "text-gray-500 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <span>{status.icon}</span>
+                                        <span>{status.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -285,25 +335,111 @@ export default function OrdersReportPage() {
 
                             {/* Orders Table */}
                             <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 overflow-hidden">
-                                <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-[#8B4513]">Order Details</h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-black uppercase tracking-widest text-[#8B4513]">Order Details</h3>
+                                    {statusFilter !== "all" && (
+                                        <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                            Showing: {statusFilter} orders ({filteredOrders.length})
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Menu Items Summary */}
+                                {data?.orders && data.orders.length > 0 && (
+                                    <div className="mb-8 p-6 bg-gradient-to-r from-[#8B4513]/10 to-[#D2691E]/10 rounded-2xl border border-[#8B4513]/20">
+                                        <h4 className="text-lg font-bold text-[#8B4513] mb-4">Popular Menu Items</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {(() => {
+                                                // Calculate menu item popularity (excluding cancelled orders)
+                                                const itemStats: { [key: string]: { count: number, revenue: number } } = {}
+                                                
+                                                data.orders
+                                                    .filter((order: any) => order.status !== 'cancelled') // Exclude cancelled orders
+                                                    .forEach((order: any) => {
+                                                        order.items?.forEach((item: any) => {
+                                                            if (!itemStats[item.name]) {
+                                                                itemStats[item.name] = { count: 0, revenue: 0 }
+                                                            }
+                                                            itemStats[item.name].count += item.quantity
+                                                            itemStats[item.name].revenue += item.price * item.quantity
+                                                        })
+                                                    })
+                                                
+                                                const sortedItems = Object.entries(itemStats)
+                                                    .sort(([,a], [,b]) => b.count - a.count)
+                                                    .slice(0, 3)
+                                                
+                                                return sortedItems.map(([itemName, stats], index) => (
+                                                    <div key={itemName} className="bg-white rounded-xl p-4 border border-[#8B4513]/20">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-2xl">
+                                                                {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                                            </span>
+                                                            <span className="text-xs font-bold text-[#8B4513] bg-[#8B4513]/10 px-2 py-1 rounded-full">
+                                                                #{index + 1}
+                                                            </span>
+                                                        </div>
+                                                        <h5 className="font-bold text-gray-800 mb-1">{itemName}</h5>
+                                                        <p className="text-sm text-gray-600">
+                                                            {stats.count} orders • {stats.revenue.toFixed(2)} ብር
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+                                
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
+                                    {filteredOrders.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <div className="text-6xl mb-4">
+                                                {statusFilter === "cancelled" ? "❌" : 
+                                                 statusFilter === "completed" ? "✅" : 
+                                                 statusFilter === "pending" ? "⏳" : "📋"}
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-600 mb-2">
+                                                No {statusFilter === "all" ? "" : statusFilter} orders found
+                                            </h3>
+                                            <p className="text-gray-500">
+                                                {statusFilter === "all" 
+                                                    ? `No orders found for ${filter} period.`
+                                                    : `No ${statusFilter} orders found for ${filter} period.`
+                                                }
+                                            </p>
+                                            {statusFilter !== "all" && (
+                                                <button
+                                                    onClick={() => setStatusFilter("all")}
+                                                    className="mt-4 bg-[#8B4513] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#D2691E] transition-colors"
+                                                >
+                                                    Show All Orders
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <table className="w-full text-left">
                                         <thead>
                                             <tr className="border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 <th className="pb-4 pl-4">Order ID</th>
                                                 <th className="pb-4">Date & Time</th>
                                                 <th className="pb-4">Status</th>
-                                                <th className="pb-4">Items Ordered</th>
+                                                <th className="pb-4">Menu Items & Details</th>
                                                 <th className="pb-4">Payment Method</th>
                                                 <th className="pb-4 pr-4 text-right">Total Amount</th>
+                                                <th className="pb-4 text-center">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
-                                            {data?.orders?.map((order: any) => (
-                                                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                                            {filteredOrders.map((order: any) => (
+                                                <tr key={order._id} className={`hover:bg-gray-50 transition-colors ${order.status === 'cancelled' ? 'bg-red-50/30' : ''}`}>
                                                     <td className="py-4 pl-4 font-bold text-slate-800">
                                                         <div className="flex flex-col">
-                                                            <span>#{order.orderNumber}</span>
+                                                            <div className="flex items-center space-x-2">
+                                                                <span>#{order.orderNumber}</span>
+                                                                {order.status === 'cancelled' && (
+                                                                    <span className="text-red-500 text-xs">❌</span>
+                                                                )}
+                                                            </div>
                                                             <span className="text-[10px] text-gray-400 font-medium">ID: {order._id.slice(-6)}</span>
                                                         </div>
                                                     </td>
@@ -322,13 +458,44 @@ export default function OrdersReportPage() {
                                                         </span>
                                                     </td>
                                                     <td className="py-4 text-gray-600 text-sm">
-                                                        <div className="max-w-xs">
-                                                            {order.items.map((item: any, idx: number) => (
-                                                                <div key={idx} className="flex justify-between text-xs mb-1">
-                                                                    <span className="text-gray-700">{item.name}</span>
-                                                                    <span className="font-bold text-gray-500">×{item.quantity}</span>
+                                                        <div className="max-w-sm">
+                                                            <div className="space-y-2">
+                                                                {order.items.map((item: any, idx: number) => (
+                                                                    <div key={idx} className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                                                                        <div className="flex justify-between items-start">
+                                                                            <div className="flex-1">
+                                                                                <div className="font-medium text-gray-800">{item.name}</div>
+                                                                                {item.category && (
+                                                                                    <div className="text-xs text-gray-500 mt-1">
+                                                                                        <span className="bg-gray-200 px-2 py-0.5 rounded-full">
+                                                                                            {item.category}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                                {item.notes && (
+                                                                                    <div className="text-xs text-blue-600 mt-1 italic">
+                                                                                        Note: {item.notes}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="text-right ml-3">
+                                                                                <div className="font-bold text-[#8B4513]">×{item.quantity}</div>
+                                                                                <div className="text-xs text-gray-500">
+                                                                                    {item.price} ብር each
+                                                                                </div>
+                                                                                <div className="text-xs font-medium text-gray-700">
+                                                                                    = {(item.price * item.quantity).toFixed(2)} ብር
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                                                    <div className="text-xs text-gray-500">
+                                                                        Total Items: {order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
+                                                                    </div>
                                                                 </div>
-                                                            ))}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="py-4">
@@ -337,17 +504,44 @@ export default function OrdersReportPage() {
                                                         </span>
                                                     </td>
                                                     <td className="py-4 pr-4 text-right font-black text-slate-800 text-lg">
-                                                        {order.totalAmount} <span className="text-xs font-bold text-gray-400">ብር</span>
+                                                        <div className="flex flex-col items-end">
+                                                            <span className={order.status === 'cancelled' ? 'line-through text-gray-400' : ''}>
+                                                                {order.totalAmount} <span className="text-xs font-bold text-gray-400">ብር</span>
+                                                            </span>
+                                                            {order.status === 'cancelled' && (
+                                                                <span className="text-xs text-red-500 font-medium">Not collected</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 text-center">
+                                                        <button
+                                                            onClick={() => handleViewOrder(order)}
+                                                            className="bg-[#8B4513] hover:bg-[#D2691E] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 mx-auto transition-colors"
+                                                        >
+                                                            <Eye className="h-3 w-3" />
+                                                            <span>View</span>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
+                                    )}
                                 </div>
                             </div>
                         </>
                     )}
                 </div>
+
+                {/* Order Details Modal */}
+                <OrderDetailsModal 
+                    order={selectedOrder}
+                    isOpen={showOrderDetails}
+                    onClose={() => {
+                        setShowOrderDetails(false)
+                        setSelectedOrder(null)
+                    }}
+                />
             </div>
         </ProtectedRoute>
     )

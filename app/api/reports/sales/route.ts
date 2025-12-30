@@ -57,20 +57,29 @@ export async function GET(request: Request) {
             }
         }
 
-        const query = {
+        // Get all orders (including cancelled) for reporting
+        const allOrdersQuery = {
+            createdAt: { $gte: startDate, $lte: endDate }
+        }
+        
+        // Get revenue-generating orders (excluding cancelled)
+        const revenueQuery = {
             createdAt: { $gte: startDate, $lte: endDate },
-            status: { $ne: "cancelled" } // Exclude cancelled orders from revenue
+            status: { $ne: "cancelled" }
         }
 
-        const orders = await Order.find(query).sort({ createdAt: -1 }).lean()
+        const allOrders = await Order.find(allOrdersQuery).sort({ createdAt: -1 }).lean()
+        const revenueOrders = await Order.find(revenueQuery).lean()
 
-        // Aggregation
+        // Aggregation for revenue (excluding cancelled orders)
         const paymentStats: any = {}
-        const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0)
-        const totalOrders = orders.length
-        const completedOrders = orders.filter(o => o.status === "completed").length
+        const totalRevenue = revenueOrders.reduce((sum, order) => sum + order.totalAmount, 0)
+        const totalOrders = allOrders.length
+        const completedOrders = allOrders.filter(o => o.status === "completed").length
+        const pendingOrders = allOrders.filter(o => o.status === "pending").length
+        const cancelledOrders = allOrders.filter(o => o.status === "cancelled").length
 
-        orders.forEach(order => {
+        revenueOrders.forEach(order => {
             const method = order.paymentMethod || "cash"
             paymentStats[method] = (paymentStats[method] || 0) + order.totalAmount
         })
@@ -93,13 +102,16 @@ export async function GET(request: Request) {
                 totalRevenue,
                 totalOrders,
                 completedOrders,
+                pendingOrders,
+                cancelledOrders,
                 paymentStats,
                 totalOxCost,
                 totalOtherExpenses,
                 totalExpenses,
                 netProfit
             },
-            orders,
+            orders: allOrders, // Return all orders for display
+            revenueOrders, // Revenue-generating orders for calculations
             dailyExpenses
         })
 
