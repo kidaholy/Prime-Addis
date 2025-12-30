@@ -174,9 +174,10 @@ export default function ReportsPage() {
   }
 
   const filteredOrders = getFilteredOrders()
-  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.totalAmount, 0)
-  const completedOrders = filteredOrders.filter((o) => o.status === "completed").length
-  const averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0
+  const completedOrders = filteredOrders.filter((o) => o.status === "completed")
+  const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0)
+  const completedOrdersCount = completedOrders.length
+  const averageOrderValue = completedOrdersCount > 0 ? totalRevenue / completedOrdersCount : 0
   const totalNetWorth = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
   // Calculate comprehensive profit using the business logic
@@ -188,7 +189,7 @@ export default function ReportsPage() {
 
   const stats = {
     totalRevenue: totalRevenue,
-    completedOrders: completedOrders,
+    completedOrders: completedOrdersCount,
     averageOrderValue: averageOrderValue,
     inventoryValue: totalNetWorth,
     totalOrders: filteredOrders.length,
@@ -392,7 +393,7 @@ export default function ReportsPage() {
             {/* Main Stats */}
             <div className="lg:col-span-9 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.totalOrders} ${t("adminReports.ordersTotal")}`} />
+                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.completedOrders} ${t("adminReports.ordersTotal")}`} />
 
                 {/* Net Worth Summary using formula: Revenue - Ox - Other */}
                 {(() => {
