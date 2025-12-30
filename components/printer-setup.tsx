@@ -94,15 +94,33 @@ export function PrinterSetup({ onClose }: PrinterSetupProps) {
       case 'auto':
         autoDetectPrinter()
         return
+      case 'SQUARE_POS':
+        const squareSetup = COMMON_SETUPS.SQUARE_POS()
+        id = squareSetup.id
+        config = squareSetup.config
+        break
+      case 'CLOVER_POS':
+        const cloverSetup = COMMON_SETUPS.CLOVER_POS()
+        id = cloverSetup.id
+        config = cloverSetup.config
+        break
+      case 'USB_THERMAL':
+        const usbSetup = COMMON_SETUPS.USB_THERMAL()
+        id = usbSetup.id
+        config = usbSetup.config
+        break
+      case 'EPSON_TM':
+        const epsonSetup = COMMON_SETUPS.EPSON_TM()
+        id = epsonSetup.id
+        config = epsonSetup.config
+        break
+      case 'STAR_TSP':
+        const starSetup = COMMON_SETUPS.STAR_TSP()
+        id = starSetup.id
+        config = starSetup.config
+        break
       default:
-        const setup = COMMON_SETUPS[selectedConfig as keyof typeof COMMON_SETUPS]
-        if (typeof setup === 'function') {
-          const printerSetup = setup()
-          id = printerSetup.id
-          config = printerSetup.config
-        } else {
-          return
-        }
+        return
     }
 
     addPrinter(id, config)
