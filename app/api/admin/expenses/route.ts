@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         await connectDB()
 
         let query: any = {}
-        
+
         if (date) {
             // Specific date
             const targetDate = new Date(date)
@@ -50,13 +50,26 @@ export async function GET(request: Request) {
                     endDate.setUTCHours(23, 59, 59, 999)
                     break
                 case "month":
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+                    break
+                case "year":
+                    startDate = new Date(now.getFullYear(), 0, 1)
+                    endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+                    break
+                case "all":
+                    startDate = new Date(2000, 0, 1) // Effectively all
+                    endDate = new Date(2100, 0, 1)
+                    break
                 default:
                     startDate = new Date(now.getFullYear(), now.getMonth(), 1)
                     endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
                     break
             }
 
-            query.date = { $gte: startDate, $lte: endDate }
+            if (period !== "all") {
+                query.date = { $gte: startDate, $lte: endDate }
+            }
         }
 
         const expenses = await DailyExpense.find(query).sort({ date: -1 }).lean()
@@ -128,13 +141,45 @@ export async function POST(request: Request) {
         }
 
         // 🔗 BUSINESS LOGIC: Update stock quantities based on purchases
+        // If updating an existing expense, revert the old quantities first to avoid doubling
+        if (existingExpense) {
+            // Revert Ox
+            if (existingExpense.oxQuantity > 0) {
+                const oldOxStock = await Stock.findOne({
+                    name: { $regex: /^ox$/i },
+                    status: { $ne: 'finished' }
+                })
+                if (oldOxStock) {
+                    oldOxStock.quantity = Math.max(0, (oldOxStock.quantity || 0) - existingExpense.oxQuantity)
+                    await oldOxStock.save()
+                }
+            }
+
+            // Revert other items
+            if (existingExpense.items && existingExpense.items.length > 0) {
+                for (const item of existingExpense.items) {
+                    if (item.quantity > 0) {
+                        const oldStockItem = await Stock.findOne({
+                            name: { $regex: new RegExp(`^${item.name}$`, 'i') },
+                            status: { $ne: 'finished' }
+                        })
+                        if (oldStockItem) {
+                            oldStockItem.quantity = Math.max(0, (oldStockItem.quantity || 0) - item.quantity)
+                            await oldStockItem.save()
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply new quantities
         if (oxQuantity > 0) {
             // Find active ox stock item and update quantity
-            const oxStock = await Stock.findOne({ 
+            const oxStock = await Stock.findOne({
                 name: { $regex: /^ox$/i },
                 status: { $ne: 'finished' }
             })
-            
+
             if (oxStock) {
                 oxStock.quantity = (oxStock.quantity || 0) + oxQuantity
                 await oxStock.save()
@@ -153,16 +198,16 @@ export async function POST(request: Request) {
             }
         }
 
-        // Update other stock items based on expense items
+        // Update other stock items based on new expense items
         if (items && items.length > 0) {
             for (const item of items) {
                 if (item.quantity > 0 && item.name) {
                     // Try to find existing stock item
-                    let stockItem = await Stock.findOne({ 
+                    let stockItem = await Stock.findOne({
                         name: { $regex: new RegExp(`^${item.name}$`, 'i') },
                         status: { $ne: 'finished' }
                     })
-                    
+
                     if (stockItem) {
                         // Update existing stock
                         stockItem.quantity = (stockItem.quantity || 0) + item.quantity

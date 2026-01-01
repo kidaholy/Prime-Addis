@@ -164,9 +164,15 @@ export default function ReportsPage() {
           lastWeek.setHours(0, 0, 0, 0);
           return orderDate >= lastWeek && orderDate <= now
         case "month":
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-          return orderDate >= startOfMonth && orderDate <= endOfMonth
+          const lastMonth = new Date(today);
+          lastMonth.setDate(today.getDate() - 30);
+          lastMonth.setHours(0, 0, 0, 0);
+          return orderDate >= lastMonth && orderDate <= now
+        case "year":
+          const lastYear = new Date(today);
+          lastYear.setDate(today.getDate() - 365);
+          lastYear.setHours(0, 0, 0, 0);
+          return orderDate >= lastYear && orderDate <= now
         default:
           return true
       }
@@ -344,6 +350,7 @@ export default function ReportsPage() {
                     { id: "today", label: t("adminReports.todayView") },
                     { id: "week", label: t("adminReports.weekView") },
                     { id: "month", label: t("adminReports.monthView") },
+                    { id: "year", label: "Year View" },
                   ].map((range) => (
                     <button
                       key={range.id}
@@ -407,7 +414,7 @@ export default function ReportsPage() {
                       value={`${profitData.netProfit.toLocaleString()} ${t("common.currencyBr")}`}
                       icon="💎"
                       color={profitData.netProfit >= 0 ? "purple" : "orange"}
-                      subtext={`Orders - Ox Cost - Physical Expense`}
+                      subtext={`Orders - Ox Exp - Physical Stock`}
                     />
                   );
                 })()}
@@ -416,10 +423,10 @@ export default function ReportsPage() {
                 <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.netWorth")}</p>
                   <h3 className="text-4xl font-black text-purple-600">
-                    {profitData ? profitData.netProfit.toLocaleString() : stats.totalRevenue.toFixed(0)} {t("common.currencyBr")}
+                    {profitData ? profitData.netProfit.toLocaleString() : "..."} {t("common.currencyBr")}
                   </h3>
                   <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
-                    💎 Orders - Ox - Physical Expense
+                    💎 Orders - Ox Exp - Physical Stock
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Detailed Analysis →</span>
                   </p>
                 </Link>

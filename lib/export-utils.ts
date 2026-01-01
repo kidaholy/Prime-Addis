@@ -654,8 +654,12 @@ export class ProfitCalculator {
     const totalStockValue = stockItems
       .reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
-    // Net profit = Revenue - (Ox costs + Other expenses + Stock Value)
-    const netProfit = revenue - (expenses.totalOxCost || 0) - (expenses.totalOtherExpenses || 0) - totalStockValue
+    // Net Worth = Orders - Period Expenditures - Inherited Stock
+    // To avoid doubling, we only subtract Stock Value that wasn't already recorded as an expense this period.
+    const totalExpenditures = (expenses.totalOxCost || 0) + (expenses.totalOtherExpenses || 0)
+    const inheritedStockValue = Math.max(0, totalStockValue - totalExpenditures)
+
+    const netProfit = revenue - totalExpenditures - inheritedStockValue
 
     return {
       revenue,

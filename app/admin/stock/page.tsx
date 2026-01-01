@@ -52,6 +52,7 @@ export default function StockAndExpensesPage() {
     const [editingStock, setEditingStock] = useState<StockItem | null>(null)
     const [saveLoading, setSaveLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [expensePeriod, setExpensePeriod] = useState<"today" | "week" | "month" | "year" | "all">("month")
 
     const [showRestockModal, setShowRestockModal] = useState(false)
     const [restockingItem, setRestockingItem] = useState<StockItem | null>(null)
@@ -87,12 +88,12 @@ export default function StockAndExpensesPage() {
             fetchExpenses()
             fetchStockItems()
         }
-    }, [token])
+    }, [token, expensePeriod])
 
     const fetchExpenses = async () => {
         try {
             setLoading(true)
-            const response = await fetch("/api/admin/expenses", {
+            const response = await fetch(`/api/admin/expenses?period=${expensePeriod}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             if (response.ok) {
@@ -443,6 +444,7 @@ export default function StockAndExpensesPage() {
 
     const totalStats = {
         totalOx: expenses.reduce((sum, e) => sum + e.oxCost, 0),
+        totalOxCount: expenses.reduce((sum, e) => sum + (e.oxQuantity || 0), 0),
         totalOther: expenses.reduce((sum, e) => sum + e.otherExpenses, 0),
         count: expenses.length,
         inventoryValue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitCost || 0)), 0),
@@ -475,7 +477,7 @@ export default function StockAndExpensesPage() {
                                         {activeTab === 'expenses' ? (
                                             <>
                                                 <p className="text-4xl font-black">{totalStats.totalOx.toLocaleString()} <span className="text-xs">ETB</span></p>
-                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total Ox Investment</p>
+                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total {totalStats.totalOxCount} Ox Investment</p>
                                             </>
                                         ) : (
                                             <>
@@ -547,19 +549,35 @@ export default function StockAndExpensesPage() {
                         {/* Main Feed Area */}
                         <div className="lg:col-span-8 space-y-6">
                             {/* Tab Switcher */}
-                            <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
-                                <button
-                                    onClick={() => setActiveTab("expenses")}
-                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
-                                >
-                                    🐂 Ox Diary
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("inventory")}
-                                    className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
-                                >
-                                    📦 Physical Stock & Expenses
-                                </button>
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
+                                    <button
+                                        onClick={() => setActiveTab("expenses")}
+                                        className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
+                                    >
+                                        🐂 Ox Diary
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("inventory")}
+                                        className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
+                                    >
+                                        📦 Physical Stock & Expenses
+                                    </button>
+                                </div>
+
+                                {activeTab === 'expenses' && (
+                                    <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
+                                        {(["today", "week", "month", "year", "all"] as const).map((p) => (
+                                            <button
+                                                key={p}
+                                                onClick={() => setExpensePeriod(p)}
+                                                className={`px-4 py-3 rounded-full font-black uppercase text-[9px] tracking-widest transition-all ${expensePeriod === p ? 'bg-[#D2691E] text-white shadow-md' : 'text-gray-400 hover:text-[#8B4513]'}`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <motion.div
@@ -639,7 +657,10 @@ export default function StockAndExpensesPage() {
                                                                             })()
                                                                         )}
                                                                     </div>
-                                                                    <p className="font-black text-2xl text-[#8B4513]">{expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span></p>
+                                                                    <p className="font-black text-2xl text-[#8B4513]">
+                                                                        {expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span>
+                                                                        {expense.oxQuantity > 0 && <span className="text-xs font-bold text-gray-400 ml-2">({expense.oxQuantity} Ox)</span>}
+                                                                    </p>
                                                                 </div>
                                                                 <div className="w-px h-8 bg-gray-200" />
                                                                 <div>

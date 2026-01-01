@@ -245,7 +245,7 @@ export default function StockUsageReportPage() {
                                 />
                                 <StatCard
                                     icon={Package}
-                                    label="Stock Value"
+                                    label="Physical Stock Value"
                                     value={`ብር${(data?.summary?.totalStockValue || 0).toLocaleString()}`}
                                     color="bg-blue-500 text-blue-600"
                                 />
@@ -260,6 +260,12 @@ export default function StockUsageReportPage() {
                                     label="Restock Required"
                                     value={`${data?.stockAnalysis?.filter((s: any) => (s.remaining <= s.minLimit)).length} SKUs`}
                                     color="bg-red-500 text-red-600"
+                                />
+                                <StatCard
+                                    icon={Package}
+                                    label="Physical Spend"
+                                    value={`ብር${(data?.summary?.totalPurchaseValue || 0).toLocaleString()}`}
+                                    color="bg-orange-500 text-orange-600"
                                 />
                             </div>
 
@@ -278,13 +284,13 @@ export default function StockUsageReportPage() {
                                         <p className="text-xs text-gray-500 mt-2">Per order</p>
                                     </div>
                                     <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-3xl">
-                                        <h4 className="text-xs font-black uppercase tracking-wider text-purple-600 mb-2">Stock Investment</h4>
-                                        <p className="text-3xl font-black text-slate-900">${(data?.summary?.totalStockValue || 0).toLocaleString()}</p>
+                                        <h4 className="text-xs font-black uppercase tracking-wider text-purple-600 mb-2">Physical Stock</h4>
+                                        <p className="text-3xl font-black text-slate-900">ብር{(data?.summary?.totalStockValue || 0).toLocaleString()}</p>
                                         <p className="text-xs text-gray-500 mt-2">Current value</p>
                                     </div>
                                     <div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-3xl">
                                         <h4 className="text-xs font-black uppercase tracking-wider text-orange-600 mb-2">Consumed Value</h4>
-                                        <p className="text-3xl font-black text-slate-900">${(data?.summary?.totalConsumedValue || 0).toLocaleString()}</p>
+                                        <p className="text-3xl font-black text-slate-900">ብር{(data?.summary?.totalConsumedValue || 0).toLocaleString()}</p>
                                         <p className="text-xs text-gray-500 mt-2">Cost of goods sold</p>
                                     </div>
                                 </div>
@@ -392,7 +398,7 @@ export default function StockUsageReportPage() {
                                                         {item.supplier}
                                                     </td>
                                                     <td className="py-4 text-right font-bold text-gray-700">
-                                                        ${item.unitCost.toFixed(2)}
+                                                        ብር{item.unitCost.toFixed(2)}
                                                     </td>
                                                     <td className="py-4 text-right font-black text-emerald-500 text-lg">
                                                         {item.purchased.toLocaleString()} <span className="text-xs font-bold">{item.unit}</span>
@@ -422,12 +428,12 @@ export default function StockUsageReportPage() {
                                                         )}
                                                     </td>
                                                     <td className="py-4 text-right font-bold text-green-600">
-                                                        ${item.stockValue.toLocaleString()}
+                                                        ብር{item.stockValue.toLocaleString()}
                                                     </td>
                                                     <td className="py-4 text-right pr-4">
                                                         <span className={`text-xs font-bold px-2 py-1 rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-600' :
-                                                                item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
-                                                                    'bg-yellow-100 text-yellow-600'
+                                                            item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
+                                                                'bg-yellow-100 text-yellow-600'
                                                             }`}>
                                                             {item.status || 'active'}
                                                         </span>
@@ -451,8 +457,8 @@ export default function StockUsageReportPage() {
                                                     <p className="text-xs text-gray-500 uppercase tracking-wider">{item.category}</p>
                                                 </div>
                                                 <span className={`text-xs font-bold px-2 py-1 rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-600' :
-                                                        item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
-                                                            'bg-yellow-100 text-yellow-600'
+                                                    item.status === 'finished' ? 'bg-gray-100 text-gray-600' :
+                                                        'bg-yellow-100 text-yellow-600'
                                                     }`}>
                                                     {item.status || 'active'}
                                                 </span>
@@ -471,11 +477,11 @@ export default function StockUsageReportPage() {
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-gray-500">Unit Cost:</span>
-                                                    <span className="text-sm font-bold">${item.unitCost.toFixed(2)}</span>
+                                                    <span className="text-sm font-bold">ብር{item.unitCost.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-gray-500">Stock Value:</span>
-                                                    <span className="text-sm font-bold text-green-600">${item.stockValue.toLocaleString()}</span>
+                                                    <span className="text-sm font-bold text-green-600">ብር{item.stockValue.toLocaleString()}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-gray-500">Consumed ({filter}):</span>

@@ -47,10 +47,20 @@ export async function GET(request: Request) {
                     startDate.setHours(0, 0, 0, 0);
                     break
                 case "month":
-                    startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+                    // Last 30 days
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 30);
+                    startDate.setHours(0, 0, 0, 0);
                     break
                 case "year":
-                    startDate = new Date(today.getFullYear(), 0, 1)
+                    // Last 365 days
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 365);
+                    startDate.setHours(0, 0, 0, 0);
+                    break
+                case "all":
+                    startDate = new Date(2000, 0, 1) // Effectively all
+                    endDate = new Date(2100, 0, 1)
                     break
                 default:
                     startDate = today
@@ -61,7 +71,7 @@ export async function GET(request: Request) {
         const allOrdersQuery = {
             createdAt: { $gte: startDate, $lte: endDate }
         }
-        
+
         // Get revenue-generating orders (excluding cancelled)
         const revenueQuery = {
             createdAt: { $gte: startDate, $lte: endDate },

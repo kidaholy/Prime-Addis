@@ -81,9 +81,24 @@ export default function NetWorthReportPage() {
         .filter(item => !(item.category.toLowerCase() === "meat" || item.name.toLowerCase().includes("ox")))
         .reduce((acc, item) => acc + ((item.quantity ?? 0) * (item.unitCost ?? 0)), 0)
 
-    const displayOxCosts = totalOxCost + oxStockValue
-    const displayPhysicalExpenses = totalOtherExpenses + otherStockValue
-    const netWorth = totalRevenue - (displayOxCosts + displayPhysicalExpenses)
+    // Business Logic: Orders - Ox Expense - Physical Stock
+    // 1. Period Expenditures (Cash Out)
+    const periodOxPurchases = totalOxCost
+    const periodOtherPurchases = totalOtherExpenses
+
+    // 2. Inherited Stock Value (Non-duplicated Assets)
+    // We treat stock as an expense. If it was bought in the period, it's already in the expenditures.
+    // We only subtract the value of stock that existed BEFORE the period to avoid doubling.
+    // If CurrentStock > PeriodPurchases, the difference is inherited value.
+    const inheritedOxValue = Math.max(0, oxStockValue - periodOxPurchases)
+    const inheritedOtherValue = Math.max(0, otherStockValue - periodOtherPurchases)
+
+    // Final Categorization for UI
+    const displayOxCosts = periodOxPurchases + inheritedOxValue
+    const displayPhysicalStock = periodOtherPurchases + inheritedOtherValue
+
+    // Net Worth = Revenue - (Total Value tied in Oxen) - (Total Value tied in Physical Goods)
+    const netWorth = totalRevenue - displayOxCosts - displayPhysicalStock
 
     const exportNetWorthCSV = () => {
         const exportData = {
@@ -98,27 +113,27 @@ export default function NetWorthReportPage() {
                     "Description": "Total sales revenue from orders"
                 },
                 {
-                    "Component": "Ox Costs",
+                    "Component": "Ox Exp",
                     "Type": "Expense",
                     "Amount (ብር)": `-${displayOxCosts.toLocaleString()}`,
                     "Description": "Oxen purchased & stock value"
                 },
                 {
-                    "Component": "Physical Expense",
+                    "Component": "Physical Stock",
                     "Type": "Expense",
-                    "Amount (ብር)": `-${displayPhysicalExpenses.toLocaleString()}`,
+                    "Amount (ብር)": `-${displayPhysicalStock.toLocaleString()}`,
                     "Description": "Operational & other stock value"
                 },
                 {
                     "Component": "Net Worth",
                     "Type": "Result",
                     "Amount (ብር)": netWorth.toLocaleString(),
-                    "Description": "Orders - (Ox Costs + Physical Expense)"
+                    "Description": "Orders - (Ox Exp + Physical Stock)"
                 }
             ],
             summary: {
                 "Total Revenue": `${totalRevenue.toLocaleString()} ብር`,
-                "Total Costs": `${(displayOxCosts + displayPhysicalExpenses).toLocaleString()} ብር`,
+                "Total Costs": `${(displayOxCosts + displayPhysicalStock).toLocaleString()} ብር`,
                 "Net Worth": `${netWorth.toLocaleString()} ብር`,
                 "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0}%`
             }
@@ -140,15 +155,15 @@ export default function NetWorthReportPage() {
                     "Description": "Total sales revenue"
                 },
                 {
-                    "Component": "Ox Costs",
+                    "Component": "Ox Exp",
                     "Type": "Expense",
                     "Amount": `${displayOxCosts.toLocaleString()} ብር`,
                     "Description": "Oxen purchases & stock"
                 },
                 {
-                    "Component": "Physical Expense",
+                    "Component": "Physical Stock",
                     "Type": "Expense",
-                    "Amount": `${displayPhysicalExpenses.toLocaleString()} ብር`,
+                    "Amount": `${displayPhysicalStock.toLocaleString()} ብር`,
                     "Description": "Operational expenses & stock"
                 }
             ],
@@ -178,15 +193,15 @@ export default function NetWorthReportPage() {
                     "Description": "Total sales revenue"
                 },
                 {
-                    "Component": "Ox Costs",
+                    "Component": "Ox Exp",
                     "Type": "Expense",
                     "Amount": `${displayOxCosts.toLocaleString()} ብር`,
                     "Description": "Oxen purchases & stock"
                 },
                 {
-                    "Component": "Physical Expense",
+                    "Component": "Physical Stock",
                     "Type": "Expense",
-                    "Amount": `${displayPhysicalExpenses.toLocaleString()} ብር`,
+                    "Amount": `${displayPhysicalStock.toLocaleString()} ብር`,
                     "Description": "Operational expenses & stock"
                 }
             ],
@@ -218,7 +233,7 @@ export default function NetWorthReportPage() {
 
                         <div className="flex gap-4 items-center">
                             <div className="flex gap-2 bg-white p-1.5 rounded-[20px] shadow-sm">
-                                {["today", "week", "month", "year"].map((f) => (
+                                {["today", "week", "month", "year", "all"].map((f) => (
                                     <button
                                         key={f}
                                         onClick={() => setFilter(f)}
@@ -288,9 +303,9 @@ export default function NetWorthReportPage() {
                                     <div className="flex flex-wrap items-center gap-4 text-2xl font-black mb-6">
                                         <span className="bg-white/20 px-4 py-2 rounded-2xl">Revenue</span>
                                         <span className="text-3xl">-</span>
-                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Ox Costs</span>
+                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Ox Expense</span>
                                         <span className="text-3xl">-</span>
-                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Physical Expense</span>
+                                        <span className="bg-white/20 px-4 py-2 rounded-2xl">Physical Stock</span>
                                         <span className="text-3xl">=</span>
                                         <span className="bg-white text-[#8B4513] px-6 py-3 rounded-2xl font-black">
                                             {netWorth.toLocaleString()} ብር
@@ -342,9 +357,9 @@ export default function NetWorthReportPage() {
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="p-3 bg-red-500 text-white rounded-2xl">
-                                                <span className="text-lg">🐄</span>
+                                                <Beef size={20} />
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-wider text-red-600">Ox Costs ({filter})</span>
+                                            <span className="text-xs font-black uppercase tracking-wider text-red-600">Ox Exp ({filter})</span>
                                         </div>
                                         <p className="text-3xl font-black text-red-700 mb-2">
                                             -{displayOxCosts.toLocaleString()} <span className="text-sm">ብር</span>
@@ -368,12 +383,12 @@ export default function NetWorthReportPage() {
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="p-3 bg-orange-500 text-white rounded-2xl">
-                                                <span className="text-lg">💸</span>
+                                                <Package size={20} />
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-wider text-orange-600">Physical Expense ({filter})</span>
+                                            <span className="text-xs font-black uppercase tracking-wider text-orange-600">Physical Stock ({filter})</span>
                                         </div>
                                         <p className="text-3xl font-black text-orange-700 mb-2">
-                                            -{displayPhysicalExpenses.toLocaleString()} <span className="text-sm">ብር</span>
+                                            -{displayPhysicalStock.toLocaleString()} <span className="text-sm">ብር</span>
                                         </p>
                                         <p className="text-xs text-orange-600 font-medium">
                                             Misc & Other Stock Assets
