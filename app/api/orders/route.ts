@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     const serializedOrders = orders.map(order => ({
       ...order,
       _id: order._id.toString(),
-      items: order.items.sort((a: any, b: any) => {
+      items: (order.items || []).sort((a: any, b: any) => {
         const idA = a.menuId || ""
         const idB = b.menuId || ""
         return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
@@ -194,7 +194,10 @@ export async function POST(request: Request) {
         const menu = linkedMenuItems.find(m => m._id.toString() === item.menuItemId)
         return {
           ...item,
-          menuId: menu?.menuId
+          menuId: menu?.menuId,
+          status: "pending",
+          modifiers: item.modifiers || [],
+          notes: item.notes || ""
         }
       }).sort((a: any, b: any) => {
         const idA = a.menuId || ""

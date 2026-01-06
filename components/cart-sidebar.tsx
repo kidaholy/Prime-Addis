@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useLanguage } from "@/context/language-context"
 
 interface CartItem {
@@ -32,12 +33,39 @@ export function CartSidebar({
   waiterBatchNumber,
   setWaiterBatchNumber,
   tableNumber,
-  setTableNumber
+  setTableNumber,
 }: CartSidebarProps) {
   const { t } = useLanguage()
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.08
   const total = subtotal + tax
+
+  // Settings State for Tables/Waiters
+  const [tables, setTables] = useState<any[]>([])
+  const [waiters, setWaiters] = useState<any[]>([])
+
+  useEffect(() => {
+    // Fetch tables and waiters
+    const fetchData = async () => {
+      try {
+        const [tablesRes, waitersRes] = await Promise.all([
+          fetch("/api/tables"),
+          fetch("/api/waiters")
+        ])
+        if (tablesRes.ok) setTables(await tablesRes.json())
+        if (waitersRes.ok) setWaiters(await waitersRes.json())
+      } catch (err) { console.error("Failed to load tables/waiters", err) }
+    }
+    fetchData()
+  }, [])
+
+  // Filter tables based on selected waiter
+  const filteredTables = waiterBatchNumber
+    ? tables.filter(t => {
+      const selectedWaiter = waiters.find(w => w.waiterId === waiterBatchNumber)
+      return selectedWaiter?.tables?.includes(t.tableNumber)
+    })
+    : tables
 
   const containerClasses = isEmbedded
     ? "w-full flex flex-col h-full bg-transparent"
@@ -57,24 +85,41 @@ export function CartSidebar({
       <div className={`${isEmbedded ? 'pb-4' : 'px-4 pb-4'} space-y-3`}>
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Table #</label>
-            <input
-              type="text"
-              value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
-              placeholder="e.g. 12"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none"
-            />
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Batch #</label>
+            <select
+              value={waiterBatchNumber}
+              onChange={(e) => {
+                setWaiterBatchNumber(e.target.value)
+                setTableNumber("") // Reset table selection when waiter changes
+              }}
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none appearance-none"
+            >
+              <option value="">Select Waiter</option>
+              {waiters.map((waiter: any) => (
+                <option key={waiter._id} value={waiter.waiterId}>
+                  {waiter.waiterId} - {waiter.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex-1">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Batch #</label>
-            <input
-              type="text"
-              value={waiterBatchNumber}
-              onChange={(e) => setWaiterBatchNumber(e.target.value)}
-              placeholder="e.g. B-01"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none"
-            />
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Table #</label>
+            <select
+              value={tableNumber}
+              onChange={(e) => setTableNumber(e.target.value)}
+              disabled={!waiterBatchNumber && waiters.some(w => w.tables?.length > 0)} // Disable if strict mode is needed, but for now just filter
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none appearance-none disabled:opacity-50 disabled:bg-gray-100"
+            >
+              <option value="">Select Table</option>
+              {filteredTables.map((table: any) => (
+                <option key={table._id} value={table.tableNumber}>
+                  {table.tableNumber} {table.capacity ? `(${table.capacity})` : ""}
+                </option>
+              ))}
+            </select>
+            {waiterBatchNumber && filteredTables.length === 0 && (
+              <p className="text-[10px] text-red-500 font-bold mt-1">No tables assigned to this waiter.</p>
+            )}
           </div>
         </div>
       </div>

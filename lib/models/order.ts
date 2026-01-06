@@ -6,6 +6,9 @@ interface IOrderItem {
   name: string
   quantity: number
   price: number
+  status: "pending" | "preparing" | "ready" | "served" | "cancelled"
+  modifiers?: string[]
+  notes?: string
 }
 
 interface IOrder extends Document {
@@ -20,6 +23,9 @@ interface IOrder extends Document {
   createdBy: mongoose.Types.ObjectId
   createdAt: Date
   updatedAt: Date
+  kitchenAcceptedAt?: Date
+  readyAt?: Date
+  servedAt?: Date
 }
 
 const orderSchema = new Schema<IOrder>(
@@ -32,6 +38,13 @@ const orderSchema = new Schema<IOrder>(
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
+        status: {
+          type: String,
+          enum: ["pending", "preparing", "ready", "served", "cancelled"],
+          default: "pending"
+        },
+        modifiers: [{ type: String }],
+        notes: { type: String }
       },
     ],
     totalAmount: { type: Number, required: true },
@@ -45,6 +58,9 @@ const orderSchema = new Schema<IOrder>(
     waiterBatchNumber: { type: String, required: true, index: true },
     tableNumber: { type: String, required: true, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    kitchenAcceptedAt: { type: Date },
+    readyAt: { type: Date },
+    servedAt: { type: Date }
   },
   { timestamps: true }
 )

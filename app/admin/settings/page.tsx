@@ -33,6 +33,13 @@ export default function AdminSettingsPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadMethod, setUploadMethod] = useState<"url" | "file">("url")
 
+  // Table & Waiter Management State
+  const [activeTab, setActiveTab] = useState("branding")
+  const [tables, setTables] = useState<any[]>([])
+  const [waiters, setWaiters] = useState<any[]>([])
+  const [newTable, setNewTable] = useState({ tableNumber: "", capacity: "" })
+  const [newWaiter, setNewWaiter] = useState({ waiterId: "", name: "", tables: [] as string[] })
+
   useEffect(() => {
     if (settings) {
       setFormData({
@@ -42,6 +49,83 @@ export default function AdminSettingsPage() {
       })
     }
   }, [settings])
+
+  useEffect(() => {
+    if (activeTab === "tables") fetchTables()
+    if (activeTab === "waiters") fetchWaiters()
+  }, [activeTab])
+
+  const fetchTables = async () => {
+    try {
+      const res = await fetch("/api/admin/tables", { headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) setTables(await res.json())
+    } catch (err) { console.error("Failed to fetch tables", err) }
+  }
+
+  const fetchWaiters = async () => {
+    try {
+      const res = await fetch("/api/admin/waiters", { headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) setWaiters(await res.json())
+    } catch (err) { console.error("Failed to fetch waiters", err) }
+  }
+
+  const handleAddTable = async () => {
+    try {
+      const res = await fetch("/api/admin/tables", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(newTable)
+      })
+      if (res.ok) {
+        setNewTable({ tableNumber: "", capacity: "" })
+        fetchTables()
+        notify({ title: "Success", message: "Table added successfully", type: "success" })
+      } else {
+        const err = await res.json()
+        notify({ title: "Error", message: err.message, type: "error" })
+      }
+    } catch (err) { notify({ title: "Error", message: "Failed to add table", type: "error" }) }
+  }
+
+  const handleDeleteTable = async (id: string) => {
+    if (!await confirm({ title: "Delete Table", message: "Are you sure?", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
+    try {
+      const res = await fetch(`/api/admin/tables?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) {
+        fetchTables()
+        notify({ title: "Success", message: "Table deleted", type: "success" })
+      }
+    } catch (err) { notify({ title: "Error", message: "Failed to delete table", type: "error" }) }
+  }
+
+  const handleAddWaiter = async () => {
+    try {
+      const res = await fetch("/api/admin/waiters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(newWaiter)
+      })
+      if (res.ok) {
+        setNewWaiter({ waiterId: "", name: "", tables: [] })
+        fetchWaiters()
+        notify({ title: "Success", message: "Waiter added successfully", type: "success" })
+      } else {
+        const err = await res.json()
+        notify({ title: "Error", message: err.message, type: "error" })
+      }
+    } catch (err) { notify({ title: "Error", message: "Failed to add waiter", type: "error" }) }
+  }
+
+  const handleDeleteWaiter = async (id: string) => {
+    if (!await confirm({ title: "Delete Waiter", message: "Are you sure?", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
+    try {
+      const res = await fetch(`/api/admin/waiters?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) {
+        fetchWaiters()
+        notify({ title: "Success", message: "Waiter deleted", type: "success" })
+      }
+    } catch (err) { notify({ title: "Error", message: "Failed to delete waiter", type: "error" }) }
+  }
 
   const handleSaveSetting = async (key: string, value: string, type: string = "string", description?: string) => {
     try {
@@ -155,7 +239,7 @@ export default function AdminSettingsPage() {
       confirmText: "Remove Logo",
       cancelText: "Cancel"
     })
-    
+
     if (confirmed) {
       setFormData({ ...formData, logo_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&h=200&fit=crop&crop=center' })
     }
@@ -247,24 +331,34 @@ export default function AdminSettingsPage() {
             {/* Main Content - Settings Form */}
             <div className="lg:col-span-8">
               <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <div className="flex justify-between items-center mb-8">
-                  <div>
-                    <h2 className="text-2xl font-bold bubbly-text">{t("adminSettings.title")}</h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {t("adminSettings.subtitle")}
-                    </p>
-                  </div>
+
+                <div className="flex gap-4 mb-8 border-b border-gray-100 pb-4">
+                  <button
+                    onClick={() => setActiveTab("branding")}
+                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "branding" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                  >
+                    Branding
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("tables")}
+                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "tables" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                  >
+                    Table Management
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("waiters")}
+                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "waiters" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                  >
+                    Waiter Management
+                  </button>
                 </div>
 
-                {loading ? (
-                  <div className="flex flex-col items-center justify-center py-32">
-                    <div className="text-6xl animate-bounce mb-4">⚙️</div>
-                    <p className="text-gray-400 font-bold">{t("adminSettings.loadingSettings")}</p>
-                  </div>
-                ) : (
+                {activeTab === "branding" && (
                   <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* ... (Existing Branding Form Content - Logo, App Name, Tagline) ... */}
                     {/* Logo Upload Section */}
                     <div className="space-y-4">
+                      {/* ... Copy existing Logo Upload content here ... */}
                       <label className="block text-sm font-bold text-gray-700">
                         {t("adminSettings.logoUpload")}
                       </label>
@@ -427,6 +521,172 @@ export default function AdminSettingsPage() {
                     </div>
                   </form>
                 )}
+
+                {activeTab === "tables" && (
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                      <h3 className="font-bold text-lg mb-4 text-[#8B4513]">Add New Table</h3>
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Table Number (e.g. T-01)"
+                            value={newTable.tableNumber}
+                            onChange={(e) => setNewTable({ ...newTable, tableNumber: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Capacity (Optional)"
+                            value={newTable.capacity}
+                            onChange={(e) => setNewTable({ ...newTable, capacity: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                          />
+                        </div>
+                        <button
+                          onClick={handleAddTable}
+                          disabled={!newTable.tableNumber}
+                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {tables.map(table => (
+                        <div key={table._id} className="p-4 bg-white border border-gray-200 rounded-2xl flex justify-between items-center group hover:border-[#8B4513] hover:shadow-md transition-all">
+                          <div>
+                            <div className="font-black text-lg text-gray-800">{table.tableNumber}</div>
+                            {table.capacity && <div className="text-xs text-gray-400 font-bold">{table.capacity} Seats</div>}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteTable(table._id)}
+                            className="text-gray-300 hover:text-red-500 transition-colors p-2"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                      {tables.length === 0 && (
+                        <div className="col-span-full text-center py-10 text-gray-400">
+                          No tables added yet.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "waiters" && (
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                      <h3 className="font-bold text-lg mb-4 text-[#8B4513]">Add New Waiter/Batch</h3>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="Batch Number (e.g. B-01)"
+                              value={newWaiter.waiterId}
+                              onChange={(e) => setNewWaiter({ ...newWaiter, waiterId: e.target.value })}
+                              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="Waiter Name"
+                              value={newWaiter.name}
+                              onChange={(e) => setNewWaiter({ ...newWaiter, name: e.target.value })}
+                              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Table Assignment */}
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Assign Tables (Optional)</label>
+                          <div className="bg-white border border-gray-200 rounded-xl p-4 max-h-40 overflow-y-auto custom-scrollbar grid grid-cols-3 gap-2">
+                            {tables.map(table => (
+                              <label key={table._id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg">
+                                <input
+                                  type="checkbox"
+                                  checked={newWaiter.tables.includes(table.tableNumber)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setNewWaiter({ ...newWaiter, tables: [...newWaiter.tables, table.tableNumber] })
+                                    } else {
+                                      setNewWaiter({ ...newWaiter, tables: newWaiter.tables.filter(t => t !== table.tableNumber) })
+                                    }
+                                  }}
+                                  className="accent-[#8B4513] w-4 h-4 rounded-sm"
+                                />
+                                <span className="text-sm font-medium text-gray-700">{table.tableNumber}</span>
+                              </label>
+                            ))}
+                            {tables.length === 0 && <div className="text-gray-400 text-xs col-span-3">No tables available. Add tables first.</div>}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleAddWaiter}
+                          disabled={!newWaiter.waiterId || !newWaiter.name}
+                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors w-full"
+                        >
+                          Add Waiter
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {waiters.map(waiter => (
+                        <div key={waiter._id} className="p-4 bg-white border border-gray-200 rounded-2xl flex flex-col gap-3 group hover:border-[#8B4513] hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-[#8B4513]/10 rounded-full flex items-center justify-center text-lg">
+                                👤
+                              </div>
+                              <div>
+                                <div className="font-black text-sm text-gray-800">{waiter.name}</div>
+                                <div className="text-xs text-[#8B4513] font-mono font-bold">{waiter.waiterId}</div>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteWaiter(waiter._id)}
+                              className="text-gray-300 hover:text-red-500 transition-colors p-2"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+
+                          {/* Display Assigned Tables */}
+                          <div>
+                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tables</div>
+                            <div className="flex flex-wrap gap-1">
+                              {waiter.tables && waiter.tables.length > 0 ? (
+                                waiter.tables.map((t: string) => (
+                                  <span key={t} className="bg-gray-100 text-gray-600 text-[10px] px-2 py-1 rounded-md font-bold">
+                                    {t}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs text-gray-300 italic">No tables assigned</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {waiters.length === 0 && (
+                        <div className="col-span-full text-center py-10 text-gray-400">
+                          No waiters added yet.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
