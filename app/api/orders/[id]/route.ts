@@ -28,29 +28,32 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
         const previousStatus = order.status
 
-        // 🔗 BUSINESS LOGIC: Auto-consume stock when order is completed
-        if (status === "completed" && previousStatus !== "completed") {
-            console.log(`🍽️ Processing stock consumption for completed order #${order.orderNumber}`)
-            
+        // 🔗 BUSINESS LOGIC: Auto-consume stock when order is served or completed
+        const isFinalStatus = status === "served" || status === "completed"
+        const wasFinalStatus = previousStatus === "served" || previousStatus === "completed"
+
+        if (isFinalStatus && !wasFinalStatus) {
+            console.log(`🍽️ Processing stock consumption for ${status} order #${order.orderNumber}`)
+
             // Get menu items with stock links
             const menuItemIds = order.items.map((item: any) => item.menuItemId)
             const linkedMenuItems = await MenuItem.find({ _id: { $in: menuItemIds } }).populate('stockItemId')
-            
+
             // Calculate and consume stock
             const stockConsumptionMap = new Map()
-            
+
             for (const orderItem of order.items) {
                 const menuData = linkedMenuItems.find(m => m._id.toString() === orderItem.menuItemId)
                 if (menuData && menuData.stockItemId && menuData.reportQuantity > 0) {
                     const stockId = (menuData.stockItemId as any)._id.toString()
                     const consumptionAmount = menuData.reportQuantity * orderItem.quantity
-                    
+
                     if (stockConsumptionMap.has(stockId)) {
                         stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
                     } else {
                         stockConsumptionMap.set(stockId, consumptionAmount)
                     }
-                    
+
                     console.log(`📦 ${menuData.name} x${orderItem.quantity} → ${consumptionAmount} ${menuData.reportUnit} of ${(menuData.stockItemId as any).name}`)
                 }
             }
@@ -60,16 +63,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 const stockItem = await Stock.findById(stockId)
                 if (stockItem && stockItem.trackQuantity) {
                     const newQuantity = Math.max(0, (stockItem.quantity || 0) - consumptionAmount)
-                    
+
                     console.log(`🔄 ${stockItem.name}: ${stockItem.quantity} → ${newQuantity} ${stockItem.unit}`)
-                    
+
                     stockItem.quantity = newQuantity
-                    
+
                     // Auto-mark as finished if quantity reaches 0
                     if (newQuantity === 0 && stockItem.status !== 'finished') {
                         stockItem.status = 'finished'
                         console.log(`🏁 ${stockItem.name} automatically marked as finished`)
-                        
+
                         // Send low stock notification
                         addNotification(
                             "warning",
@@ -85,7 +88,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                             "admin"
                         )
                     }
-                    
+
                     await stockItem.save()
                 }
             }
@@ -104,19 +107,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 pending: "📋 Order is pending preparation",
                 preparing: "👨‍🍳 Order is being prepared",
                 ready: "🔔 Order is ready for pickup",
+                served: "🍽️ Order has been served to table",
                 completed: "✅ Order has been completed"
             }
 
             addNotification(
                 "info",
                 `${statusMessages[status as keyof typeof statusMessages]} - Order #${order.orderNumber}`,
-                status === "ready" ? "cashier" : "chef"
+                (status === "ready" || status === "served") ? "cashier" : "chef"
             )
 
-            if (status === "completed") {
+            if (status === "completed" || status === "served") {
                 addNotification(
                     "success",
-                    `💰 Order #${order.orderNumber} completed - Revenue: ${order.totalAmount} Br`,
+                    `💰 Order #${order.orderNumber} ${status} - Revenue: ${order.totalAmount} Br`,
                     "admin"
                 )
             }

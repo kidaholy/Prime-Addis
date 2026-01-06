@@ -13,6 +13,7 @@ import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface MenuItem {
   _id: string
+  menuId?: string
   name: string
   description?: string
   category: string
@@ -38,6 +39,8 @@ export default function CashierPOSPage() {
   const [orderNumber, setOrderNumber] = useState("")
   const [showOrderAnimation, setShowOrderAnimation] = useState(false)
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
+  const [waiterBatchNumber, setWaiterBatchNumber] = useState("")
+  const [tableNumber, setTableNumber] = useState("")
   const { token, user } = useAuth()
   const { t } = useLanguage()
   const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
@@ -121,6 +124,15 @@ export default function CashierPOSPage() {
   const handleCheckout = async () => {
     if (cartItems.length === 0) return
 
+    if (!waiterBatchNumber || !tableNumber) {
+      notify({
+        title: "Missing Information",
+        message: "Please enter both Waiter Batch Number and Table Number.",
+        type: "info"
+      })
+      return
+    }
+
     setIsCheckoutLoading(true)
     try {
       const response = await fetch("/api/orders", {
@@ -139,6 +151,8 @@ export default function CashierPOSPage() {
           totalAmount: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
           paymentMethod: "cash",
           status: "pending",
+          waiterBatchNumber,
+          tableNumber
         }),
       })
 
@@ -151,12 +165,15 @@ export default function CashierPOSPage() {
 
         setTimeout(() => {
           setCartItems([])
+          setTableNumber("")
+          // We might want to keep waiterBatchNumber for the next order if the waiter is the same
           setShowOrderAnimation(false)
         }, 4000)
       } else {
+        const errorData = await response.json()
         notify({
           title: "Order Failed",
-          message: "Failed to create the order. Please try again.",
+          message: errorData.message || "Failed to create the order. Please try again.",
           type: "error"
         })
       }
@@ -243,6 +260,7 @@ export default function CashierPOSPage() {
                               image={item.image}
                               category={item.category}
                               preparationTime={item.preparationTime}
+                              menuId={item.menuId}
                               onAddToCart={() => handleAddToCart(item)}
                               index={idx}
                             />
@@ -270,6 +288,10 @@ export default function CashierPOSPage() {
                     onCheckout={handleCheckout}
                     isLoading={isCheckoutLoading}
                     isEmbedded={true}
+                    waiterBatchNumber={waiterBatchNumber}
+                    setWaiterBatchNumber={setWaiterBatchNumber}
+                    tableNumber={tableNumber}
+                    setTableNumber={setTableNumber}
                   />
                 </div>
               </div>

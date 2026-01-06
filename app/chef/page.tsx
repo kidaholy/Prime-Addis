@@ -10,6 +10,7 @@ import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface OrderItem {
   menuItemId: string
+  menuId?: string
   name: string
   quantity: number
   specialInstructions?: string
@@ -110,7 +111,7 @@ export default function KitchenDisplayPage() {
       confirmText: "Cancel Order",
       cancelText: "Keep Order"
     })
-    
+
     if (!confirmed) return
 
     try {
@@ -372,7 +373,10 @@ function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentCol
       <div className="space-y-2 mb-4 bg-gray-50 p-3 rounded-2xl">
         {order.items.map((item, idx) => (
           <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-100 last:border-0 pb-1 last:pb-0">
-            <span className="font-medium text-gray-700">{item.name}</span>
+            <span className="font-medium text-gray-700">
+              {item.name}
+              {item.menuId && <span className="text-xs text-gray-400 font-mono ml-2">({item.menuId})</span>}
+            </span>
             <span className="font-bold bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">
               {item.quantity}
             </span>

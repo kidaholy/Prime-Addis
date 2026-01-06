@@ -11,11 +11,13 @@ import { useConfirmation } from "@/hooks/use-confirmation"
 interface Order {
   _id: string
   orderNumber: string
-  items: Array<{ name: string; quantity: number; price: number }>
+  items: Array<{ name: string; quantity: number; price: number; menuId?: string }>
   totalAmount: number
-  status: "pending" | "preparing" | "ready" | "completed" | "cancelled"
+  status: "pending" | "preparing" | "ready" | "served" | "completed" | "cancelled"
   createdAt: string
   customerName?: string
+  waiterBatchNumber: string
+  tableNumber: string
 }
 
 export default function AdminOrdersPage() {
@@ -25,6 +27,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
+  const [searchTerm, setSearchTerm] = useState("")
   const [deleting, setDeleting] = useState<string | null>(null)
   const [bulkDeleting, setBulkDeleting] = useState(false)
 
@@ -44,7 +47,8 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("/api/orders", {
+      // Fetch recent orders (limit 100 to prevent large payloads during polling)
+      const res = await fetch("/api/orders?limit=100", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
@@ -66,7 +70,7 @@ export default function AdminOrdersPage() {
       confirmText: "Delete Order",
       cancelText: "Cancel"
     })
-    
+
     if (!confirmed) return
 
     setDeleting(orderId)
@@ -114,7 +118,7 @@ export default function AdminOrdersPage() {
       confirmText: "Delete All Orders",
       cancelText: "Cancel"
     })
-    
+
     if (!confirmed) return
 
     const finalConfirmed = await confirm({
@@ -124,7 +128,7 @@ export default function AdminOrdersPage() {
       confirmText: "Yes, Delete Everything",
       cancelText: "Cancel"
     })
-    
+
     if (!finalConfirmed) return
 
     setBulkDeleting(true)
@@ -165,8 +169,14 @@ export default function AdminOrdersPage() {
   }
 
   const filteredOrders = orders.filter((order) => {
-    if (filter === "all") return true
-    return order.status === filter
+    const matchesFilter = filter === "all" ? true : order.status === filter
+    const matchesSearch =
+      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.waiterBatchNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.tableNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return matchesFilter && matchesSearch
   })
 
   const getStatusConfig = (status: string) => {
@@ -176,9 +186,11 @@ export default function AdminOrdersPage() {
       case "preparing":
         return { color: "bg-[#93c5fd]/20 text-blue-700", label: t("adminOrders.cooking"), icon: "🍳" }
       case "ready":
-        return { color: "bg-white text-[#8B4513]", label: t("adminOrders.ready"), icon: "✅" }
+        return { color: "bg-[#2d5a41]/20 text-[#2d5a41]", label: t("adminOrders.ready"), icon: "✅" }
+      case "served":
+        return { color: "bg-purple-100 text-purple-700", label: "Served", icon: "🍽️" }
       case "completed":
-        return { color: "bg-gray-100 text-gray-500", label: t("adminOrders.served"), icon: "🍽️" }
+        return { color: "bg-gray-100 text-gray-500", label: t("adminOrders.served"), icon: "💰" }
       case "cancelled":
         return { color: "bg-red-50 text-red-500", label: t("adminOrders.cancelled"), icon: "✕" }
       default:
@@ -190,7 +202,8 @@ export default function AdminOrdersPage() {
     all: orders.length,
     pending: orders.filter(o => o.status === "pending").length,
     preparing: orders.filter(o => o.status === "preparing").length,
-    ready: orders.filter(o => o.status === "ready").length
+    ready: orders.filter(o => o.status === "ready").length,
+    served: orders.filter(o => o.status === "served").length
   }
 
   return (
@@ -209,7 +222,8 @@ export default function AdminOrdersPage() {
                     { id: "all", label: t("adminOrders.allOrders"), count: stats.all, emoji: "📋" },
                     { id: "pending", label: t("adminOrders.pending"), count: stats.pending, emoji: "🕒" },
                     { id: "preparing", label: t("adminOrders.preparing"), count: stats.preparing, emoji: "🔥" },
-                    { id: "ready", label: t("adminOrders.ready"), count: stats.ready, emoji: "✅" }
+                    { id: "ready", label: t("adminOrders.ready"), count: stats.ready, emoji: "✅" },
+                    { id: "served", label: "Served", count: stats.served, emoji: "🍽️" }
                   ].map(item => (
                     <button
                       key={item.id}
@@ -244,7 +258,7 @@ export default function AdminOrdersPage() {
             <div className="lg:col-span-9">
               <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[700px]">
                 {/* Header with Bulk Delete Button */}
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-8">
                   <div>
                     <h2 className="text-2xl font-bold bubbly-text">{t("adminOrders.orderManagement")}</h2>
                     <p className="text-gray-500 text-sm mt-1">
@@ -252,25 +266,37 @@ export default function AdminOrdersPage() {
                     </p>
                   </div>
 
-                  {orders.length > 0 && (
-                    <button
-                      onClick={handleBulkDeleteOrders}
-                      disabled={bulkDeleting}
-                      className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center gap-2"
-                    >
-                      {bulkDeleting ? (
-                        <>
-                          <span className="animate-spin">⏳</span>
-                          {t("adminOrders.deleting")}
-                        </>
-                      ) : (
-                        <>
-                          <span>🗑️</span>
-                          {t("adminOrders.deleteAllOrders")}
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <div className="flex gap-4 w-full md:w-auto">
+                    <div className="relative flex-1 md:w-64">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                      <input
+                        type="text"
+                        placeholder="Search batch, table, order..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none"
+                      />
+                    </div>
+                    {orders.length > 0 && (
+                      <button
+                        onClick={handleBulkDeleteOrders}
+                        disabled={bulkDeleting}
+                        className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center gap-2 whitespace-nowrap"
+                      >
+                        {bulkDeleting ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            {t("adminOrders.deleting")}
+                          </>
+                        ) : (
+                          <>
+                            <span>🗑️</span>
+                            {t("adminOrders.deleteAllOrders")}
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-32">
@@ -291,9 +317,12 @@ export default function AdminOrdersPage() {
                         <div key={order._id} className="bg-gray-50 rounded-[40px] p-6 border-2 border-transparent hover:border-[#2d5a41]/10 hover:shadow-xl transition-all flex flex-col group animate-slide-in-up">
                           <div className="flex justify-between items-start mb-6">
                             <div>
-                              <h3 className="text-xl font-bold text-gray-800">#{order.orderNumber}</h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-gray-800">#{order.orderNumber}</h3>
+                                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">Table {order.tableNumber}</span>
+                              </div>
                               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Batch {order.waiterBatchNumber}
                               </p>
                             </div>
                             <span className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold ${status.color}`}>
@@ -307,6 +336,7 @@ export default function AdminOrdersPage() {
                               <div key={idx} className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600 font-bold">
                                   <span className="text-[#8B4513]">{item.quantity}×</span> {item.name}
+                                  {item.menuId && <span className="text-gray-400 font-mono text-xs ml-1">({item.menuId})</span>}
                                 </span>
                                 <span className="font-bold text-gray-400">{(item.price * item.quantity).toFixed(0)} {t("common.currencyBr")}</span>
                               </div>

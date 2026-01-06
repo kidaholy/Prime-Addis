@@ -16,6 +16,10 @@ interface CartSidebarProps {
   onCheckout: () => void
   isLoading?: boolean
   isEmbedded?: boolean
+  waiterBatchNumber: string
+  setWaiterBatchNumber: (val: string) => void
+  tableNumber: string
+  setTableNumber: (val: string) => void
 }
 
 export function CartSidebar({
@@ -24,7 +28,11 @@ export function CartSidebar({
   onQuantityChange,
   onCheckout,
   isLoading = false,
-  isEmbedded = false
+  isEmbedded = false,
+  waiterBatchNumber,
+  setWaiterBatchNumber,
+  tableNumber,
+  setTableNumber
 }: CartSidebarProps) {
   const { t } = useLanguage()
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -44,6 +52,32 @@ export function CartSidebar({
           <p className="text-sm text-muted-foreground">{items.length} {t("cashier.items")}</p>
         </div>
       )}
+
+      {/* Order Metadata */}
+      <div className={`${isEmbedded ? 'pb-4' : 'px-4 pb-4'} space-y-3`}>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Table #</label>
+            <input
+              type="text"
+              value={tableNumber}
+              onChange={(e) => setTableNumber(e.target.value)}
+              placeholder="e.g. 12"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Batch #</label>
+            <input
+              type="text"
+              value={waiterBatchNumber}
+              onChange={(e) => setWaiterBatchNumber(e.target.value)}
+              placeholder="e.g. B-01"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-[#2d5a41] focus:ring-0 transition-all outline-none"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Items */}
       <div className={`flex-1 overflow-y-auto ${isEmbedded ? 'py-2' : 'p-4'} space-y-3 custom-scrollbar`}>

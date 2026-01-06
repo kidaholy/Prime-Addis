@@ -33,7 +33,11 @@ export async function GET(request: Request) {
       ...item,
       _id: item._id.toString(),
       stockItemId: item.stockItemId ? item.stockItemId._id.toString() : null
-    }))
+    })).sort((a: any, b: any) => {
+      const idA = a.menuId || ""
+      const idB = b.menuId || ""
+      return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+    })
 
     return NextResponse.json(serializedItems)
   } catch (error: any) {

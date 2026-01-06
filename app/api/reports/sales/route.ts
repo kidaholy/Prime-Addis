@@ -99,9 +99,8 @@ export async function GET(request: Request) {
             date: { $gte: startDate, $lte: endDate }
         }
         const dailyExpenses = await DailyExpense.find(expenseQuery).lean()
-        const totalOxCost = dailyExpenses.reduce((sum, exp) => sum + (exp.oxCost || 0), 0)
         const totalOtherExpenses = dailyExpenses.reduce((sum, exp) => sum + (exp.otherExpenses || 0), 0)
-        const totalExpenses = totalOxCost + totalOtherExpenses
+        const totalExpenses = totalOtherExpenses
         const netProfit = totalRevenue - totalExpenses
 
         return NextResponse.json({
@@ -115,7 +114,6 @@ export async function GET(request: Request) {
                 pendingOrders,
                 cancelledOrders,
                 paymentStats,
-                totalOxCost,
                 totalOtherExpenses,
                 totalExpenses,
                 netProfit

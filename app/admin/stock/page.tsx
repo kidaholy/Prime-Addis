@@ -19,8 +19,6 @@ import { PlusCircle } from "lucide-react"
 interface DailyExpense {
     _id: string
     date: string
-    oxCost: number
-    oxQuantity: number
     otherExpenses: number
     items: Array<{ name: string; amount: number; quantity: number; unit: string }>
     description?: string
@@ -61,8 +59,6 @@ export default function StockAndExpensesPage() {
 
     const [expenseFormData, setExpenseFormData] = useState({
         date: new Date().toISOString().split('T')[0],
-        oxCost: "",
-        oxQuantity: "",
         items: [] as Array<{ name: string; amount: number; quantity: number; unit: string }>,
         otherExpenses: "", // Kept for aggregate view
         description: ""
@@ -133,8 +129,6 @@ export default function StockAndExpensesPage() {
                 },
                 body: JSON.stringify({
                     ...expenseFormData,
-                    oxCost: Number(expenseFormData.oxCost) || 0,
-                    oxQuantity: Number(expenseFormData.oxQuantity) || 0,
                     items: expenseFormData.items.map(i => ({
                         ...i,
                         amount: Number(i.amount) || 0,
@@ -334,8 +328,6 @@ export default function StockAndExpensesPage() {
         setEditingExpense(expense)
         setExpenseFormData({
             date: new Date(expense.date).toISOString().split('T')[0],
-            oxCost: expense.oxCost.toString(),
-            oxQuantity: (expense.oxQuantity || 0).toString(),
             items: expense.items || [],
             otherExpenses: expense.otherExpenses.toString(),
             description: expense.description || ""
@@ -407,8 +399,6 @@ export default function StockAndExpensesPage() {
     const resetExpenseForm = () => {
         setExpenseFormData({
             date: new Date().toISOString().split('T')[0],
-            oxCost: "",
-            oxQuantity: "",
             items: [],
             otherExpenses: "",
             description: ""
@@ -443,8 +433,6 @@ export default function StockAndExpensesPage() {
     )
 
     const totalStats = {
-        totalOx: expenses.reduce((sum, e) => sum + e.oxCost, 0),
-        totalOxCount: expenses.reduce((sum, e) => sum + (e.oxQuantity || 0), 0),
         totalOther: expenses.reduce((sum, e) => sum + e.otherExpenses, 0),
         count: expenses.length,
         inventoryValue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitCost || 0)), 0),
@@ -476,8 +464,8 @@ export default function StockAndExpensesPage() {
                                     <div>
                                         {activeTab === 'expenses' ? (
                                             <>
-                                                <p className="text-4xl font-black">{totalStats.totalOx.toLocaleString()} <span className="text-xs">ETB</span></p>
-                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total {totalStats.totalOxCount} Ox Investment</p>
+                                                <p className="text-4xl font-black">{totalStats.totalOther.toLocaleString()} <span className="text-xs">ETB</span></p>
+                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total Operational Investment</p>
                                             </>
                                         ) : (
                                             <>
@@ -489,10 +477,6 @@ export default function StockAndExpensesPage() {
                                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
                                         {activeTab === 'expenses' ? (
                                             <>
-                                                <div>
-                                                    <p className="text-xl font-bold">{totalStats.totalOther.toLocaleString()}</p>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Other Costs</p>
-                                                </div>
                                                 <div>
                                                     <p className="text-xl font-bold">{totalStats.count}</p>
                                                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Days Recorded</p>
@@ -523,7 +507,7 @@ export default function StockAndExpensesPage() {
                             >
                                 <div className="flex justify-between items-center">
                                     <h2 className="text-xl font-black text-slate-800 tracking-tight">
-                                        {activeTab === 'expenses' ? 'Record Ox Cost' : 'Physical Operations'}
+                                        {activeTab === 'expenses' ? 'Record Operational Cost' : 'Physical Operations'}
                                     </h2>
                                     <div className="p-2 bg-[#8B4513]/10 rounded-xl">
                                         {activeTab === 'expenses' ? <TrendingUp className="w-5 h-5 text-[#8B4513]" /> : <Plus className="w-5 h-5 text-[#8B4513]" />}
@@ -541,7 +525,7 @@ export default function StockAndExpensesPage() {
                                     }}
                                     className="w-full bg-[#D2691E] text-slate-900 py-4 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[#D2691E]/20 hover:scale-[1.02] active:scale-98 transition-all"
                                 >
-                                    {activeTab === 'expenses' ? 'Log Ox Price' : 'Add Physical Item'}
+                                    {activeTab === 'expenses' ? 'Log Expense' : 'Add Physical Item'}
                                 </button>
                             </motion.div>
                         </div>
@@ -555,7 +539,7 @@ export default function StockAndExpensesPage() {
                                         onClick={() => setActiveTab("expenses")}
                                         className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
                                     >
-                                        🐂 Ox Diary
+                                        💸 Expenses Diary
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("inventory")}
@@ -639,34 +623,9 @@ export default function StockAndExpensesPage() {
                                                         <div>
                                                             <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{new Date(expense.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
                                                             <div className="flex items-center gap-6">
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">🐂 Ox Value</span>
-                                                                        {expense.oxQuantity > 0 && (
-                                                                            (() => {
-                                                                                const activeOx = stockItems.find(s => s.name.toLowerCase() === 'ox' && s.status !== 'finished');
-                                                                                if (!activeOx) return null;
-                                                                                return (
-                                                                                    <button
-                                                                                        onClick={() => handleMarkFinished(activeOx)}
-                                                                                        className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all ml-2"
-                                                                                    >
-                                                                                        Mark Finished
-                                                                                    </button>
-                                                                                )
-                                                                            })()
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="font-black text-2xl text-[#8B4513]">
-                                                                        {expense.oxCost.toLocaleString()} <span className="text-[10px] font-medium">ETB</span>
-                                                                        {expense.oxQuantity > 0 && <span className="text-xs font-bold text-gray-400 ml-2">({expense.oxQuantity} Ox)</span>}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="w-px h-8 bg-gray-200" />
-                                                                <div>
-                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Operational</span>
-                                                                    <p className="font-bold text-lg text-slate-600">{expense.otherExpenses.toLocaleString()} <span className="text-[10px] font-medium">ETB</span></p>
-                                                                </div>
+                                                                <p className="font-black text-2xl text-[#8B4513]">
+                                                                    {expense.otherExpenses.toLocaleString()} <span className="text-[10px] font-medium">ETB</span>
+                                                                </p>
                                                             </div>
                                                             {expense.items && expense.items.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -830,8 +789,8 @@ export default function StockAndExpensesPage() {
                             >
                                 <div className="flex justify-between items-start mb-10">
                                     <div>
-                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">{activeTab === 'expenses' ? 'Ox' : 'Physical'} <span className="text-[#2d5a41]">{activeTab === 'expenses' ? 'Diary' : 'Expenses'}</span></h2>
-                                        <p className="text-gray-500 mt-2 font-medium">{activeTab === 'expenses' ? 'Record daily livestock price.' : 'Log operational costs like Charcoal/Gas.'}</p>
+                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">{activeTab === 'expenses' ? 'Expense' : 'Physical'} <span className="text-[#2d5a41]">{activeTab === 'expenses' ? 'Entry' : 'Expenses'}</span></h2>
+                                        <p className="text-gray-500 mt-2 font-medium">{activeTab === 'expenses' ? 'Log operational expenses like Charcoal/Gas.' : 'Log operational costs like Charcoal/Gas.'}</p>
                                     </div>
                                     <button onClick={resetExpenseForm} className="p-3 hover:bg-gray-100 rounded-2xl transition-colors">
                                         <ChevronRight className="w-6 h-6 rotate-45 text-gray-400" />
@@ -854,72 +813,46 @@ export default function StockAndExpensesPage() {
                                             </div>
                                         </div>
 
-                                        {activeTab === 'expenses' ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">🐂 ox count</label>
-                                                    <input
-                                                        type="number"
-                                                        placeholder="2"
-                                                        value={expenseFormData.oxQuantity}
-                                                        onChange={e => setExpenseFormData({ ...expenseFormData, oxQuantity: e.target.value })}
-                                                        className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl placeholder:text-gray-200"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Total Cost (Br)</label>
-                                                    <input
-                                                        type="number"
-                                                        placeholder="45,000"
-                                                        value={expenseFormData.oxCost}
-                                                        onChange={e => setExpenseFormData({ ...expenseFormData, oxCost: e.target.value })}
-                                                        className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl placeholder:text-gray-200"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2 flex justify-between items-center pr-2">
-                                                    <span>🛠️ Operational Expenses</span>
-                                                    <span className="text-[#2d5a41]">{expenseFormData.items.reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString()} Br Total</span>
-                                                </label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2 flex justify-between items-center pr-2">
+                                                <span>🛠️ Operational Expenses</span>
+                                                <span className="text-[#2d5a41]">{expenseFormData.items.reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString()} Br Total</span>
+                                            </label>
 
-                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
-                                                    {expenseFormData.items.map((item, index) => (
-                                                        <div key={index} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-3xl border border-gray-100 group">
-                                                            <div className="flex gap-2">
-                                                                <input type="text" placeholder="Item (e.g. Milk)" value={item.name} onChange={e => {
-                                                                    const newItems = [...expenseFormData.items]; newItems[index].name = e.target.value; setExpenseFormData({ ...expenseFormData, items: newItems });
-                                                                }} className="flex-[2] bg-white border-none rounded-xl p-3 outline-none font-bold text-sm" />
-                                                                <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: expenseFormData.items.filter((_, i) => i !== index) })} className="p-3 text-red-400 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={14} /></button>
+                                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                                                {expenseFormData.items.map((item, index) => (
+                                                    <div key={index} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-3xl border border-gray-100 group">
+                                                        <div className="flex gap-2">
+                                                            <input type="text" placeholder="Item (e.g. Milk)" value={item.name} onChange={e => {
+                                                                const newItems = [...expenseFormData.items]; newItems[index].name = e.target.value; setExpenseFormData({ ...expenseFormData, items: newItems });
+                                                            }} className="flex-[2] bg-white border-none rounded-xl p-3 outline-none font-bold text-sm" />
+                                                            <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: expenseFormData.items.filter((_, i) => i !== index) })} className="p-3 text-red-400 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={14} /></button>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <div className="flex-1">
+                                                                <input type="number" placeholder="Qty" value={item.quantity} onChange={e => {
+                                                                    const newItems = [...expenseFormData.items]; newItems[index].quantity = Number(e.target.value); setExpenseFormData({ ...expenseFormData, items: newItems });
+                                                                }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm" />
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                                <div className="flex-1">
-                                                                    <input type="number" placeholder="Qty" value={item.quantity} onChange={e => {
-                                                                        const newItems = [...expenseFormData.items]; newItems[index].quantity = Number(e.target.value); setExpenseFormData({ ...expenseFormData, items: newItems });
-                                                                    }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm" />
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <input type="text" placeholder="Unit" value={item.unit} onChange={e => {
-                                                                        const newItems = [...expenseFormData.items]; newItems[index].unit = e.target.value; setExpenseFormData({ ...expenseFormData, items: newItems });
-                                                                    }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm uppercase text-[10px]" />
-                                                                </div>
-                                                                <div className="flex-[1.5]">
-                                                                    <input type="number" placeholder="Br" value={item.amount} onChange={e => {
-                                                                        const newItems = [...expenseFormData.items]; newItems[index].amount = Number(e.target.value); setExpenseFormData({ ...expenseFormData, items: newItems });
-                                                                    }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm text-right" />
-                                                                </div>
+                                                            <div className="flex-1">
+                                                                <input type="text" placeholder="Unit" value={item.unit} onChange={e => {
+                                                                    const newItems = [...expenseFormData.items]; newItems[index].unit = e.target.value; setExpenseFormData({ ...expenseFormData, items: newItems });
+                                                                }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm uppercase text-[10px]" />
+                                                            </div>
+                                                            <div className="flex-[1.5]">
+                                                                <input type="number" placeholder="Br" value={item.amount} onChange={e => {
+                                                                    const newItems = [...expenseFormData.items]; newItems[index].amount = Number(e.target.value); setExpenseFormData({ ...expenseFormData, items: newItems });
+                                                                }} className="w-full bg-white border-none rounded-xl p-3 outline-none font-bold text-sm text-right" />
                                                             </div>
                                                         </div>
-                                                    ))}
-                                                    <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: "", amount: 0, quantity: 1, unit: "" }] })} className="w-full p-3 border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-black uppercase text-gray-400 hover:text-[#2d5a41] transition-all">+ Add Item</button>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 pt-2">
-                                                    {['Milk', 'Charcoal', 'Gas', 'Spices'].map(s => <button key={s} type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: s, amount: 0, quantity: 1, unit: s === 'Milk' ? 'L' : 'pcs' }] })} className="text-[9px] font-black uppercase bg-gray-50 px-3 py-1 rounded-full text-gray-400">+ {s}</button>)}
-                                                </div>
+                                                    </div>
+                                                ))}
+                                                <button type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: "", amount: 0, quantity: 1, unit: "" }] })} className="w-full p-3 border-2 border-dashed border-gray-100 rounded-xl text-[10px] font-black uppercase text-gray-400 hover:text-[#2d5a41] transition-all">+ Add Item</button>
                                             </div>
-                                        )}
+                                            <div className="flex flex-wrap gap-2 pt-2">
+                                                {['Milk', 'Charcoal', 'Gas', 'Spices'].map(s => <button key={s} type="button" onClick={() => setExpenseFormData({ ...expenseFormData, items: [...expenseFormData.items, { name: s, amount: 0, quantity: 1, unit: s === 'Milk' ? 'L' : 'pcs' }] })} className="text-[9px] font-black uppercase bg-gray-50 px-3 py-1 rounded-full text-gray-400">+ {s}</button>)}
+                                            </div>
+                                        </div>
 
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Quick Note</label>

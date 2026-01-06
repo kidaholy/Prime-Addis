@@ -116,7 +116,38 @@ export default function ReportsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchWithTimeout("/api/orders", {
+      let url = "/api/orders";
+      const now = new Date();
+      let startDate: Date | null = null;
+      // End date is end of today to be inclusive of the full current day if needed, 
+      // but 'now' works for 'up to this moment'. 
+      // API $lte uses strict comparison.
+
+      if (timeRange === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 00:00:00 today
+      } else if (timeRange === 'week') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (timeRange === 'month') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (timeRange === 'year') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 365);
+        startDate.setHours(0, 0, 0, 0);
+      }
+
+      if (startDate) {
+        url += `?startDate=${startDate.toISOString()}`;
+        // We can optionally add endDate if we want to bound it, 
+        // but default is usually "up to now".
+        // Adding endDate ensures consistency if time passes while request is in flight? 
+        // Not strictly necessary for "reports so far".
+      }
+
+      const response = await fetchWithTimeout(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -217,8 +248,7 @@ export default function ReportsPage() {
       headers: ["Metric", "Value", "Unit"],
       data: [
         { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
-        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
-        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
+        { Metric: "General Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
         { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
         { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
         { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
@@ -231,7 +261,7 @@ export default function ReportsPage() {
         "Report Period": timeRange.toUpperCase(),
         "Generated Date": new Date().toLocaleDateString(),
         "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
-        "Formula": "Orders - (Assets + Ox)",
+        "Formula": "Orders - (Assets + Expenses)",
         "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
       }
     }
@@ -248,8 +278,7 @@ export default function ReportsPage() {
       headers: ["Metric", "Value", "Unit"],
       data: [
         { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
-        { Metric: "Ox Costs", Value: profitData.oxCost.toFixed(2), Unit: "ETB" },
-        { Metric: "Other Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
+        { Metric: "General Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
         { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
         { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
         { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
@@ -259,7 +288,7 @@ export default function ReportsPage() {
         "Report Period": timeRange.toUpperCase(),
         "Generated Date": new Date().toLocaleDateString(),
         "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
-        "Formula": "Orders - (Assets + Ox)",
+        "Formula": "Orders - (Assets + Expenses)",
         "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
       },
       metadata: {
@@ -299,13 +328,7 @@ export default function ReportsPage() {
           data: [
             // 1. Inflow
             { Metric: "Total Revenue", Value: profitData.revenue.toLocaleString(), Unit: "ETB" },
-            { Metric: "Total Orders", Value: stats.totalOrders.toString(), Unit: "Count" },
-            { Metric: "Completed Orders", Value: stats.completedOrders.toString(), Unit: "Count" },
-            { Metric: "Average Order Value", Value: stats.averageOrderValue.toFixed(2), Unit: "ETB" },
-
-            // 2. Outflow
-            { Metric: "Ox Costs", Value: profitData.oxCost.toLocaleString(), Unit: "ETB" },
-            { Metric: "Other Expenses", Value: profitData.otherExpenses.toLocaleString(), Unit: "ETB" },
+            { Metric: "General Expenses", Value: profitData.otherExpenses.toLocaleString(), Unit: "ETB" },
 
             // 3. Assets
             { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toLocaleString(), Unit: "ETB" },
@@ -414,7 +437,7 @@ export default function ReportsPage() {
                       value={`${profitData.netProfit.toLocaleString()} ${t("common.currencyBr")}`}
                       icon="💎"
                       color={profitData.netProfit >= 0 ? "purple" : "orange"}
-                      subtext={`Orders - Ox Exp - Physical Stock`}
+                      subtext={`Orders - Expenses - Physical Stock`}
                     />
                   );
                 })()}
@@ -426,7 +449,7 @@ export default function ReportsPage() {
                     {profitData ? profitData.netProfit.toLocaleString() : "..."} {t("common.currencyBr")}
                   </h3>
                   <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
-                    💎 Orders - Ox Exp - Physical Stock
+                    💎 Orders - Expenses - Physical Stock
                     <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Detailed Analysis →</span>
                   </p>
                 </Link>

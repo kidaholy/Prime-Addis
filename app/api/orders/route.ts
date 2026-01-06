@@ -8,9 +8,14 @@ import { addNotification } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
-// GET all orders
+// GET all orders with filtering
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const limit = searchParams.get('limit')
+
     const token = request.headers.get("authorization")?.replace("Bearer ", "")
 
     if (!token) {
@@ -18,18 +23,36 @@ export async function GET(request: Request) {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any
-    console.log("📋 User fetching orders:", decoded.email || decoded.id)
+    // console.log("📋 User fetching orders:", decoded.email || decoded.id)
 
     await connectDB()
-    console.log("📊 Database connected for order retrieval")
 
-    const orders = await Order.find().sort({ createdAt: -1 }).lean()
-    console.log(`📦 Found ${orders.length} orders in database`)
+    let query: any = {}
 
-    // Convert ObjectId to string for frontend compatibility
+    if (startDate || endDate) {
+      query.createdAt = {}
+      if (startDate) query.createdAt.$gte = new Date(startDate)
+      if (endDate) query.createdAt.$lte = new Date(endDate)
+    }
+
+    let orderQuery = Order.find(query).sort({ createdAt: -1 })
+
+    if (limit) {
+      orderQuery = orderQuery.limit(Number(limit))
+    }
+
+    const orders = await orderQuery.lean()
+    // console.log(`📦 Found ${orders.length} orders`)
+
+    // Convert ObjectId to string for frontend compatibility and sort items by menuId
     const serializedOrders = orders.map(order => ({
       ...order,
-      _id: order._id.toString()
+      _id: order._id.toString(),
+      items: order.items.sort((a: any, b: any) => {
+        const idA = a.menuId || ""
+        const idB = b.menuId || ""
+        return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      })
     }))
 
     return NextResponse.json(serializedOrders)
@@ -56,12 +79,29 @@ export async function POST(request: Request) {
     console.log("📊 Database connected successfully")
 
     const body = await request.json()
-    const { items, totalAmount, paymentMethod, customerName } = body
-    console.log("📝 Order data received:", { items: items.length, totalAmount, paymentMethod })
+    const { items, totalAmount, paymentMethod, customerName, waiterBatchNumber, tableNumber } = body
+    console.log("📝 Order data received:", { items: items.length, totalAmount, waiterBatchNumber, tableNumber })
 
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ message: "Items are required" }, { status: 400 })
+    }
+
+    if (!waiterBatchNumber || !tableNumber) {
+      return NextResponse.json({ message: "Waiter Batch Number and Table Number are required" }, { status: 400 })
+    }
+
+    // Check for active orders on the same table
+    const activeOrderOnTable = await Order.findOne({
+      tableNumber,
+      status: { $in: ["pending", "preparing", "ready"] }
+    })
+
+    if (activeOrderOnTable) {
+      return NextResponse.json({
+        message: `Table ${tableNumber} already has an active order (#${activeOrderOnTable.orderNumber}). Please serve or cancel the existing order first.`,
+        activeOrder: activeOrderOnTable.orderNumber
+      }, { status: 400 })
     }
 
     if (!totalAmount || totalAmount <= 0) {
@@ -84,13 +124,13 @@ export async function POST(request: Request) {
 
     // 🔗 BUSINESS LOGIC: Calculate total stock consumption for this order
     const stockConsumptionMap = new Map()
-    
+
     for (const orderItem of items) {
       const menuData = linkedMenuItems.find(m => m._id.toString() === orderItem.menuItemId)
       if (menuData && menuData.stockItemId && menuData.reportQuantity > 0) {
         const stockId = (menuData.stockItemId as any)._id.toString()
         const consumptionAmount = menuData.reportQuantity * orderItem.quantity
-        
+
         if (stockConsumptionMap.has(stockId)) {
           stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
         } else {
@@ -150,11 +190,23 @@ export async function POST(request: Request) {
     // Create order data
     const orderData = {
       orderNumber,
-      items,
+      items: items.map((item: any) => {
+        const menu = linkedMenuItems.find(m => m._id.toString() === item.menuItemId)
+        return {
+          ...item,
+          menuId: menu?.menuId
+        }
+      }).sort((a: any, b: any) => {
+        const idA = a.menuId || ""
+        const idB = b.menuId || ""
+        return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      }),
       totalAmount,
       status: "pending" as const,
       paymentMethod: paymentMethod || "cash",
-      customerName,
+      customerName: customerName || `Table ${tableNumber}`,
+      waiterBatchNumber,
+      tableNumber,
       createdBy: decoded.id,
     }
 

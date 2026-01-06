@@ -650,23 +650,22 @@ export class ReportExporter {
 // Profit calculation utilities
 export class ProfitCalculator {
   static calculateNetProfit(revenue: number, expenses: any, stockItems: any[]) {
-    // Calculate total stock value (including ox stock as assets)
+    // Calculate total stock value
     const totalStockValue = stockItems
       .reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
     // Net Worth = Orders - Period Expenditures - Inherited Stock
     // To avoid doubling, we only subtract Stock Value that wasn't already recorded as an expense this period.
-    const totalExpenditures = (expenses.totalOxCost || 0) + (expenses.totalOtherExpenses || 0)
+    const totalExpenditures = expenses.totalOtherExpenses || 0
     const inheritedStockValue = Math.max(0, totalStockValue - totalExpenditures)
 
     const netProfit = revenue - totalExpenditures - inheritedStockValue
 
     return {
       revenue,
-      oxCost: expenses.totalOxCost || 0,
       otherExpenses: expenses.totalOtherExpenses || 0,
       totalStockValue, // Keeping for asset valuation report
-      totalInvestment: (expenses.totalOxCost || 0) + (expenses.totalOtherExpenses || 0), // Operating investment
+      totalInvestment: expenses.totalOtherExpenses || 0, // Operating investment
       netProfit,
       profitMargin: revenue > 0 ? (netProfit / revenue) * 100 : 0
     }

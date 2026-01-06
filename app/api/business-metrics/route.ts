@@ -49,7 +49,6 @@ interface BusinessMetrics {
     netProfit: number
     profitMargin: number
     costBreakdown: {
-      oxCost: number
       otherExpenses: number
       stockCosts: number
     }
@@ -80,10 +79,10 @@ export async function GET(request: Request) {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1)
-    
+
     const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000)
     const yesterdayEnd = new Date(todayStart.getTime() - 1)
-    
+
     const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -123,7 +122,7 @@ export async function GET(request: Request) {
     const hourlyRevenue = Array.from({ length: 24 }, (_, hour) => {
       const hourStart = new Date(todayStart.getTime() + hour * 60 * 60 * 1000)
       const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000 - 1)
-      const hourOrders = todayOrders.filter(o => 
+      const hourOrders = todayOrders.filter(o =>
         new Date(o.createdAt) >= hourStart && new Date(o.createdAt) <= hourEnd && o.status !== 'cancelled'
       )
       return {
@@ -135,7 +134,7 @@ export async function GET(request: Request) {
 
     // Sales Analytics
     const itemSales = new Map<string, { quantity: number; revenue: number; category: string }>()
-    
+
     todayOrders.forEach(order => {
       if (order.status !== 'cancelled') {
         order.items.forEach((item: any) => {
@@ -223,7 +222,7 @@ export async function GET(request: Request) {
 
     // Stock consumption calculation
     const stockConsumption = new Map<string, { consumed: number; unit: string; cost: number }>()
-    
+
     todayOrders.forEach(order => {
       if (order.status !== 'cancelled') {
         order.items.forEach((item: any) => {
@@ -262,7 +261,7 @@ export async function GET(request: Request) {
     const hourlyOrderCount = Array.from({ length: 24 }, (_, hour) => {
       const hourStart = new Date(todayStart.getTime() + hour * 60 * 60 * 1000)
       const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000 - 1)
-      const hourOrders = todayOrders.filter(o => 
+      const hourOrders = todayOrders.filter(o =>
         new Date(o.createdAt) >= hourStart && new Date(o.createdAt) <= hourEnd
       )
       return {
@@ -272,10 +271,10 @@ export async function GET(request: Request) {
     }).sort((a, b) => b.orderCount - a.orderCount)
 
     // Financial Overview
-    const todayExpensesTotal = todayExpenses.reduce((sum, exp) => sum + (exp.oxCost || 0) + (exp.otherExpenses || 0), 0)
-    const monthExpensesTotal = monthExpenses.reduce((sum, exp) => sum + (exp.oxCost || 0) + (exp.otherExpenses || 0), 0)
+    const todayExpensesTotal = todayExpenses.reduce((sum, exp) => sum + (exp.otherExpenses || 0), 0)
+    const monthExpensesTotal = monthExpenses.reduce((sum, exp) => sum + (exp.otherExpenses || 0), 0)
     const stockCosts = stockConsumptionArray.reduce((sum, item) => sum + item.cost, 0)
-    
+
     const grossRevenue = todayRevenue
     const totalExpenses = todayExpensesTotal + stockCosts
     const netProfit = grossRevenue - totalExpenses
@@ -286,15 +285,15 @@ export async function GET(request: Request) {
       const date = new Date(todayStart.getTime() - i * 24 * 60 * 60 * 1000)
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1)
-      
-      const dayOrders = weekOrders.filter(o => 
-        new Date(o.createdAt) >= dayStart && 
+
+      const dayOrders = weekOrders.filter(o =>
+        new Date(o.createdAt) >= dayStart &&
         new Date(o.createdAt) <= dayEnd &&
         o.status !== 'cancelled'
       )
-      
+
       const dayRevenue = dayOrders.reduce((sum, order) => sum + order.totalAmount, 0)
-      
+
       return {
         date: date.toISOString().split('T')[0],
         revenue: dayRevenue,
@@ -344,7 +343,6 @@ export async function GET(request: Request) {
         netProfit: Math.round(netProfit * 100) / 100,
         profitMargin: Math.round(profitMargin * 100) / 100,
         costBreakdown: {
-          oxCost: todayExpenses.reduce((sum, exp) => sum + (exp.oxCost || 0), 0),
           otherExpenses: todayExpenses.reduce((sum, exp) => sum + (exp.otherExpenses || 0), 0),
           stockCosts: Math.round(stockCosts * 100) / 100
         }

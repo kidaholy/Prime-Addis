@@ -42,7 +42,6 @@ export interface BusinessMetrics {
     netProfit: number
     profitMargin: number
     costBreakdown: {
-      oxCost: number
       otherExpenses: number
       stockCosts: number
     }
@@ -91,7 +90,7 @@ export function useBusinessMetrics(options: UseBusinessMetricsOptions = {}): Use
 
     try {
       setError(null)
-      
+
       const params = new URLSearchParams({
         period,
         historical: includeHistorical.toString()
@@ -222,7 +221,7 @@ export const MetricsUtils = {
     if (data.length < 2) return 'stable'
     const recent = data.slice(-3).reduce((sum, item) => sum + item.value, 0) / 3
     const previous = data.slice(-6, -3).reduce((sum, item) => sum + item.value, 0) / 3
-    
+
     if (recent > previous * 1.05) return 'up'
     if (recent < previous * 0.95) return 'down'
     return 'stable'

@@ -65,8 +65,7 @@
         "menu": "Menu",
         "orders": "Orders",
         "users": "Users",
-        "otherExpenses": "Physical Expense",
-        "oxCosts": "Ox Cost",
+        "stock": "Stock & Expenses",
         "reports": "Reports",
         "settings": "Settings",
         "pos": "POS",
@@ -149,7 +148,7 @@
     "adminStock": {
         "title": "Daily Expenses",
         "system": "Expense Tracker",
-        "managePrecision": "Record your daily Ox costs and operational expenses for accurate profit/loss reporting.",
+        "managePrecision": "Record your daily operational expenses for accurate profit/loss reporting.",
         "registerNew": "Register New Stock",
         "manageCategories": "Manage Categories",
         "searchPlaceholder": "Search by name, category, or unit...",
@@ -165,7 +164,7 @@
         "healthyLevels": "Healthy Levels",
         "syncing": "Syncing Stock...",
         "yieldTool": "Yield & Conversion Tool",
-        "yieldDesc": "Convert larger stock units (e.g., Whole Ox) into itemized units (e.g., Beef kg).",
+        "yieldDesc": "Convert larger stock units into itemized units.",
         "convertItem": "Convert Item",
         "sourceItem": "Source Item",
         "targetItem": "Target Item",
@@ -250,9 +249,7 @@
         "confidentialBusinessReport": "Confidential Business Report",
         "backToDashboard": "Back to Dashboard",
         "printReport": "Print Report",
-        "saveAsPdf": "Save as PDF",
-        "otherExpenses": "Physical Expense",
-        "oxCosts": "Ox Cost"
+        "saveAsPdf": "Save as PDF"
     },
     "adminSettings": {
         "title": "App Settings",

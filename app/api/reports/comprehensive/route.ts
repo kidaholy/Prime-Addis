@@ -69,17 +69,16 @@ export async function GET(request: Request) {
         const completedOrders = orders.filter(o => o.status === "completed").length
 
         // Expense calculations
-        const totalOxCost = dailyExpenses.reduce((sum, exp) => sum + (exp.oxCost || 0), 0)
         const totalOtherExpenses = dailyExpenses.reduce((sum, exp) => sum + (exp.otherExpenses || 0), 0)
 
-        // Stock calculations with correct ox integration
+        // Stock calculations
         const totalStockValue = stockItems
             .reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
 
-        // Total investment = Ox costs + Other expenses + Total stock assets
-        const totalInvestment = totalOxCost + totalOtherExpenses + totalStockValue
-        
-        // Net worth = Revenue - Total investment (Orders - (Asset + Ox))
+        // Total investment = Other expenses + Total stock assets
+        const totalInvestment = totalOtherExpenses + totalStockValue
+
+        // Net worth = Revenue - Total investment (Orders - (Asset + Expenses))
         const netProfit = totalRevenue - totalInvestment
         const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
 
@@ -96,7 +95,7 @@ export async function GET(request: Request) {
                         if (stockItem) {
                             const consumedAmount = menuData.reportQuantity * item.quantity
                             const key = stockItem.name
-                            
+
                             if (!stockConsumption[key]) {
                                 stockConsumption[key] = {
                                     name: stockItem.name,
@@ -105,7 +104,7 @@ export async function GET(request: Request) {
                                     cost: 0
                                 }
                             }
-                            
+
                             stockConsumption[key].consumed += consumedAmount
                             stockConsumption[key].cost += consumedAmount * (stockItem.unitCost || 0)
                         }
@@ -150,18 +149,17 @@ export async function GET(request: Request) {
             startDate,
             endDate,
             generatedAt: new Date(),
-            
+
             // Financial Overview
             financial: {
                 totalRevenue,
-                totalOxCost,
                 totalOtherExpenses,
-                totalStockValue, // All stock assets including ox
+                totalStockValue, // All stock assets
                 totalInvestment,
                 netProfit,
                 profitMargin
             },
-            
+
             // Operational Metrics
             operational: {
                 totalOrders,
@@ -169,15 +167,15 @@ export async function GET(request: Request) {
                 averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
                 completionRate: totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0
             },
-            
+
             // Stock Analysis
             inventory: {
-                totalStockValue, // All assets including ox stock
+                totalStockValue, // All assets
                 lowStockAlerts,
                 stockConsumption: Object.values(stockConsumption),
                 categoryPerformance
             },
-            
+
             // Raw data for detailed exports
             orders: orders.map(order => ({
                 orderNumber: order.orderNumber,
@@ -187,7 +185,7 @@ export async function GET(request: Request) {
                 paymentMethod: order.paymentMethod,
                 itemsCount: order.items.length
             })),
-            
+
             stockItems: stockItems.map(item => ({
                 name: item.name,
                 category: item.category,
@@ -197,11 +195,9 @@ export async function GET(request: Request) {
                 totalValue: (item.quantity || 0) * (item.unitCost || 0),
                 status: item.status
             })),
-            
+
             dailyExpenses: dailyExpenses.map(exp => ({
                 date: exp.date,
-                oxCost: exp.oxCost,
-                oxQuantity: exp.oxQuantity,
                 otherExpenses: exp.otherExpenses,
                 items: exp.items
             }))

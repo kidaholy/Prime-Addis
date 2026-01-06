@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         await connectDB()
 
         const body = await request.json()
-        const { date, oxCost, oxQuantity, otherExpenses, items, description } = body
+        const { date, otherExpenses, items, description } = body
 
         // Validate required fields
         if (!date) {
@@ -120,8 +120,6 @@ export async function POST(request: Request) {
 
         const expenseData = {
             date: expenseDate,
-            oxCost: oxCost || 0,
-            oxQuantity: oxQuantity || 0,
             otherExpenses: calculatedOtherExpenses,
             items: items || [],
             description: description || ""
@@ -143,18 +141,6 @@ export async function POST(request: Request) {
         // 🔗 BUSINESS LOGIC: Update stock quantities based on purchases
         // If updating an existing expense, revert the old quantities first to avoid doubling
         if (existingExpense) {
-            // Revert Ox
-            if (existingExpense.oxQuantity > 0) {
-                const oldOxStock = await Stock.findOne({
-                    name: { $regex: /^ox$/i },
-                    status: { $ne: 'finished' }
-                })
-                if (oldOxStock) {
-                    oldOxStock.quantity = Math.max(0, (oldOxStock.quantity || 0) - existingExpense.oxQuantity)
-                    await oldOxStock.save()
-                }
-            }
-
             // Revert other items
             if (existingExpense.items && existingExpense.items.length > 0) {
                 for (const item of existingExpense.items) {
@@ -169,32 +155,6 @@ export async function POST(request: Request) {
                         }
                     }
                 }
-            }
-        }
-
-        // Apply new quantities
-        if (oxQuantity > 0) {
-            // Find active ox stock item and update quantity
-            const oxStock = await Stock.findOne({
-                name: { $regex: /^ox$/i },
-                status: { $ne: 'finished' }
-            })
-
-            if (oxStock) {
-                oxStock.quantity = (oxStock.quantity || 0) + oxQuantity
-                await oxStock.save()
-            } else {
-                // Create new ox stock if none exists
-                await Stock.create({
-                    name: 'Ox',
-                    category: 'meat',
-                    quantity: oxQuantity,
-                    unit: 'head',
-                    unitCost: oxQuantity > 0 ? (oxCost / oxQuantity) : 0,
-                    trackQuantity: true,
-                    showStatus: true,
-                    status: 'active'
-                })
             }
         }
 

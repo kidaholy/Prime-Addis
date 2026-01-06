@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     // Business intelligence analytics
     const today = new Date()
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-    
+
     const [monthOrders, monthExpenses] = await Promise.all([
       Order.find({ createdAt: { $gte: monthStart } }).lean(),
       DailyExpense.find({ date: { $gte: monthStart } }).lean()
@@ -28,9 +28,9 @@ export async function GET(request: Request) {
     const monthRevenue = monthOrders
       .filter(o => o.status !== 'cancelled')
       .reduce((sum, order) => sum + order.totalAmount, 0)
-    
-    const monthExpensesTotal = monthExpenses.reduce((sum, exp) => 
-      sum + (exp.oxCost || 0) + (exp.otherExpenses || 0), 0)
+
+    const monthExpensesTotal = monthExpenses.reduce((sum, exp) =>
+      sum + (exp.otherExpenses || 0), 0)
 
     const intelligence = {
       monthlyRevenue: monthRevenue,

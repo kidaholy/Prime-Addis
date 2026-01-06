@@ -4,6 +4,7 @@ import mongoose from "mongoose"
 import { connectDB } from "@/lib/db"
 import MenuItem from "@/lib/models/menu-item"
 import Stock from "@/lib/models/stock"
+import AuditLog from "@/lib/models/audit-log"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -39,8 +40,33 @@ export async function PUT(request: Request, context: any) {
 
     const updateData = await request.json()
     console.log("📝 Menu item update data:", updateData)
-    console.log("🖼️ Image URL in update data:", updateData.image)
-    console.log("🆔 Menu item ID to update:", params.id)
+
+    // First check if the item exists
+    const existingItem = await MenuItem.findById(params.id)
+    if (!existingItem) {
+      console.error("❌ Menu item not found in database:", params.id)
+      return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
+    }
+
+    // Handle menuId update and uniqueness
+    if (updateData.menuId && updateData.menuId !== existingItem.menuId) {
+      const alreadyExists = await MenuItem.findOne({ menuId: updateData.menuId, _id: { $ne: params.id } })
+      if (alreadyExists) {
+        return NextResponse.json({ message: `Menu ID ${updateData.menuId} already exists` }, { status: 400 })
+      }
+
+      // Log the change
+      await AuditLog.create({
+        entityType: 'MenuItem',
+        entityId: params.id,
+        action: 'update',
+        field: 'menuId',
+        oldValue: existingItem.menuId,
+        newValue: updateData.menuId,
+        performedBy: decoded.email || decoded.id,
+        timestamp: new Date()
+      })
+    }
 
     // Validate ObjectId format using mongoose
     if (!params.id || !mongoose.Types.ObjectId.isValid(params.id)) {
@@ -70,19 +96,6 @@ export async function PUT(request: Request, context: any) {
       updateData.stockConsumption = Number(updateData.stockConsumption)
     } else if (updateData.stockConsumption === "") {
       updateData.stockConsumption = 0
-    }
-
-    // First check if the item exists
-    const existingItem = await MenuItem.findById(params.id)
-    console.log("🔍 Existing menu item found:", existingItem ? "Yes" : "No")
-
-    if (existingItem) {
-      console.log("🖼️ Current image URL:", existingItem.image)
-    }
-
-    if (!existingItem) {
-      console.error("❌ Menu item not found in database:", params.id)
-      return NextResponse.json({ message: "Menu item not found" }, { status: 404 })
     }
 
     console.log("🔄 Performing MongoDB update with data:", JSON.stringify(updateData, null, 2))

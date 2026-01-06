@@ -2,8 +2,6 @@ import mongoose, { Schema, Document } from "mongoose"
 
 export interface IDailyExpense extends Document {
     date: Date
-    oxCost: number
-    oxQuantity: number // tangible count
     otherExpenses: number
     items: Array<{ name: string; amount: number; quantity: number; unit: string }>
     description?: string
@@ -24,8 +22,6 @@ const DailyExpenseSchema = new Schema<IDailyExpense>(
                 return date;
             }
         },
-        oxCost: { type: Number, default: 0 },
-        oxQuantity: { type: Number, default: 0 },
         otherExpenses: { type: Number, default: 0 },
         items: [
             {

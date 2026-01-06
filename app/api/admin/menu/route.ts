@@ -32,7 +32,11 @@ export async function GET(request: Request) {
     const serializedItems = menuItems.map(item => ({
       ...item,
       _id: item._id.toString()
-    }))
+    })).sort((a: any, b: any) => {
+      const idA = a.menuId || ""
+      const idB = b.menuId || ""
+      return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+    })
 
     return NextResponse.json(serializedItems)
   } catch (error: any) {
@@ -60,15 +64,29 @@ export async function POST(request: Request) {
     await connectDB()
     console.log("📊 Database connected for menu item creation")
 
-    const { name, category, price, description, image, preparationTime, available, stockItemId, stockConsumption } = await request.json()
-    console.log("📝 Menu item data received:", { name, category, price, stockItemId })
+    const { menuId, name, category, price, description, image, preparationTime, available, stockItemId, stockConsumption } = await request.json()
+    console.log("📝 Menu item data received:", { menuId, name, category, price, stockItemId })
 
     if (!name || !category || !price) {
       return NextResponse.json({ message: "Name, category, and price are required" }, { status: 400 })
     }
 
+    // Check if menuId is provided, if not auto-generate
+    let finalMenuId = menuId
+    if (!finalMenuId) {
+      const count = await MenuItem.countDocuments()
+      finalMenuId = `MENU-${(count + 1).toString().padStart(3, '0')}`
+    }
+
+    // Check for uniqueness
+    const existingWithId = await MenuItem.findOne({ menuId: finalMenuId })
+    if (existingWithId) {
+      return NextResponse.json({ message: `Menu ID ${finalMenuId} already exists` }, { status: 400 })
+    }
+
     // Create menu item
     const menuItem = new MenuItem({
+      menuId: finalMenuId,
       name,
       category,
       price: Number(price),

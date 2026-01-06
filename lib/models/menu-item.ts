@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose"
 
 interface IMenuItem {
+  menuId: string
   name: string
   category: string
   price: number
@@ -17,6 +18,7 @@ interface IMenuItem {
 
 const menuItemSchema = new Schema<IMenuItem>(
   {
+    menuId: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
     category: { type: String, required: true },
     price: { type: Number, required: true },

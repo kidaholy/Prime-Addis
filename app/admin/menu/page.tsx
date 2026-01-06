@@ -13,6 +13,7 @@ import { useConfirmation } from "@/hooks/use-confirmation"
 
 interface MenuItem {
   _id: string
+  menuId: string
   name: string
   category: string
   price: number
@@ -29,6 +30,7 @@ interface MenuItem {
 }
 
 interface MenuItemForm {
+  menuId: string
   name: string
   category: string
   price: string
@@ -56,6 +58,7 @@ export default function AdminMenuPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [formData, setFormData] = useState<MenuItemForm>({
+    menuId: "",
     name: "",
     category: "",
     price: "",
@@ -143,7 +146,7 @@ export default function AdminMenuPage() {
       confirmText: "Delete Category",
       cancelText: "Cancel"
     })
-    
+
     if (!confirmed) return
     try {
       const response = await fetch(`/api/categories/${id}`, {
@@ -197,7 +200,8 @@ export default function AdminMenuPage() {
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.menuId && item.menuId.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     }
     if (categoryFilter !== "all") {
@@ -297,6 +301,7 @@ export default function AdminMenuPage() {
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item)
     setFormData({
+      menuId: item.menuId || "",
       name: item.name,
       category: item.category,
       price: item.price.toString(),
@@ -320,7 +325,7 @@ export default function AdminMenuPage() {
       confirmText: "Delete Item",
       cancelText: "Cancel"
     })
-    
+
     if (!confirmed) return
 
     try {
@@ -338,9 +343,35 @@ export default function AdminMenuPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    if (menuItems.length === 0) return
+
+    const headers = ["Menu ID", "Name", "Category", "Price", "Available", "Description"]
+    const rows = menuItems.map(item => [
+      item.menuId || "",
+      item.name,
+      item.category,
+      item.price,
+      item.available ? "Yes" : "No",
+      item.description || ""
+    ])
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n")
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `menu_export_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const resetForm = () => {
     setFormData({
-      name: "", category: "", price: "", description: "",
+      menuId: "", name: "", category: "", price: "", description: "",
       image: "", preparationTime: "10", available: true,
       reportUnit: 'piece', reportQuantity: '1',
       stockItemId: "", stockConsumption: "0"
@@ -369,9 +400,15 @@ export default function AdminMenuPage() {
                 </button>
                 <button
                   onClick={() => setShowCategoryManager(true)}
-                  className="w-full bg-[#8B4513] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm"
+                  className="w-full bg-[#8B4513] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm mb-3"
                 >
                   📁 {t("adminMenu.manageCategories")}
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-full border border-slate-200 transform transition-transform hover:scale-105 active:scale-95 text-sm"
+                >
+                  📥 Export Menu (CSV)
                 </button>
               </div>
 
@@ -444,6 +481,9 @@ export default function AdminMenuPage() {
                             <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">☕</div>
                           )}
                           <div className="absolute top-4 left-4 flex flex-col gap-2">
+                            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-[#8B4513] shadow-sm">
+                              #{item.menuId || "NO ID"}
+                            </div>
                           </div>
                           <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${item.available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
                             {item.available ? t("adminMenu.active") : t("adminMenu.hidden")}
@@ -570,16 +610,28 @@ export default function AdminMenuPage() {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                      placeholder="Flat White"
-                      required
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Menu ID (Optional)</label>
+                      <input
+                        type="text"
+                        value={formData.menuId}
+                        onChange={(e) => setFormData({ ...formData, menuId: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                        placeholder="AUTO-GEN"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                        placeholder="Flat White"
+                        required
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.category")} *</label>

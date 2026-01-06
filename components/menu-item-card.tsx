@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useLanguage } from "@/context/language-context"
 
 interface MenuItemCardProps {
+  menuId?: string
   name: string
   price: number
   description?: string
@@ -16,6 +17,7 @@ interface MenuItemCardProps {
 }
 
 export function MenuItemCard({
+  menuId,
   name,
   price,
   description,
@@ -92,6 +94,13 @@ export function MenuItemCard({
         <div className="absolute top-2 left-2 text-2xl animate-wiggle">
           {getCategoryEmoji(category)}
         </div>
+
+        {/* Menu ID Badge */}
+        {menuId && (
+          <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-mono border border-white/20">
+            ID: {menuId}
+          </div>
+        )}
       </div>
 
       <div className="mb-3">
@@ -115,8 +124,8 @@ export function MenuItemCard({
       <button
         onClick={onAddToCart}
         className={`w-full py-3 rounded-lg font-bold transition-all ${isSelected
-            ? "bg-accent/30 text-accent border-2 border-accent animate-pulse-glow"
-            : "bg-accent text-accent-foreground hover:opacity-90 transform hover:scale-105"
+          ? "bg-accent/30 text-accent border-2 border-accent animate-pulse-glow"
+          : "bg-accent text-accent-foreground hover:opacity-90 transform hover:scale-105"
           }`}
       >
         {isSelected ? (
