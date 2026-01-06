@@ -33,14 +33,18 @@ interface StockItem {
     quantity?: number
     unit: string
     minLimit?: number
+    averagePurchasePrice?: number
     unitCost?: number
     trackQuantity: boolean
     showStatus: boolean
-    status: 'active' | 'finished'
+    status: 'active' | 'out_of_stock'
+    totalInvestment?: number
+    totalPurchased?: number
+    totalConsumed?: number
 }
 
 export default function StockAndExpensesPage() {
-    const [activeTab, setActiveTab] = useState<"expenses" | "inventory">("expenses")
+    const [activeTab, setActiveTab] = useState<"inventory">("inventory")
     const [expenses, setExpenses] = useState<DailyExpense[]>([])
     const [stockItems, setStockItems] = useState<StockItem[]>([])
     const [loading, setLoading] = useState(true)
@@ -50,11 +54,11 @@ export default function StockAndExpensesPage() {
     const [editingStock, setEditingStock] = useState<StockItem | null>(null)
     const [saveLoading, setSaveLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
-    const [expensePeriod, setExpensePeriod] = useState<"today" | "week" | "month" | "year" | "all">("month")
 
     const [showRestockModal, setShowRestockModal] = useState(false)
     const [restockingItem, setRestockingItem] = useState<StockItem | null>(null)
     const [restockAmount, setRestockAmount] = useState("")
+    const [newTotalCost, setNewTotalCost] = useState("")
     const [newUnitCost, setNewUnitCost] = useState("")
 
     const [expenseFormData, setExpenseFormData] = useState({
@@ -70,6 +74,7 @@ export default function StockAndExpensesPage() {
         quantity: "",
         unit: "kg",
         minLimit: "",
+        totalPurchaseCost: "",
         unitCost: "",
         trackQuantity: true,
         showStatus: true
@@ -81,39 +86,61 @@ export default function StockAndExpensesPage() {
 
     useEffect(() => {
         if (token) {
-            fetchExpenses()
             fetchStockItems()
         }
-    }, [token, expensePeriod])
-
-    const fetchExpenses = async () => {
-        try {
-            setLoading(true)
-            const response = await fetch(`/api/admin/expenses?period=${expensePeriod}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            if (response.ok) {
-                const data = await response.json()
-                setExpenses(data)
+        
+        // Fallback: if loading takes too long, stop loading state
+        const timeout = setTimeout(() => {
+            if (loading) {
+                console.warn("⚠️ Stock loading timeout - stopping loading state")
+                setLoading(false)
             }
-        } catch (error) {
-            console.error("Error fetching expenses:", error)
-        } finally {
-            setLoading(false)
-        }
-    }
+        }, 10000) // 10 second timeout
+        
+        return () => clearTimeout(timeout)
+    }, [token])
 
     const fetchStockItems = async () => {
         try {
+            setLoading(true)
+            console.log("🔄 Fetching stock items...")
+            
             const response = await fetch("/api/stock", {
                 headers: { Authorization: `Bearer ${token}` },
             })
+            
+            console.log("📡 Stock API response status:", response.status)
+            
             if (response.ok) {
                 const data = await response.json()
+                console.log("📦 Fetched stock items:", data)
+                console.log("📊 Number of items:", data.length)
                 setStockItems(data)
+                
+                if (data.length === 0) {
+                    console.log("ℹ️ No stock items found in database")
+                }
+            } else {
+                console.error("❌ Failed to fetch stock items:", response.status, response.statusText)
+                const errorText = await response.text()
+                console.error("❌ Error details:", errorText)
+                
+                notify({
+                    title: "Failed to Load Stock",
+                    message: `Error ${response.status}: ${response.statusText}`,
+                    type: "error"
+                })
             }
         } catch (error) {
-            console.error("Error fetching stock:", error)
+            console.error("❌ Error fetching stock:", error)
+            notify({
+                title: "Network Error",
+                message: "Failed to connect to server. Please check your connection.",
+                type: "error"
+            })
+        } finally {
+            setLoading(false)
+            console.log("✅ Stock fetch completed")
         }
     }
 
@@ -235,13 +262,8 @@ export default function StockAndExpensesPage() {
         setSaveLoading(true)
         try {
             const addedAmount = Number(restockAmount)
-            const currentQuantity = restockingItem.quantity || 0
-            const newQuantity = currentQuantity + addedAmount
-
-            // If user provides a new unit cost, update it. Otherwise keep the old one.
-            // You might want to do a weighted average, but for simplicity we'll just update the current cost
-            // or keep existing if blank.
-            const updatedUnitCost = newUnitCost ? Number(newUnitCost) : restockingItem.unitCost
+            const totalCost = Number(newTotalCost)
+            const sellingPrice = newUnitCost ? Number(newUnitCost) : restockingItem.unitCost
 
             const response = await fetch(`/api/stock/${restockingItem._id}`, {
                 method: "PUT",
@@ -250,32 +272,42 @@ export default function StockAndExpensesPage() {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    quantity: newQuantity,
-                    unitCost: updatedUnitCost,
-                    status: 'active' // Reactivate if it was finished
+                    action: 'restock',
+                    quantityAdded: addedAmount,
+                    totalPurchaseCost: totalCost,
+                    newUnitCost: sellingPrice,
+                    notes: `Restocked ${addedAmount} ${restockingItem.unit} for total cost ${totalCost} Br`
                 }),
             })
 
             if (response.ok) {
+                const data = await response.json()
                 fetchStockItems()
                 setShowRestockModal(false)
                 setRestockingItem(null)
                 setRestockAmount("")
+                setNewTotalCost("")
                 setNewUnitCost("")
                 notify({
-                    title: "Stock Updated",
-                    message: `Added ${addedAmount} ${restockingItem.unit} to ${restockingItem.name}. New total: ${newQuantity} ${restockingItem.unit}.`,
+                    title: "Stock Restocked",
+                    message: data.message || `Successfully restocked ${addedAmount} ${restockingItem.unit}`,
                     type: "success"
                 })
             } else {
+                const errorData = await response.json()
                 notify({
-                    title: "Update Failed",
-                    message: "Failed to update stock quantity.",
+                    title: "Restock Failed",
+                    message: errorData.message || "Failed to restock item.",
                     type: "error"
                 })
             }
         } catch (error) {
             console.error(error)
+            notify({
+                title: "Error",
+                message: "An error occurred while restocking.",
+                type: "error"
+            })
         } finally {
             setSaveLoading(false)
         }
@@ -284,6 +316,7 @@ export default function StockAndExpensesPage() {
     const openRestockModal = (item: StockItem) => {
         setRestockingItem(item)
         setRestockAmount("")
+        setNewTotalCost("")
         setNewUnitCost(item.unitCost?.toString() || "")
         setShowRestockModal(true)
     }
@@ -343,57 +376,12 @@ export default function StockAndExpensesPage() {
             quantity: item.quantity?.toString() || "",
             unit: item.unit,
             minLimit: item.minLimit?.toString() || "",
+            totalPurchaseCost: item.totalInvestment?.toString() || "",
             unitCost: item.unitCost?.toString() || "",
             trackQuantity: item.trackQuantity,
             showStatus: item.showStatus
         })
         setShowStockForm(true)
-    }
-
-    const handleMarkFinished = async (item: StockItem) => {
-        const confirmed = await confirm({
-            title: "Mark Stock as Finished",
-            message: `Are you sure you want to mark ${item.name} as Finished?\n\nThis will set its quantity to 0 and block related orders.`,
-            type: "warning",
-            confirmText: "Mark Finished",
-            cancelText: "Cancel"
-        })
-
-        if (!confirmed) return
-
-        const shouldArchive = await confirm({
-            title: "Archive This Record?",
-            message: `Do you want to ARCHIVE this record?\n\nArchiving renames it to "${item.name} (Finished)" which preserves its history in your reports and allows you to start a fresh batch next time.`,
-            type: "info",
-            confirmText: "Yes, Archive",
-            cancelText: "No, Just Mark Finished"
-        })
-
-        try {
-            const updateData: any = {
-                quantity: 0,
-                status: 'finished'
-            }
-
-            if (shouldArchive) {
-                const dateStr = new Date().toISOString().split('T')[0]
-                updateData.name = `${item.name} (Finished ${dateStr})`
-            }
-
-            const response = await fetch(`/api/stock/${item._id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(updateData),
-            })
-            if (response.ok) {
-                fetchStockItems()
-            }
-        } catch (error) {
-            console.error("Error marking stock as finished:", error)
-        }
     }
 
     const resetExpenseForm = () => {
@@ -414,6 +402,7 @@ export default function StockAndExpensesPage() {
             quantity: "",
             unit: "kg",
             minLimit: "",
+            totalPurchaseCost: "",
             unitCost: "",
             trackQuantity: true,
             showStatus: true
@@ -422,21 +411,37 @@ export default function StockAndExpensesPage() {
         setShowStockForm(false)
     }
 
-    const filteredExpenses = expenses.filter(exp =>
-        new Date(exp.date).toLocaleDateString().includes(searchTerm) ||
-        exp.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
     const filteredStock = stockItems.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.category.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
     const totalStats = {
+        // Expense metrics
         totalOther: expenses.reduce((sum, e) => sum + e.otherExpenses, 0),
         count: expenses.length,
-        inventoryValue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitCost || 0)), 0),
-        lowStockItems: stockItems.filter(item => item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0)).length
+        
+        // Enhanced inventory metrics
+        inventoryValue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.averagePurchasePrice || 0)), 0), // Investment value
+        potentialRevenue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitCost || 0)), 0), // Potential revenue
+        totalItems: stockItems.length,
+        activeItems: stockItems.filter(item => item.status === 'active').length,
+        lowStockItems: stockItems.filter(item => item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0)).length,
+        outOfStockItems: stockItems.filter(item => item.trackQuantity && (item.quantity || 0) <= 0).length,
+        
+        // Stock health metrics
+        healthyItems: stockItems.filter(item => 
+            !item.trackQuantity || 
+            (item.status === 'active' && (item.quantity || 0) > (item.minLimit || 0))
+        ).length,
+        
+        // Category breakdown
+        categories: [...new Set(stockItems.map(item => item.category))].length,
+        
+        // Unit type breakdown
+        weightItems: stockItems.filter(item => ['kg', 'g', 'gram', 'kilogram'].includes(item.unit?.toLowerCase())).length,
+        volumeItems: stockItems.filter(item => ['l', 'ml', 'liter', 'litre', 'milliliter'].includes(item.unit?.toLowerCase())).length,
+        countItems: stockItems.filter(item => !['kg', 'g', 'gram', 'kilogram', 'l', 'ml', 'liter', 'litre', 'milliliter'].includes(item.unit?.toLowerCase())).length
     }
 
     return (
@@ -458,42 +463,48 @@ export default function StockAndExpensesPage() {
                                     {activeTab === 'expenses' ? <TrendingUp className="w-48 h-48" /> : <Package className="w-48 h-48" />}
                                 </div>
                                 <h2 className="text-sm font-black uppercase tracking-widest mb-6 opacity-60">
-                                    {activeTab === 'expenses' ? 'Expense Summary' : 'Inventory Value'}
+                                    Investment Value
                                 </h2>
                                 <div className="space-y-6 relative z-10">
                                     <div>
-                                        {activeTab === 'expenses' ? (
-                                            <>
-                                                <p className="text-4xl font-black">{totalStats.totalOther.toLocaleString()} <span className="text-xs">ETB</span></p>
-                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total Operational Investment</p>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <p className="text-4xl font-black">{totalStats.inventoryValue.toLocaleString()} <span className="text-xs">ETB</span></p>
-                                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Assets On Hand</p>
-                                            </>
-                                        )}
+                                        <p className="text-4xl font-black">{totalStats.inventoryValue.toLocaleString()} <span className="text-xs">ETB</span></p>
+                                        <p className="text-xs font-bold uppercase tracking-widest opacity-60 mt-1">Total Money Invested</p>
+                                        <p className="text-2xl font-bold text-green-300 mt-2">{totalStats.potentialRevenue.toLocaleString()} <span className="text-xs">ETB</span></p>
+                                        <p className="text-xs font-bold uppercase tracking-widest opacity-60">Potential Revenue</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-                                        {activeTab === 'expenses' ? (
-                                            <>
-                                                <div>
-                                                    <p className="text-xl font-bold">{totalStats.count}</p>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Days Recorded</p>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div>
-                                                    <p className="text-xl font-bold">{totalStats.lowStockItems}</p>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Low Stock SKUs</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xl font-bold">{stockItems.length}</p>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Total Items</p>
-                                                </div>
-                                            </>
-                                        )}
+                                        <div>
+                                            <p className="text-xl font-bold text-red-300">{totalStats.outOfStockItems}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Out of Stock</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xl font-bold text-yellow-300">{totalStats.lowStockItems}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Low Stock</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xl font-bold text-green-300">{totalStats.healthyItems}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Healthy Stock</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xl font-bold">{totalStats.totalItems}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Total Items</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/10">
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div>
+                                                <p className="text-sm font-bold">{totalStats.weightItems}</p>
+                                                <p className="text-[8px] font-bold uppercase tracking-widest opacity-60">Weight</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">{totalStats.volumeItems}</p>
+                                                <p className="text-[8px] font-bold uppercase tracking-widest opacity-60">Volume</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">{totalStats.countItems}</p>
+                                                <p className="text-[8px] font-bold uppercase tracking-widest opacity-60">Count</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -507,61 +518,36 @@ export default function StockAndExpensesPage() {
                             >
                                 <div className="flex justify-between items-center">
                                     <h2 className="text-xl font-black text-slate-800 tracking-tight">
-                                        {activeTab === 'expenses' ? 'Record Operational Cost' : 'Physical Operations'}
+                                        Physical Operations
                                     </h2>
                                     <div className="p-2 bg-[#8B4513]/10 rounded-xl">
-                                        {activeTab === 'expenses' ? <TrendingUp className="w-5 h-5 text-[#8B4513]" /> : <Plus className="w-5 h-5 text-[#8B4513]" />}
+                                        <Plus className="w-5 h-5 text-[#8B4513]" />
                                     </div>
                                 </div>
                                 <p className="text-gray-500 text-sm font-medium">
-                                    {activeTab === 'expenses'
-                                        ? 'Record the daily livestock purchase price.'
-                                        : 'Manage your physical items and specific operational costs like charcoal & gas.'}
+                                    Manage your physical items and specific operational costs like charcoal & gas.
                                 </p>
                                 <button
-                                    onClick={() => {
-                                        if (activeTab === 'expenses') { resetExpenseForm(); setShowForm(true); }
-                                        else { resetStockForm(); setShowStockForm(true); }
-                                    }}
+                                    onClick={() => { resetStockForm(); setShowStockForm(true); }}
                                     className="w-full bg-[#D2691E] text-slate-900 py-4 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[#D2691E]/20 hover:scale-[1.02] active:scale-98 transition-all"
                                 >
-                                    {activeTab === 'expenses' ? 'Log Expense' : 'Add Physical Item'}
+                                    Add Physical Item
                                 </button>
                             </motion.div>
                         </div>
 
                         {/* Main Feed Area */}
                         <div className="lg:col-span-8 space-y-6">
-                            {/* Tab Switcher */}
+                            {/* Header */}
                             <div className="flex flex-col md:flex-row gap-4">
-                                <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
-                                    <button
-                                        onClick={() => setActiveTab("expenses")}
-                                        className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'expenses' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
-                                    >
-                                        💸 Expenses Diary
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab("inventory")}
-                                        className={`px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-[#8B4513] text-white shadow-lg' : 'text-gray-400 hover:text-slate-800'}`}
-                                    >
-                                        📦 Physical Stock & Expenses
-                                    </button>
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                                        📦 Physical Stock & Expenses Management
+                                    </h2>
+                                    <p className="text-gray-500 font-medium mt-1">
+                                        Manage inventory items and operational costs
+                                    </p>
                                 </div>
-
-                                {activeTab === 'expenses' && (
-                                    <div className="bg-white p-2 rounded-full inline-flex gap-2 custom-shadow">
-                                        {(["today", "week", "month", "year", "all"] as const).map((p) => (
-                                            <button
-                                                key={p}
-                                                onClick={() => setExpensePeriod(p)}
-                                                className={`px-4 py-3 rounded-full font-black uppercase text-[9px] tracking-widest transition-all ${expensePeriod === p ? 'bg-[#D2691E] text-white shadow-md' : 'text-gray-400 hover:text-[#8B4513]'}`}
-                                            >
-                                                {p}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
 
                             <motion.div
@@ -572,17 +558,17 @@ export default function StockAndExpensesPage() {
                                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                                     <div>
                                         <h1 className="text-3xl font-black text-slate-900 tracking-tight bubbly-text">
-                                            {activeTab === 'expenses' ? <>Daily <span className="text-[#8B4513]">Expenses</span></> : <>Physical <span className="text-[#8B4513]">Stock</span></>}
+                                            Physical <span className="text-[#8B4513]">Stock</span>
                                         </h1>
                                         <p className="text-gray-500 font-medium mt-1">
-                                            {activeTab === 'expenses' ? 'Observational financial record of operations.' : 'Itemized list of all physical assets and quantities.'}
+                                            Itemized list of all physical assets and quantities.
                                         </p>
                                     </div>
                                     <div className="relative group w-full md:w-64">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#8B4513] transition-colors" />
                                         <input
                                             type="text"
-                                            placeholder={activeTab === 'expenses' ? "Search by date..." : "Search items..."}
+                                            placeholder="Search items..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[#8B4513]/10 outline-none font-bold text-sm"
@@ -593,72 +579,10 @@ export default function StockAndExpensesPage() {
                                 {loading ? (
                                     <div className="flex flex-col items-center justify-center py-32 opacity-20">
                                         <History className="w-16 h-16 animate-spin-slow mb-4" />
-                                        <p className="font-black uppercase tracking-widest text-xs">Syncing Balance Sheet...</p>
+                                        <p className="font-black uppercase tracking-widest text-xs">Loading Inventory...</p>
                                     </div>
-                                ) : activeTab === 'expenses' ? (
-                                    /* EXPENSES FEED */
-                                    filteredExpenses.length === 0 ? (
-                                        <div className="text-center py-32">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <Calendar className="w-8 h-8 text-gray-200" />
-                                            </div>
-                                            <h3 className="text-lg font-bold text-gray-400">No expenses recorded yet.</h3>
-                                            <button onClick={() => setShowForm(true)} className="mt-4 text-[#2d5a41] font-bold text-sm hover:underline">Start Recording Today</button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            {filteredExpenses.map((expense, idx) => (
-                                                <motion.div
-                                                    key={expense._id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.05 }}
-                                                    className="group relative flex items-center justify-between p-6 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-xl transition-all"
-                                                >
-                                                    <div className="flex items-center gap-6">
-                                                        <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center group-hover:bg-[#8B4513]/5 transition-colors">
-                                                            <span className="text-[10px] font-black uppercase text-[#8B4513]/40">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                            <span className="text-xl font-black text-[#8B4513] leading-none">{new Date(expense.date).getDate()}</span>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{new Date(expense.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
-                                                            <div className="flex items-center gap-6">
-                                                                <p className="font-black text-2xl text-[#8B4513]">
-                                                                    {expense.otherExpenses.toLocaleString()} <span className="text-[10px] font-medium">ETB</span>
-                                                                </p>
-                                                            </div>
-                                                            {expense.items && expense.items.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {expense.items.map((item, i) => (
-                                                                        <span key={i} className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-gray-100 text-gray-500">
-                                                                            {item.name}: {item.amount.toLocaleString()}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {expense.description && <p className="text-xs text-gray-400 mt-2 font-medium italic">"{expense.description}"</p>}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => handleEditExpense(expense)}
-                                                            className="p-3 bg-white hover:bg-[#8B4513] text-[#8B4513] hover:text-white rounded-2xl shadow-sm border border-gray-100 transition-all active:scale-90"
-                                                        >
-                                                            <Edit2 className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => deleteExpense(expense._id)}
-                                                            className="p-3 bg-white hover:bg-red-500 text-red-500 hover:text-white rounded-2xl shadow-sm border border-gray-100 transition-all active:scale-90"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    )
                                 ) : (
-                                    /* INVENTORY FEED */
+                                    /* INVENTORY SECTION */
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">📋 Inventory List</h3>
@@ -685,44 +609,79 @@ export default function StockAndExpensesPage() {
                                                         <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                                             <th className="pb-4 pl-4">Item Details</th>
                                                             <th className="pb-4">Quantity</th>
-                                                            <th className="pb-4">Valuation</th>
+                                                            <th className="pb-4">Purchase & Selling</th>
                                                             <th className="pb-4">Status</th>
                                                             <th className="pb-4 text-right pr-4">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-gray-50">
                                                         {filteredStock.map((item, idx) => {
-                                                            const isLow = item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0);
+                                                            const isLow = item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0) && (item.quantity || 0) > 0;
+                                                            const isOutOfStock = item.trackQuantity && (item.quantity || 0) <= 0;
                                                             return (
                                                                 <motion.tr
                                                                     key={item._id}
                                                                     initial={{ opacity: 0, x: -10 }}
                                                                     animate={{ opacity: 1, x: 0 }}
                                                                     transition={{ delay: idx * 0.02 }}
-                                                                    className="group hover:bg-gray-50/50 transition-colors"
+                                                                    className={`group hover:bg-gray-50/50 transition-colors ${isOutOfStock ? 'bg-red-50/30' : isLow ? 'bg-yellow-50/30' : ''}`}
                                                                 >
                                                                     <td className="py-6 pl-4">
-                                                                        <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
-                                                                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">{item.category}</p>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div>
+                                                                                <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
+                                                                                <div className="flex items-center gap-2 mt-1">
+                                                                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{item.category}</p>
+                                                                                    <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 uppercase">
+                                                                                        {item.unit}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <p className="text-xl font-black text-slate-800">
-                                                                            {item.trackQuantity ? item.quantity : '-'}
-                                                                            <span className="text-xs font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
-                                                                        </p>
+                                                                        <div>
+                                                                            <p className={`text-xl font-black ${isOutOfStock ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-slate-800'}`}>
+                                                                                {item.trackQuantity ? (item.quantity || 0).toLocaleString() : '-'}
+                                                                                <span className="text-xs font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
+                                                                            </p>
+                                                                            {item.trackQuantity && item.minLimit > 0 && (
+                                                                                <p className="text-[10px] font-medium text-gray-400">
+                                                                                    Min: {item.minLimit} {item.unit}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
                                                                     </td>
                                                                     <td className="py-6">
-                                                                        <p className="font-bold text-slate-600">{(item.unitCost || 0).toLocaleString()} <span className="text-[10px]">Br</span></p>
-                                                                        <p className="text-[10px] font-medium text-gray-400">per {item.unit}</p>
+                                                                        <div className="space-y-2">
+                                                                            <div>
+                                                                                <p className="text-sm font-bold text-red-600">💰 Avg Cost: {(item.averagePurchasePrice || 0).toLocaleString()} Br</p>
+                                                                                <p className="text-sm font-bold text-green-600">💵 Selling: {(item.unitCost || 0).toLocaleString()} Br</p>
+                                                                                <p className="text-[10px] font-medium text-gray-400">per {item.unit}</p>
+                                                                            </div>
+                                                                            <div className="pt-2 border-t border-gray-100">
+                                                                                <p className="text-xs font-bold text-red-500">
+                                                                                    Investment: {((item.quantity || 0) * (item.averagePurchasePrice || 0)).toLocaleString()} Br
+                                                                                </p>
+                                                                                <p className="text-xs font-bold text-green-500">
+                                                                                    Revenue: {((item.quantity || 0) * (item.unitCost || 0)).toLocaleString()} Br
+                                                                                </p>
+                                                                                {(item.unitCost || 0) > 0 && (item.averagePurchasePrice || 0) > 0 && (
+                                                                                    <p className="text-xs font-bold text-blue-600">
+                                                                                        Margin: {(((item.unitCost - item.averagePurchasePrice) / item.unitCost) * 100).toFixed(1)}%
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
                                                                     </td>
                                                                     <td className="py-6">
                                                                         {item.showStatus ? (
-                                                                            item.status === 'finished' ? (
-                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                                                                                    🏁 Finished
+                                                                            isOutOfStock ? (
+                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-100 px-3 py-1 rounded-full border border-red-200">
+                                                                                    <AlertCircle size={10} /> Out of Stock
                                                                                 </span>
                                                                             ) : isLow ? (
-                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">
+                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">
                                                                                     <AlertCircle size={10} /> Low Stock
                                                                                 </span>
                                                                             ) : (
@@ -744,16 +703,6 @@ export default function StockAndExpensesPage() {
                                                                                 <PlusCircle size={12} />
                                                                                 Restock
                                                                             </button>
-                                                                            {item.status !== 'finished' && (
-                                                                                <button
-                                                                                    onClick={() => handleMarkFinished(item)}
-                                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 rounded-lg transition-all font-black text-[9px] uppercase tracking-wider border border-slate-200 hover:border-emerald-200"
-                                                                                    title="Finish and Archive"
-                                                                                >
-                                                                                    <CheckCircle2 size={12} />
-                                                                                    Finish Stock
-                                                                                </button>
-                                                                            )}
                                                                             <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
                                                                                 <Edit2 size={16} />
                                                                             </button>
@@ -789,8 +738,8 @@ export default function StockAndExpensesPage() {
                             >
                                 <div className="flex justify-between items-start mb-10">
                                     <div>
-                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">{activeTab === 'expenses' ? 'Expense' : 'Physical'} <span className="text-[#2d5a41]">{activeTab === 'expenses' ? 'Entry' : 'Expenses'}</span></h2>
-                                        <p className="text-gray-500 mt-2 font-medium">{activeTab === 'expenses' ? 'Log operational expenses like Charcoal/Gas.' : 'Log operational costs like Charcoal/Gas.'}</p>
+                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">Physical <span className="text-[#2d5a41]">Expenses</span></h2>
+                                        <p className="text-gray-500 mt-2 font-medium">Log operational costs like Charcoal/Gas.</p>
                                     </div>
                                     <button onClick={resetExpenseForm} className="p-3 hover:bg-gray-100 rounded-2xl transition-colors">
                                         <ChevronRight className="w-6 h-6 rotate-45 text-gray-400" />
@@ -927,39 +876,126 @@ export default function StockAndExpensesPage() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Quantity</label>
                                             <input
                                                 type="number"
                                                 placeholder="0"
+                                                min="0"
+                                                step="0.01"
                                                 value={stockFormData.quantity}
                                                 onChange={e => setStockFormData({ ...stockFormData, quantity: e.target.value })}
                                                 className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit</label>
-                                            <input
-                                                type="text"
-                                                placeholder="pcs / kg / L"
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit & Type</label>
+                                            <select
                                                 value={stockFormData.unit}
                                                 onChange={e => setStockFormData({ ...stockFormData, unit: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
+                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] px-6 py-[22px] outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg appearance-none"
                                                 required
+                                            >
+                                                <optgroup label="🏋️ Weight">
+                                                    <option value="kg">Kilograms (kg)</option>
+                                                    <option value="g">Grams (g)</option>
+                                                </optgroup>
+                                                <optgroup label="🥤 Volume">
+                                                    <option value="L">Liters (L)</option>
+                                                    <option value="ml">Milliliters (ml)</option>
+                                                </optgroup>
+                                                <optgroup label="🔢 Count">
+                                                    <option value="pcs">Pieces (pcs)</option>
+                                                    <option value="bottles">Bottles</option>
+                                                    <option value="cans">Cans</option>
+                                                    <option value="boxes">Boxes</option>
+                                                    <option value="bags">Bags</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Total Purchase Cost (Br)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Total amount paid"
+                                                min="0"
+                                                step="0.01"
+                                                value={stockFormData.totalPurchaseCost}
+                                                onChange={e => setStockFormData({ ...stockFormData, totalPurchaseCost: e.target.value })}
+                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit Cost (Br)</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💵 Selling Price (Br)</label>
                                             <input
                                                 type="number"
-                                                placeholder="0.00"
+                                                placeholder="What you charge"
+                                                min="0"
+                                                step="0.01"
                                                 value={stockFormData.unitCost}
                                                 onChange={e => setStockFormData({ ...stockFormData, unitCost: e.target.value })}
                                                 className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
                                             />
                                         </div>
                                     </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Minimum Stock Alert</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Alert when below this amount"
+                                                min="0"
+                                                step="0.01"
+                                                value={stockFormData.minLimit}
+                                                onChange={e => setStockFormData({ ...stockFormData, minLimit: e.target.value })}
+                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💸 Total Investment</label>
+                                            <div className="w-full bg-red-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-red-600">
+                                                {(Number(stockFormData.totalPurchaseCost) || 0).toLocaleString()} Br
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Potential Revenue</label>
+                                            <div className="w-full bg-green-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-green-600">
+                                                {((Number(stockFormData.quantity) || 0) * (Number(stockFormData.unitCost) || 0)).toLocaleString()} Br
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">📊 Avg Cost/Unit</label>
+                                            <div className="w-full bg-blue-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-blue-600">
+                                                {Number(stockFormData.quantity) > 0 ? 
+                                                    ((Number(stockFormData.totalPurchaseCost) || 0) / Number(stockFormData.quantity)).toFixed(2) 
+                                                    : '0.00'} Br
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Profit Margin Display */}
+                                    {Number(stockFormData.totalPurchaseCost) > 0 && Number(stockFormData.unitCost) > 0 && Number(stockFormData.quantity) > 0 && (
+                                        <div className="bg-blue-50 rounded-[1.5rem] p-6 border border-blue-100">
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <p className="text-sm font-black text-blue-800">Profit Analysis</p>
+                                                    <p className="text-xs text-blue-600">Per unit profit and margin percentage</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-2xl font-black text-blue-800">
+                                                        {((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) || 0).toLocaleString()} Br
+                                                    </p>
+                                                    <p className="text-sm font-bold text-blue-600">
+                                                        {Number(stockFormData.unitCost) > 0 ? 
+                                                            (((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) / Number(stockFormData.unitCost)) * 100).toFixed(1) 
+                                                            : 0}% margin
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex flex-wrap gap-8 items-center py-4">
                                         <label className="flex items-center gap-3 cursor-pointer group">
@@ -1021,16 +1057,55 @@ export default function StockAndExpensesPage() {
                                             required
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">New Unit Cost (Optional)</label>
-                                        <input
-                                            type="number"
-                                            placeholder={restockingItem.unitCost?.toString()}
-                                            value={newUnitCost}
-                                            onChange={e => setNewUnitCost(e.target.value)}
-                                            className="w-full bg-gray-50 border-none rounded-[1.5rem] p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-bold text-lg"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">💰 Total Purchase Cost (Br)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Total amount paid"
+                                                value={newTotalCost}
+                                                onChange={e => setNewTotalCost(e.target.value)}
+                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-bold text-lg"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">💵 Selling Price (Br)</label>
+                                            <input
+                                                type="number"
+                                                placeholder={restockingItem.unitCost?.toString() || "What you charge"}
+                                                value={newUnitCost}
+                                                onChange={e => setNewUnitCost(e.target.value)}
+                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-4 outline-none focus:ring-4 focus:ring-[#8B4513]/10 font-bold text-lg"
+                                            />
+                                        </div>
                                     </div>
+                                    
+                                    {/* Investment Calculation */}
+                                    {Number(restockAmount) > 0 && Number(newTotalCost) > 0 && (
+                                        <div className="bg-blue-50 rounded-[1.5rem] p-4 border border-blue-100">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="font-bold text-blue-800">Total Investment:</span>
+                                                <span className="font-black text-blue-800">
+                                                    {Number(newTotalCost).toLocaleString()} Br
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm mt-1">
+                                                <span className="font-bold text-gray-600">Avg Cost per {restockingItem.unit}:</span>
+                                                <span className="font-black text-gray-600">
+                                                    {(Number(newTotalCost) / Number(restockAmount)).toFixed(2)} Br
+                                                </span>
+                                            </div>
+                                            {Number(newUnitCost) > 0 && (
+                                                <div className="flex justify-between items-center text-sm mt-2">
+                                                    <span className="font-bold text-green-800">Potential Revenue:</span>
+                                                    <span className="font-black text-green-800">
+                                                        {(Number(restockAmount) * Number(newUnitCost)).toLocaleString()} Br
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="pt-4 flex gap-3">
                                         <button
