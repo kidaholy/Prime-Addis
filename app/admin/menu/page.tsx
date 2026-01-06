@@ -79,6 +79,8 @@ export default function AdminMenuPage() {
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [categoryLoading, setCategoryLoading] = useState(false)
+  const [swapMode, setSwapMode] = useState(false)
+  const [swapSourceId, setSwapSourceId] = useState<string | null>(null)
 
   useEffect(() => {
     if (token) {
@@ -208,6 +210,42 @@ export default function AdminMenuPage() {
       filtered = filtered.filter(item => item.category === categoryFilter)
     }
     setFilteredItems(filtered)
+  }
+
+  const handleSwap = async (targetMenuId: string) => {
+    if (!swapSourceId) {
+      setSwapSourceId(targetMenuId)
+      notify({ title: "Select Target", message: "Select another item to swap IDs with.", type: "info" })
+      return
+    }
+
+    if (swapSourceId === targetMenuId) {
+      setSwapSourceId(null)
+      return
+    }
+
+    try {
+      const response = await fetch("/api/admin/menu/swap", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ menuId1: swapSourceId, menuId2: targetMenuId }),
+      })
+
+      if (response.ok) {
+        notify({ title: "Success", message: "Menu IDs swapped successfully.", type: "success" })
+        fetchMenuItems()
+        setSwapMode(false)
+        setSwapSourceId(null)
+      } else {
+        const errorData = await response.json()
+        notify({ title: "Error", message: errorData.message || "Failed to swap IDs", type: "error" })
+      }
+    } catch (error) {
+      notify({ title: "Error", message: "An error occurred while swapping", type: "error" })
+    }
   }
 
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
@@ -406,9 +444,15 @@ export default function AdminMenuPage() {
                 </button>
                 <button
                   onClick={handleExportCSV}
-                  className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-full border border-slate-200 transform transition-transform hover:scale-105 active:scale-95 text-sm"
+                  className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-full border border-slate-200 transform transition-transform hover:scale-105 active:scale-95 text-sm mb-3"
                 >
                   📥 Export Menu (CSV)
+                </button>
+                <button
+                  onClick={() => { setSwapMode(!swapMode); setSwapSourceId(null); }}
+                  className={`w-full font-bold py-3 rounded-full border transform transition-transform hover:scale-105 active:scale-95 text-sm ${swapMode ? "bg-purple-600 text-white border-purple-600 animate-pulse" : "bg-white text-purple-600 border-purple-200"}`}
+                >
+                  🔄 {swapMode ? "Cancel Swap" : "Swap IDs"}
                 </button>
               </div>
 
@@ -497,10 +541,13 @@ export default function AdminMenuPage() {
 
                           <div className="flex gap-2 mt-auto">
                             <button
-                              onClick={() => handleEdit(item)}
-                              className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm"
+                              onClick={() => swapMode ? handleSwap(item.menuId) : handleEdit(item)}
+                              className={`flex-1 font-bold py-2.5 rounded-2xl transition-colors text-sm border ${swapMode
+                                ? (swapSourceId === item.menuId ? "bg-purple-600 text-white border-purple-600" : "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100")
+                                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                                }`}
                             >
-                              {t("adminMenu.edit")}
+                              {swapMode ? (swapSourceId === item.menuId ? "Selected" : "Swap With") : t("adminMenu.edit")}
                             </button>
                             <button
                               onClick={() => handleDelete(item)}
