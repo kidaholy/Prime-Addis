@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         await connectDB()
 
         const body = await request.json()
-        const { date, oxCost, oxQuantity, otherExpenses, items, description } = body
+        const { date, otherExpenses, items, description } = body
 
         // Validate required fields
         if (!date) {
@@ -135,8 +135,6 @@ export async function POST(request: Request) {
 
         const expenseData = {
             date: expenseDate,
-            oxCost: oxCost || 0,
-            oxQuantity: oxQuantity || 0,
             otherExpenses: otherExpenses || 0,
             items: items || [],
             description: description || ""
@@ -156,15 +154,6 @@ export async function POST(request: Request) {
         }
 
         // Update stock quantities based on purchases
-        if (oxQuantity > 0) {
-            // Find ox stock item and update quantity
-            await Stock.findOneAndUpdate(
-                { name: { $regex: /^ox/i } },
-                { $inc: { quantity: oxQuantity } }
-            )
-        }
-
-        // Update other stock items
         if (items && items.length > 0) {
             for (const item of items) {
                 if (item.quantity > 0) {

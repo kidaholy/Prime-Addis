@@ -88,12 +88,17 @@ export default function ReportsPage() {
     try {
       const response = await fetchWithTimeout(`/api/reports/sales?period=${timeRange}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      }, 15000) // Increased timeout to 15 seconds
       if (response.ok) {
         setPeriodData(await response.json())
+      } else {
+        console.error("Failed to fetch period summary:", response.status, response.statusText)
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return
+      if (err.name === 'AbortError') {
+        console.warn("Period summary request timed out")
+        return
+      }
       console.error("Failed to fetch summary:", err)
     }
   }
@@ -102,12 +107,17 @@ export default function ReportsPage() {
     try {
       const response = await fetchWithTimeout(`/api/reports/stock-usage?period=${timeRange}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      }, 20000) // Increased timeout to 20 seconds for complex calculations
       if (response.ok) {
         setStockUsageData(await response.json())
+      } else {
+        console.error("Failed to fetch stock usage:", response.status, response.statusText)
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return
+      if (err.name === 'AbortError') {
+        console.warn("Stock usage request timed out")
+        return
+      }
       console.error("Failed to fetch stock usage:", err)
     }
   }
@@ -425,7 +435,7 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.completedOrders} ${t("adminReports.ordersTotal")}`} />
 
-                {/* Net Worth Summary using formula: Revenue - Ox - Other */}
+                {/* Net Worth Summary using formula: Revenue - Expenses - Assets */}
                 {(() => {
                   if (!profitData) {
                     return <StatCard label={t("adminReports.netWorth")} value="Loading..." icon="💎" color="purple" subtext="Calculating..." />
@@ -468,16 +478,16 @@ export default function ReportsPage() {
                   </div>
                 </Link>
 
-                <Link href="/admin/reports/stock" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#D2691E] hover:scale-105 transition-transform group relative overflow-hidden">
+                <Link href="/admin/reports/stock-usage" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#D2691E] hover:scale-105 transition-transform group relative overflow-hidden">
                   <div className="relative z-10">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Consumption Analysis</p>
-                    <h3 className="text-2xl font-black text-slate-800 mb-2">Stock Usage</h3>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Movement Analysis</p>
+                    <h3 className="text-2xl font-black text-slate-800 mb-2">Stock Usage Report</h3>
                     <p className="text-xs text-[#D2691E] font-bold flex items-center gap-2">
-                      View Details <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      Complete Analysis <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </p>
                   </div>
                   <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-                    <span className="text-8xl">📦</span>
+                    <span className="text-8xl">📊</span>
                   </div>
                 </Link>
               </div>

@@ -346,7 +346,7 @@ export default function AdminDashboardPage() {
                     </div>
                   ))}
                   {metrics.inventoryInsights.lowStockAlerts.length > 5 && (
-                    <Link href="/admin/reports/stock" className="block text-center p-2 text-red-600 hover:underline">
+                    <Link href="/admin/reports/stock-usage" className="block text-center p-2 text-red-600 hover:underline">
                       View all {metrics.inventoryInsights.lowStockAlerts.length} alerts
                     </Link>
                   )}
