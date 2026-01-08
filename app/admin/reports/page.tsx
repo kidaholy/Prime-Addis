@@ -376,7 +376,7 @@ export default function ReportsPage() {
                                             const currentQuantity = item.closingStock ?? item.quantity ?? 0;
                                             const totalPurchaseValue = currentQuantity * costPrice;
                                             const consumedCount = item.consumed ?? 0;
-                                            const remains = currentQuantity;
+                                            const remains = currentQuantity - consumedCount;
                                             const potentialRevenue = remains * sellingPrice;
 
                                             return (
