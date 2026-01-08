@@ -92,9 +92,9 @@ export default function NetWorthReportPage() {
   const totalStockValue =
     stockItems && stockItems.length > 0
       ? stockItems.reduce(
-          (acc, item) => acc + (item.quantity ?? 0) * (item.unitCost ?? 0),
-          0
-        )
+        (acc, item) => acc + (item.quantity ?? 0) * (item.unitCost ?? 0),
+        0
+      )
       : 0;
 
   // Business Logic: Revenue - Investment - Physical Stock Value
@@ -151,9 +151,8 @@ export default function NetWorthReportPage() {
         "Purchased Price": `${totalPurchasedPrice.toLocaleString()} ብር`,
         "Other Expenses": `${totalOtherExpenses.toLocaleString()} ብር`,
         "Net Worth": `${netWorth.toLocaleString()} ብር`,
-        "Profit Margin": `${
-          totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0
-        }%`,
+        "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0
+          }%`,
       },
     };
 
@@ -187,9 +186,8 @@ export default function NetWorthReportPage() {
       ],
       summary: {
         "Net Worth": `${netWorth.toLocaleString()} ብር`,
-        "Profit Margin": `${
-          totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0
-        }%`,
+        "Profit Margin": `${totalRevenue > 0 ? ((netWorth / totalRevenue) * 100).toFixed(1) : 0
+          }%`,
       },
     };
 
@@ -241,11 +239,10 @@ export default function NetWorthReportPage() {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-2 rounded-md text-sm font-bold capitalize transition-all ${
-                      filter === f
+                    className={`px-4 py-2 rounded-md text-sm font-bold capitalize transition-all ${filter === f
                         ? "bg-[#8B4513] text-white shadow-md"
                         : "text-gray-500 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     {f}
                   </button>
@@ -356,11 +353,10 @@ export default function NetWorthReportPage() {
             </div>
 
             <div
-              className={`rounded-lg p-6 shadow-sm border ${
-                netWorth >= 0
+              className={`rounded-lg p-6 shadow-sm border ${netWorth >= 0
                   ? "bg-green-50 border-green-200"
                   : "bg-red-50 border-red-200"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -368,17 +364,15 @@ export default function NetWorthReportPage() {
                     Final Net Worth ({filter})
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
-                      netWorth >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
+                    className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"
+                      }`}
                   >
                     {netWorth.toLocaleString()} ብር
                   </p>
                 </div>
                 <TrendingUp
-                  className={`w-8 h-8 ${
-                    netWorth >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`w-8 h-8 ${netWorth >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
                 />
               </div>
             </div>
@@ -459,17 +453,15 @@ export default function NetWorthReportPage() {
                   <tr>
                     <td className="py-4 px-4 font-bold text-lg text-gray-900">Net Worth</td>
                     <td className="py-4 px-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        netWorth >= 0 
-                          ? 'bg-green-100 text-green-800' 
+                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${netWorth >= 0
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}>
+                        }`}>
                         {netWorth >= 0 ? 'Profit' : 'Loss'}
                       </span>
                     </td>
-                    <td className={`py-4 px-4 text-right font-bold text-xl ${
-                      netWorth >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <td className={`py-4 px-4 text-right font-bold text-xl ${netWorth >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
                       {netWorth.toLocaleString()}
                     </td>
                     <td className="py-4 px-4 text-center font-bold">
@@ -513,8 +505,8 @@ export default function NetWorthReportPage() {
                       <p className="text-sm text-purple-600">Per transaction</p>
                     </div>
                     <p className="text-2xl font-bold text-purple-600">
-                      {periodData?.sales?.summary?.totalOrders > 0 
-                        ? (totalRevenue / periodData.sales.summary.totalOrders).toFixed(0) 
+                      {periodData?.sales?.summary?.totalOrders > 0
+                        ? (totalRevenue / periodData.sales.summary.totalOrders).toFixed(0)
                         : 0} ብር
                     </p>
                   </div>
@@ -656,13 +648,6 @@ export default function NetWorthReportPage() {
                     <tr>
                       <td colSpan={9} className="py-8 text-center text-gray-500">
                         {loading ? "Loading inventory data..." : "No inventory data available for this period."}
-                      </td>
-                    </tr>
-                  )}
-                  )) || (
-                    <tr>
-                      <td colSpan={9} className="py-8 text-center text-gray-500">
-                        No inventory data available. Stock usage data may still be loading.
                       </td>
                     </tr>
                   )}

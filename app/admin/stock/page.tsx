@@ -88,7 +88,7 @@ export default function StockAndExpensesPage() {
         if (token) {
             fetchStockItems()
         }
-        
+
         // Fallback: if loading takes too long, stop loading state
         const timeout = setTimeout(() => {
             if (loading) {
@@ -96,7 +96,7 @@ export default function StockAndExpensesPage() {
                 setLoading(false)
             }
         }, 10000) // 10 second timeout
-        
+
         return () => clearTimeout(timeout)
     }, [token])
 
@@ -104,19 +104,19 @@ export default function StockAndExpensesPage() {
         try {
             setLoading(true)
             console.log("🔄 Fetching stock items...")
-            
+
             const response = await fetch("/api/stock", {
                 headers: { Authorization: `Bearer ${token}` },
             })
-            
+
             console.log("📡 Stock API response status:", response.status)
-            
+
             if (response.ok) {
                 const data = await response.json()
                 console.log("📦 Fetched stock items:", data)
                 console.log("📊 Number of items:", data.length)
                 setStockItems(data)
-                
+
                 if (data.length === 0) {
                     console.log("ℹ️ No stock items found in database")
                 }
@@ -124,7 +124,7 @@ export default function StockAndExpensesPage() {
                 console.error("❌ Failed to fetch stock items:", response.status, response.statusText)
                 const errorText = await response.text()
                 console.error("❌ Error details:", errorText)
-                
+
                 notify({
                     title: "Failed to Load Stock",
                     message: `Error ${response.status}: ${response.statusText}`,
@@ -165,7 +165,6 @@ export default function StockAndExpensesPage() {
             })
 
             if (response.ok) {
-                fetchExpenses()
                 fetchStockItems()
                 resetExpenseForm()
                 notify({
@@ -420,7 +419,7 @@ export default function StockAndExpensesPage() {
         // Expense metrics
         totalOther: expenses.reduce((sum, e) => sum + e.otherExpenses, 0),
         count: expenses.length,
-        
+
         // Enhanced inventory metrics
         inventoryValue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.averagePurchasePrice || 0)), 0), // Investment value
         potentialRevenue: stockItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitCost || 0)), 0), // Potential revenue
@@ -428,16 +427,16 @@ export default function StockAndExpensesPage() {
         activeItems: stockItems.filter(item => item.status === 'active').length,
         lowStockItems: stockItems.filter(item => item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0)).length,
         outOfStockItems: stockItems.filter(item => item.trackQuantity && (item.quantity || 0) <= 0).length,
-        
+
         // Stock health metrics
-        healthyItems: stockItems.filter(item => 
-            !item.trackQuantity || 
+        healthyItems: stockItems.filter(item =>
+            !item.trackQuantity ||
             (item.status === 'active' && (item.quantity || 0) > (item.minLimit || 0))
         ).length,
-        
+
         // Category breakdown
         categories: [...new Set(stockItems.map(item => item.category))].length,
-        
+
         // Unit type breakdown
         weightItems: stockItems.filter(item => ['kg', 'g', 'gram', 'kilogram'].includes(item.unit?.toLowerCase())).length,
         volumeItems: stockItems.filter(item => ['l', 'ml', 'liter', 'litre', 'milliliter'].includes(item.unit?.toLowerCase())).length,
@@ -968,8 +967,8 @@ export default function StockAndExpensesPage() {
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">📊 Avg Cost/Unit</label>
                                             <div className="w-full bg-blue-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-blue-600">
-                                                {Number(stockFormData.quantity) > 0 ? 
-                                                    ((Number(stockFormData.totalPurchaseCost) || 0) / Number(stockFormData.quantity)).toFixed(2) 
+                                                {Number(stockFormData.quantity) > 0 ?
+                                                    ((Number(stockFormData.totalPurchaseCost) || 0) / Number(stockFormData.quantity)).toFixed(2)
                                                     : '0.00'} Br
                                             </div>
                                         </div>
@@ -988,8 +987,8 @@ export default function StockAndExpensesPage() {
                                                         {((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) || 0).toLocaleString()} Br
                                                     </p>
                                                     <p className="text-sm font-bold text-blue-600">
-                                                        {Number(stockFormData.unitCost) > 0 ? 
-                                                            (((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) / Number(stockFormData.unitCost)) * 100).toFixed(1) 
+                                                        {Number(stockFormData.unitCost) > 0 ?
+                                                            (((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) / Number(stockFormData.unitCost)) * 100).toFixed(1)
                                                             : 0}% margin
                                                     </p>
                                                 </div>
@@ -1080,7 +1079,7 @@ export default function StockAndExpensesPage() {
                                             />
                                         </div>
                                     </div>
-                                    
+
                                     {/* Investment Calculation */}
                                     {Number(restockAmount) > 0 && Number(newTotalCost) > 0 && (
                                         <div className="bg-blue-50 rounded-[1.5rem] p-4 border border-blue-100">
