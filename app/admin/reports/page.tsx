@@ -6,7 +6,7 @@ import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
 import { useSettings } from "@/context/settings-context"
-import { ReportExporter } from "@/lib/export-utils"
+import { ReportExporter, type ComprehensiveSection } from "@/lib/export-utils"
 import { Download, FileText, Printer, CheckCircle, Clock, ShoppingCart, AlertTriangle, ArrowRight } from "lucide-react"
 
 export default function ReportsPage() {
@@ -111,50 +111,130 @@ export default function ReportsPage() {
 
 
     // --- Exports ---
-    const exportFullReport = () => {
-        const exportData = {
-            title: "Comprehensive Business Report",
+    const exportFinancialReport = () => {
+        const data = [
+            { Metric: "Total Revenue", Type: "INCOME", Amount: `${totalRevenue.toLocaleString()} ETB`, Description: "Total completed orders value" },
+            { Metric: "Total Investment", Type: "EXPENSE", Amount: `${totalInvestment.toLocaleString()} ETB`, Description: "Purchases + Operational Expenses" },
+            { Metric: "NET WORTH (Profit)", Type: "RESULT", Amount: `${netWorth.toLocaleString()} ETB`, Description: "Revenue - Total Investment" }
+        ]
+        ReportExporter.exportToWord({
+            title: "Financial Summary Report",
             period: timeRange,
-            sections: [
-                {
-                    title: "Financial Summary",
-                    summary: {
-                        "Net Worth": `${netWorth.toLocaleString()} ETB`,
-                        "Revenue": `${totalRevenue.toLocaleString()} ETB`,
-                        "Expenses": `${totalInvestment.toLocaleString()} ETB`,
-                        "Stock Assets": `${totalStockRetailValue.toLocaleString()} ETB`
-                    },
-                    headers: ["Metric", "Value", "Notes"],
-                    data: [
-                        { Metric: "Total Revenue", Value: `${totalRevenue.toLocaleString()} ETB`, Notes: "Sales Income" },
-                        { Metric: "Total Investment", Value: `${totalInvestment.toLocaleString()} ETB`, Notes: "Purchased Price (Cost)" },
-                        { Metric: "Net Profit (Net Worth)", Value: `${netWorth.toLocaleString()} ETB`, Notes: "Revenue - Investment" },
-                        { Metric: "Potential Revenue (Assets)", Value: `${totalStockRetailValue.toLocaleString()} ETB`, Notes: "Sales Value of Stock" }
-                    ]
-                },
-                {
-                    title: "Recent Orders",
-                    headers: ["Order ID", "Date", "Total", "Status"],
-                    data: filteredOrders.slice(0, 50).map(o => ({
-                        "Order ID": o._id.slice(-6),
-                        "Date": new Date(o.createdAt).toLocaleDateString(),
-                        "Total": `${o.totalAmount} ETB`,
-                        "Status": o.status
-                    }))
-                },
-                {
-                    title: "Inventory Status",
-                    headers: ["Item", "Quantity", "Value"],
-                    data: stockItems.map(i => ({
-                        "Item": i.name,
-                        "Quantity": `${i.quantity} ${i.unit}`,
-                        "Value": `${((i.quantity || 0) * (i.unitCost || 0)).toLocaleString()} ETB`
-                    }))
-                }
-            ],
+            headers: ["Metric", "Type", "Amount", "Description"],
+            data,
             metadata: { companyName: settings.app_name || "Prime Addis" }
-        }
-        ReportExporter.exportComprehensiveToWord(exportData)
+        })
+    }
+
+    const exportOrdersReport = () => {
+        const data = filteredOrders.map(o => {
+            const itemNames = o.items.map((i: any) => i.name).join(", ")
+            const totalQty = o.items.reduce((acc: number, i: any) => acc + (i.quantity || 0), 0)
+            return {
+                "Item Names": itemNames,
+                "Table": o.tableNumber ? `T-${o.tableNumber}` : "-",
+                "Items (Qty)": totalQty,
+                "Total Payment": `${o.totalAmount.toLocaleString()} ETB`,
+                "Status": o.status,
+                "Date/Time": new Date(o.createdAt).toLocaleString()
+            }
+        })
+        ReportExporter.exportToWord({
+            title: "Order History Report",
+            period: timeRange,
+            headers: ["Item Names", "Table", "Items (Qty)", "Total Payment", "Status", "Date/Time"],
+            data,
+            metadata: { companyName: settings.app_name || "Prime Addis" }
+        })
+    }
+
+    const exportInventoryReport = () => {
+        const data = (stockUsageData?.stockAnalysis || stockItems || []).map((item: any) => {
+            const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
+            const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
+            const currentQuantity = item.closingStock ?? item.quantity ?? 0;
+            const totalPurchaseValue = currentQuantity * costPrice;
+            const consumedCount = item.consumed ?? 0;
+            const remains = currentQuantity - consumedCount;
+            const potentialRevenue = remains * sellingPrice;
+            const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+
+            return {
+                "Item Name": item.name,
+                "Unit Cost": Math.round(sellingPrice).toLocaleString(),
+                "Quantity": `${currentQuantity} ${item.unit || "unit"}`,
+                "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
+                "Consumed": `${consumedCount} Usage`,
+                "Remains": `${remains} ${item.unit || "unit"}`,
+                "Potential Rev.": `${potentialRevenue.toLocaleString()} ETB`,
+                "Status": isLow ? "Low Stock" : "OK"
+            }
+        })
+        ReportExporter.exportToWord({
+            title: "Inventory Investment Report",
+            period: timeRange,
+            headers: ["Item Name", "Unit Cost", "Quantity", "Total Purchase", "Consumed", "Remains", "Potential Rev.", "Status"],
+            data,
+            metadata: { companyName: settings.app_name || "Prime Addis" }
+        })
+    }
+
+    const exportFullReport = () => {
+        const sections: ComprehensiveSection[] = [
+            {
+                title: "Financial Summary",
+                headers: ["Metric", "Type", "Amount", "Description"],
+                data: [
+                    { Metric: "Total Revenue", Type: "INCOME", Amount: `${totalRevenue.toLocaleString()} ETB`, Description: "Total completed orders value" },
+                    { Metric: "Total Investment", Type: "EXPENSE", Amount: `${totalInvestment.toLocaleString()} ETB`, Description: "Purchases + Operational Expenses" },
+                    { Metric: "NET WORTH (Profit)", Type: "RESULT", Amount: `${netWorth.toLocaleString()} ETB`, Description: "Revenue - Total Investment" }
+                ]
+            },
+            {
+                title: "Order History",
+                headers: ["Item Names", "Table", "Items (Qty)", "Total Payment", "Status", "Date/Time"],
+                data: filteredOrders.map(o => ({
+                    "Item Names": o.items.map((i: any) => i.name).join(", "),
+                    "Table": o.tableNumber ? `T-${o.tableNumber}` : "-",
+                    "Items (Qty)": o.items.reduce((acc: number, i: any) => acc + (i.quantity || 0), 0),
+                    "Total Payment": `${o.totalAmount.toLocaleString()} ETB`,
+                    "Status": o.status,
+                    "Date/Time": new Date(o.createdAt).toLocaleString()
+                }))
+            },
+            {
+                title: "Inventory Investment Details",
+                headers: ["Item Name", "Unit Cost", "Quantity", "Total Purchase", "Consumed", "Remains", "Potential Rev.", "Status"],
+                data: (stockUsageData?.stockAnalysis || stockItems || []).map((item: any) => {
+                    const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
+                    const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
+                    const currentQuantity = item.closingStock ?? item.quantity ?? 0;
+                    const totalPurchaseValue = currentQuantity * costPrice;
+                    const consumedCount = item.consumed ?? 0;
+                    const remains = currentQuantity - consumedCount;
+                    const potentialRevenue = remains * sellingPrice;
+                    const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+
+                    return {
+                        "Item Name": item.name,
+                        "Unit Cost": Math.round(sellingPrice).toLocaleString(),
+                        "Quantity": `${currentQuantity} ${item.unit || "unit"}`,
+                        "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
+                        "Consumed": `${consumedCount} Usage`,
+                        "Remains": `${remains} ${item.unit || "unit"}`,
+                        "Potential Rev.": `${potentialRevenue.toLocaleString()} ETB`,
+                        "Status": isLow ? "Low Stock" : "OK"
+                    }
+                })
+            }
+        ]
+
+        ReportExporter.exportComprehensiveToWord({
+            title: "Comprehensive Business BI Report",
+            period: timeRange,
+            sections,
+            metadata: { companyName: settings.app_name || "Prime Addis" }
+        })
     }
 
 
@@ -213,11 +293,19 @@ export default function ReportsPage() {
 
                         {/* 2. Financial Summary (Net Worth) Table */}
                         <div className="bg-white rounded-[30px] p-8 custom-shadow border-t-[10px] border-[#8B4513]">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="h-10 w-10 bg-[#8B4513] rounded-full flex items-center justify-center text-white">
-                                    <FileText size={20} />
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 bg-[#8B4513] rounded-full flex items-center justify-center text-white">
+                                        <FileText size={20} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-800">Financial Summary</h2>
                                 </div>
-                                <h2 className="text-2xl font-bold text-slate-800">Financial Summary</h2>
+                                <button
+                                    onClick={exportFinancialReport}
+                                    className="flex items-center gap-2 text-[#8B4513] hover:text-[#D2691E] font-bold text-sm transition-colors"
+                                >
+                                    <Download size={16} /> Export Section
+                                </button>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -268,7 +356,15 @@ export default function ReportsPage() {
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-800">Order History</h2>
                                 </div>
-                                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{filteredOrders.length} Orders</div>
+                                <div className="flex items-center gap-6">
+                                    <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{filteredOrders.length} Orders</div>
+                                    <button
+                                        onClick={exportOrdersReport}
+                                        className="flex items-center gap-2 text-[#D2691E] hover:text-[#8B4513] font-bold text-sm transition-colors"
+                                    >
+                                        <Download size={16} /> Export
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
@@ -334,14 +430,20 @@ export default function ReportsPage() {
                                     <h2 className="text-2xl font-bold text-slate-800">Inventory Investment Details</h2>
                                 </div>
 
-                                {stockUsageData && (
-                                    <div className="flex gap-4 text-sm font-bold">
-                                        <div className="text-red-500 flex items-center gap-1">
+                                <div className="flex items-center gap-6">
+                                    {stockUsageData && (
+                                        <div className="text-sm font-bold text-red-500 flex items-center gap-1">
                                             <AlertTriangle size={16} />
                                             {stockUsageData.summary.lowStockItemsCount} Low Stock
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                    <button
+                                        onClick={exportInventoryReport}
+                                        className="flex items-center gap-2 text-purple-600 hover:text-purple-800 font-bold text-sm transition-colors"
+                                    >
+                                        <Download size={16} /> Export
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
