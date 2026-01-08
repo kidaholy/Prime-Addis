@@ -370,15 +370,13 @@ export default function ReportsPage() {
                                         {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
                                             const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
 
-                                            // Mapping based on user request "item name, unit cost, how much or how many, total purchase, consumed, current stock remains, potential revenue, status"
+                                            // Simplified - show current stock quantities
                                             const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
                                             const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
-                                            const opening = item.openingStock ?? 0;
-                                            const purchased = item.purchased ?? 0;
-                                            const totalHandled = opening + purchased;
-                                            const totalPurchaseValue = totalHandled * costPrice;
+                                            const currentQuantity = item.closingStock ?? item.quantity ?? 0;
+                                            const totalPurchaseValue = currentQuantity * costPrice;
                                             const consumedCount = item.consumed ?? 0;
-                                            const remains = item.closingStock ?? item.quantity ?? 0;
+                                            const remains = currentQuantity;
                                             const potentialRevenue = remains * sellingPrice;
 
                                             return (
@@ -388,7 +386,7 @@ export default function ReportsPage() {
                                                         {Math.round(sellingPrice).toLocaleString()}
                                                     </td>
                                                     <td className="p-4 text-center font-bold text-slate-600">
-                                                        {totalHandled} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                        {currentQuantity} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
                                                     </td>
                                                     <td className="p-4 text-center font-bold text-green-600">
                                                         {totalPurchaseValue.toLocaleString()} ETB
