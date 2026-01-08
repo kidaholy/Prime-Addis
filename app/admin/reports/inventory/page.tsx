@@ -68,6 +68,8 @@ export default function NetWorthReportPage() {
       if (salesRes.ok && usageRes.ok) {
         const sales = await salesRes.json();
         const usage = await usageRes.json();
+        console.log("Stock Usage Data:", usage); // Debug log
+        console.log("Stock Analysis:", usage?.stockAnalysis); // Debug log
         setPeriodData({ sales, usage });
       }
     } catch (error) {
@@ -567,11 +569,11 @@ export default function NetWorthReportPage() {
             </div>
           </div>
 
-          {/* Stock Assets Table */}
+          {/* Inventory Investment Details Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">
-                Current Stock Assets
+                Inventory Investment Details
               </h3>
             </div>
             <div className="overflow-x-auto">
@@ -581,64 +583,106 @@ export default function NetWorthReportPage() {
                     <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">
                       Item Name
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
-                      Category
-                    </th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
-                      Quantity
-                    </th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
-                      Unit
+                    <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">
+                      Avg Cost
                     </th>
                     <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">
                       Unit Cost
                     </th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
+                      Opening
+                    </th>
                     <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">
-                      Total Value
+                      Total Purchase
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
+                      Consumed
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
+                      Closing
+                    </th>
+                    <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">
+                      Potential Rev
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">
+                      Status
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {stockItems.map((item, idx) => {
-                    const totalValue =
-                      (item.quantity ?? 0) * (item.unitCost ?? 0);
-                    return (
+                  {periodData?.usage?.stockAnalysis?.length > 0 ? (
+                    periodData.usage.stockAnalysis.map((item: any, idx: number) => (
                       <tr key={idx} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-900">
-                          {item.name}
+                        <td className="py-3 px-4 font-medium text-gray-900">{item.name}</td>
+                        <td className="py-3 px-4 text-right text-sm">
+                          {(item.weightedAvgCost || 0).toFixed(2)} ብር
                         </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium uppercase">
-                            {item.category}
-                          </span>
+                        <td className="py-3 px-4 text-right text-sm">
+                          {(item.currentUnitCost || 0).toFixed(2)} ብር
                         </td>
                         <td className="py-3 px-4 text-center font-medium">
-                          {item.quantity}
+                          {(item.openingStock || 0).toFixed(1)} {item.unit || 'unit'}
                         </td>
-                        <td className="py-3 px-4 text-center text-sm text-gray-600">
-                          {item.unit}
+                        <td className="py-3 px-4 text-right font-bold text-green-600">
+                          {(item.purchaseValue || 0).toLocaleString()} ብር
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          {(item.unitCost || 0).toFixed(2)} ብር
+                        <td className="py-3 px-4 text-center font-medium text-red-600">
+                          {(item.consumed || 0).toFixed(1)} {item.unit || 'unit'}
+                        </td>
+                        <td className="py-3 px-4 text-center font-medium">
+                          {(item.closingStock || 0).toFixed(1)} {item.unit || 'unit'}
                         </td>
                         <td className="py-3 px-4 text-right font-bold text-blue-600">
-                          {totalValue.toLocaleString()} ብር
+                          {(item.closingValue || 0).toLocaleString()} ብר
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {item.isLowStock ? (
+                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                              Low Stock
+                            </span>
+                          ) : item.closingStock <= (item.minLimit || 5) ? (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                              Near Out
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              OK
+                            </span>
+                          )}
                         </td>
                       </tr>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-gray-500">
+                        {loading ? "Loading inventory data..." : "No inventory data available for this period."}
+                      </td>
+                    </tr>
+                  )}
+                  )) || (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-gray-500">
+                        No inventory data available. Stock usage data may still be loading.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
                 <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="py-3 px-4 text-right font-bold text-gray-700"
-                    >
-                      Total Stock Investment:
+                    <td colSpan={4} className="py-3 px-4 text-right font-bold text-gray-700">
+                      Total Investment:
                     </td>
+                    <td className="py-3 px-4 text-right font-bold text-green-600">
+                      {(periodData?.usage?.summary?.totalPurchaseValue || 0).toLocaleString()} ብር
+                    </td>
+                    <td className="py-3 px-4 text-center font-bold text-red-600">
+                      {(periodData?.usage?.summary?.totalConsumedValue || 0).toLocaleString()} ብር
+                    </td>
+                    <td className="py-3 px-4 text-center"></td>
                     <td className="py-3 px-4 text-right font-bold text-lg text-blue-600">
-                      {totalStockValue.toLocaleString()} ብር
+                      {(periodData?.usage?.summary?.totalClosingValue || totalStockValue || 0).toLocaleString()} ብር
                     </td>
+                    <td className="py-3 px-4 text-center"></td>
                   </tr>
                 </tfoot>
               </table>

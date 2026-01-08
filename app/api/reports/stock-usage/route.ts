@@ -19,7 +19,16 @@ export async function GET(request: Request) {
         const token = request.headers.get("authorization")?.replace("Bearer ", "")
         if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
-        const decoded = jwt.verify(token, JWT_SECRET) as any
+        let decoded: any;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET) as any
+        } catch (authError: any) {
+            return NextResponse.json({
+                message: "Authentication failed",
+                error: authError.message
+            }, { status: 401 })
+        }
+
         if (decoded.role !== "admin" && decoded.role !== "super-admin") return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
         await connectDB()
@@ -207,6 +216,8 @@ export async function GET(request: Request) {
         }
 
         // 5. Stock Analysis
+        const periodDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+
         const stockAnalysis = stockItems.map(stock => {
             const fullName = stock.name.toLowerCase()
             const rootName = fullName.split(' (finished')[0].trim()
@@ -220,8 +231,9 @@ export async function GET(request: Request) {
             const openingStock = Math.max(0, currentStock - purchased + consumed)
 
             const currentUnitCost = stock.unitCost || 0
-            const weightedAvgCost = purchased > 0 && purchaseData.totalCost > 0
-                ? purchaseData.totalCost / purchased
+            const totalHandled = openingStock + purchased
+            const weightedAvgCost = totalHandled > 0
+                ? ((openingStock * (stock.averagePurchasePrice || 0)) + purchaseData.totalCost) / totalHandled
                 : (stock.averagePurchasePrice || 0)
 
             return {
@@ -258,7 +270,6 @@ export async function GET(request: Request) {
         const totalConsumedValue = stockAnalysis.reduce((sum, item) => sum + item.consumedValue, 0)
         const totalClosingValue = stockAnalysis.reduce((sum, item) => sum + item.closingValue, 0)
         const totalExpenses = totalPurchaseValue + totalOtherExpenses
-        const periodDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
 
         return NextResponse.json({
             period,
@@ -286,6 +297,9 @@ export async function GET(request: Request) {
 
     } catch (error: any) {
         console.error("❌ Stock Usage Report Error:", error)
-        return NextResponse.json({ message: "Failed to generate report", error: error.message }, { status: 500 })
+        return NextResponse.json({
+            message: "Failed to generate report",
+            error: error.message
+        }, { status: 500 })
     }
 }
