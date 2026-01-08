@@ -6,516 +6,420 @@ import { BentoNavbar } from "@/components/bento-navbar"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
 import { useSettings } from "@/context/settings-context"
-import { ReportExporter, ProfitCalculator, ComprehensiveExportData } from "@/lib/export-utils"
-import { Download, FileText, Printer, Calendar, TrendingUp, Package, DollarSign } from "lucide-react"
-import Link from "next/link"
-
-const StatCard = ({ label, value, icon, color, subtext }: { label: string, value: string, icon: string, color: string, subtext: string }) => {
-  const colorClasses: { [key: string]: string } = {
-    emerald: "border-[#8B4513] text-[#8B4513]",
-    orange: "border-[#D2691E] text-[#1a1a1a]",
-    blue: "border-[#CD853F] text-blue-800",
-    purple: "border-purple-500 text-purple-600",
-    indigo: "border-indigo-400 text-indigo-600",
-  };
-  const subtextColorClasses: { [key: string]: string } = {
-    emerald: "text-[#8B4513]",
-    orange: "text-[#D2691E]",
-    blue: "text-blue-400",
-    purple: "text-purple-400",
-    indigo: "text-indigo-400",
-  };
-  return (
-    <div className={`bg-white rounded-[40px] p-8 custom-shadow border-b-8 ${colorClasses[color]}`}>
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <h3 className={`text-4xl font-black ${colorClasses[color]}`}>{value}</h3>
-      <p className={`text-xs ${subtextColorClasses[color]} font-bold mt-2`}>{icon} {subtext}</p>
-    </div>
-  );
-};
-
-const StatusProgress = ({ label, count, total, color }: { label: string, count: number, total: number, color: string }) => {
-  const percentage = ((count / (total || 1)) * 100).toFixed(0);
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest">
-        <span className="text-gray-400">{label}</span>
-        <span className="text-gray-800">{count} ({percentage}%)</span>
-      </div>
-      <div className="h-4 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
-        <div
-          className="h-full rounded-full transition-all duration-1000"
-          style={{ width: `${percentage}%`, backgroundColor: color }}
-        />
-      </div>
-    </div>
-  );
-};
+import { ReportExporter } from "@/lib/export-utils"
+import { Download, FileText, Printer, CheckCircle, Clock, ShoppingCart, AlertTriangle, ArrowRight } from "lucide-react"
 
 export default function ReportsPage() {
-  const [timeRange, setTimeRange] = useState("month")
-  const [orders, setOrders] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [stockItems, setStockItems] = useState<any[]>([])
-  const [periodData, setPeriodData] = useState<any>(null)
-  const [stockUsageData, setStockUsageData] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const { token } = useAuth()
-  const { t } = useLanguage()
-  const { settings } = useSettings()
+    const [timeRange, setTimeRange] = useState("week") // Default to week
+    // Data State
+    const [loading, setLoading] = useState(true)
+    const [orders, setOrders] = useState<any[]>([])
+    const [stockItems, setStockItems] = useState<any[]>([])
+    const [periodData, setPeriodData] = useState<any>(null) // Sales/Financial Data
+    const [stockUsageData, setStockUsageData] = useState<any>(null) // Usage Data
 
-  useEffect(() => {
-    fetchReportData()
-    fetchStockItems()
-    fetchPeriodSummary()
-    fetchStockUsage()
-  }, [token, timeRange])
+    // Context
+    const { token } = useAuth()
+    const { t } = useLanguage()
+    const { settings } = useSettings()
 
-  const fetchWithTimeout = async (url: string, options: any = {}, timeout = 10000) => {
-    const controller = new AbortController()
-    const id = setTimeout(() => controller.abort("Request timed out"), timeout)
-    try {
-      const response = await fetch(url, { ...options, signal: controller.signal })
-      clearTimeout(id)
-      return response
-    } catch (err) {
-      clearTimeout(id)
-      throw err
-    }
-  }
+    useEffect(() => {
+        if (token) {
+            fetchAllData()
+        }
+    }, [token, timeRange])
 
-  const fetchPeriodSummary = async () => {
-    try {
-      const response = await fetchWithTimeout(`/api/reports/sales?period=${timeRange}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }, 15000) // Increased timeout to 15 seconds
-      if (response.ok) {
-        setPeriodData(await response.json())
-      } else {
-        console.error("Failed to fetch period summary:", response.status, response.statusText)
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.warn("Period summary request timed out")
-        return
-      }
-      console.error("Failed to fetch summary:", err)
-    }
-  }
+    const fetchAllData = async () => {
+        setLoading(true)
+        try {
+            // Parallel Fetching for performance
+            const [salesRes, stockRes, usageRes, ordersRes] = await Promise.all([
+                fetch(`/api/reports/sales?period=${timeRange}`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`/api/stock`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`/api/reports/stock-usage?period=${timeRange}`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(getOrdersUrl(timeRange), { headers: { Authorization: `Bearer ${token}` } })
+            ])
 
-  const fetchStockUsage = async () => {
-    try {
-      const response = await fetchWithTimeout(`/api/reports/stock-usage?period=${timeRange}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }, 20000) // Increased timeout to 20 seconds for complex calculations
-      if (response.ok) {
-        setStockUsageData(await response.json())
-      } else {
-        console.error("Failed to fetch stock usage:", response.status, response.statusText)
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.warn("Stock usage request timed out")
-        return
-      }
-      console.error("Failed to fetch stock usage:", err)
-    }
-  }
+            if (salesRes.ok) setPeriodData(await salesRes.json())
+            if (stockRes.ok) setStockItems(await stockRes.json())
+            if (usageRes.ok) setStockUsageData(await usageRes.json())
+            if (ordersRes.ok) setOrders(await ordersRes.json())
 
-  const fetchReportData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      let url = "/api/orders";
-      const now = new Date();
-      let startDate: Date | null = null;
-      // End date is end of today to be inclusive of the full current day if needed, 
-      // but 'now' works for 'up to this moment'. 
-      // API $lte uses strict comparison.
-
-      if (timeRange === 'today') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 00:00:00 today
-      } else if (timeRange === 'week') {
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
-      } else if (timeRange === 'month') {
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
-        startDate.setHours(0, 0, 0, 0);
-      } else if (timeRange === 'year') {
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 365);
-        startDate.setHours(0, 0, 0, 0);
-      }
-
-      if (startDate) {
-        url += `?startDate=${startDate.toISOString()}`;
-        // We can optionally add endDate if we want to bound it, 
-        // but default is usually "up to now".
-        // Adding endDate ensures consistency if time passes while request is in flight? 
-        // Not strictly necessary for "reports so far".
-      }
-
-      const response = await fetchWithTimeout(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        setOrders(await response.json());
-      } else {
-        setError("Failed to load orders");
-      }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error("Failed to load orders:", err);
-      }
-      setError(err.name === 'AbortError' ? "Request timed out" : "Failed to load report data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStockItems = async () => {
-    try {
-      const response = await fetch("/api/stock", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setStockItems(data)
-      }
-    } catch (err) {
-      console.error("Failed to load stock data")
-    }
-  }
-
-  const getFilteredOrders = () => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-    return orders.filter(order => {
-      const orderDate = new Date(order.createdAt)
-      switch (timeRange) {
-        case "today":
-          const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate())
-          return orderDay.getTime() === today.getTime()
-        case "week":
-          const lastWeek = new Date(today);
-          lastWeek.setDate(today.getDate() - 7);
-          lastWeek.setHours(0, 0, 0, 0);
-          return orderDate >= lastWeek && orderDate <= now
-        case "month":
-          const lastMonth = new Date(today);
-          lastMonth.setDate(today.getDate() - 30);
-          lastMonth.setHours(0, 0, 0, 0);
-          return orderDate >= lastMonth && orderDate <= now
-        case "year":
-          const lastYear = new Date(today);
-          lastYear.setDate(today.getDate() - 365);
-          lastYear.setHours(0, 0, 0, 0);
-          return orderDate >= lastYear && orderDate <= now
-        default:
-          return true
-      }
-    })
-  }
-
-  const filteredOrders = getFilteredOrders()
-  const completedOrders = filteredOrders.filter((o) => o.status === "completed")
-  const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0)
-  const completedOrdersCount = completedOrders.length
-  const averageOrderValue = completedOrdersCount > 0 ? totalRevenue / completedOrdersCount : 0
-  const totalNetWorth = stockItems.reduce((sum, item) => sum + (item.quantity * (item.unitCost || 0)), 0)
-
-  // Calculate comprehensive profit using the business logic
-  const profitData = periodData ? ProfitCalculator.calculateNetProfit(
-    periodData.summary.totalRevenue,
-    periodData.summary,
-    stockItems
-  ) : null
-
-  const stats = {
-    totalRevenue: totalRevenue,
-    completedOrders: completedOrdersCount,
-    averageOrderValue: averageOrderValue,
-    inventoryValue: totalNetWorth,
-    totalOrders: filteredOrders.length,
-    statusDistribution: {
-      pending: filteredOrders.filter((o) => o.status === "pending").length,
-      preparing: filteredOrders.filter((o) => o.status === "preparing").length,
-      ready: filteredOrders.filter((o) => o.status === "ready").length,
-      completed: filteredOrders.filter((o) => o.status === "completed").length,
-    }
-  }
-
-  // Enhanced export functions
-  const exportSummaryCSV = () => {
-    if (!periodData || !profitData) return
-
-    const exportData = {
-      title: "Business Summary Report",
-      period: timeRange,
-      headers: ["Metric", "Value", "Unit"],
-      data: [
-        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
-        { Metric: "General Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
-        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
-        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" },
-        { Metric: "Total Orders", Value: stats.totalOrders.toString(), Unit: "Count" },
-        { Metric: "Completed Orders", Value: stats.completedOrders.toString(), Unit: "Count" },
-        { Metric: "Average Order Value", Value: stats.averageOrderValue.toFixed(2), Unit: "ETB" }
-      ],
-      summary: {
-        "Report Period": timeRange.toUpperCase(),
-        "Generated Date": new Date().toLocaleDateString(),
-        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
-        "Formula": "Orders - (Assets + Expenses)",
-        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
-      }
+        } catch (error) {
+            console.error("Failed to load report data:", error)
+        } finally {
+            setLoading(false)
+        }
     }
 
-    ReportExporter.exportToCSV(exportData)
-  }
+    // Helper to construct Orders URL
+    const getOrdersUrl = (range: string) => {
+        let url = "/api/orders"
+        const now = new Date()
+        let startDate: Date | null = null
 
-  const exportSummaryPDF = () => {
-    if (!periodData || !profitData) return
+        if (range === 'today') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        } else if (range === 'week') {
+            startDate = new Date(now)
+            startDate.setDate(now.getDate() - 7)
+            startDate.setHours(0, 0, 0, 0)
+        } else if (range === 'month') {
+            startDate = new Date(now)
+            startDate.setDate(now.getDate() - 30)
+            startDate.setHours(0, 0, 0, 0)
+        } else if (range === 'year') {
+            startDate = new Date(now)
+            startDate.setDate(now.getDate() - 365)
+            startDate.setHours(0, 0, 0, 0)
+        }
 
-    const exportData = {
-      title: "Business Summary Report",
-      period: timeRange,
-      headers: ["Metric", "Value", "Unit"],
-      data: [
-        { Metric: "Total Revenue", Value: profitData.revenue.toFixed(2), Unit: "ETB" },
-        { Metric: "General Expenses", Value: profitData.otherExpenses.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toFixed(2), Unit: "ETB" },
-        { Metric: "Total Investment", Value: profitData.totalInvestment.toFixed(2), Unit: "ETB" },
-        { Metric: "Net Worth", Value: profitData.netProfit.toFixed(2), Unit: "ETB" },
-        { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
-      ],
-      summary: {
-        "Report Period": timeRange.toUpperCase(),
-        "Generated Date": new Date().toLocaleDateString(),
-        "Net Worth": `${profitData.netProfit.toFixed(2)} ETB`,
-        "Formula": "Orders - (Assets + Expenses)",
-        "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
-      },
-      metadata: {
-        companyName: settings.app_name || "Prime Addis"
-      }
+        if (startDate) {
+            url += `?startDate=${startDate.toISOString()}`
+        }
+        return url
     }
 
-    ReportExporter.exportToPDF(exportData)
-  }
+    // --- Calculations ---
 
-  const exportSummaryWord = () => {
-    if (!periodData || !profitData) return
+    // Safety checks
+    const salesSummary = periodData?.summary || {}
+    const usageSummary = stockUsageData?.summary || {}
 
-    // Prepare detailed expense data
-    const expenseDetails = periodData.dailyExpenses?.flatMap((exp: any) =>
-      exp.items.map((item: any) => ({
-        Date: new Date(exp.date).toLocaleDateString(),
-        Item: item.name,
-        Quantity: `${item.quantity} ${item.unit}`,
-        Cost: `${item.amount.toLocaleString()} ETB`
-      }))
-    ) || []
+    const totalRevenue = salesSummary.totalRevenue || 0
+    // Revenue Potential (Selling Price * Quantity)
+    const totalStockRetailValue = stockItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.unitCost || 0)), 0)
 
-    const exportData: ComprehensiveExportData = {
-      title: "Business Summary Report",
-      period: timeRange,
-      sections: [
-        {
-          title: "Financial Overview",
-          summary: {
-            "Report Period": timeRange.toUpperCase(),
-            "Generated Date": new Date().toLocaleDateString(),
-            "Net Worth": `${profitData.netProfit.toLocaleString()} ETB`,
-            "Profit Margin": `${profitData.profitMargin.toFixed(1)}%`
-          },
-          headers: ["Metric", "Value", "Unit"],
-          data: [
-            // 1. Inflow
-            { Metric: "Total Revenue", Value: profitData.revenue.toLocaleString(), Unit: "ETB" },
-            { Metric: "General Expenses", Value: profitData.otherExpenses.toLocaleString(), Unit: "ETB" },
+    // Actual Investment (Cost Price * Quantity)
+    const totalStockInvestment = stockItems.reduce((acc, item) => acc + ((item.quantity || 0) * (item.averagePurchasePrice || 0)), 0)
 
-            // 3. Assets
-            { Metric: "Total Stock Assets", Value: profitData.totalStockValue.toLocaleString(), Unit: "ETB" },
-            { Metric: "Total Investment", Value: profitData.totalInvestment.toLocaleString(), Unit: "ETB" },
+    // Total Investment = Historical Stock Cost (Current) + Operational Expenses
+    // Using averagePurchasePrice ensures we track the actual money spent, not the potential revenue.
+    const totalInvestment = totalStockInvestment + (usageSummary.totalOtherExpenses || 0)
 
-            // 4. Profitability
-            { Metric: "Net Worth", Value: profitData.netProfit.toLocaleString(), Unit: "ETB" },
-            { Metric: "Profit Margin", Value: profitData.profitMargin.toFixed(2), Unit: "%" }
-          ]
-        },
-        // Add Detailed Breakdown if data exists
-        ...(expenseDetails.length > 0 ? [{
-          title: "Expense Details",
-          headers: ["Date", "Item", "Quantity", "Cost"],
-          data: expenseDetails
-        }] : [])
-      ],
-      metadata: {
-        companyName: settings.app_name || "Prime Addis"
-      }
+    // "Glitch Fix": Net Worth = Revenue - Total Investment
+    const netWorth = totalRevenue - totalInvestment
+
+    // Filter orders by time range again just to be safe if API returns more
+    // (Though the API call should handle it, client-side safety is good)
+    const getFilteredOrders = () => {
+        // If API filters correctly, this is redundant but harmless. 
+        // We'll trust the API for now or simple sort
+        return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+    const filteredOrders = getFilteredOrders()
+
+
+    // --- Exports ---
+    const exportFullReport = () => {
+        const exportData = {
+            title: "Comprehensive Business Report",
+            period: timeRange,
+            sections: [
+                {
+                    title: "Financial Summary",
+                    summary: {
+                        "Net Worth": `${netWorth.toLocaleString()} ETB`,
+                        "Revenue": `${totalRevenue.toLocaleString()} ETB`,
+                        "Expenses": `${totalInvestment.toLocaleString()} ETB`,
+                        "Stock Assets": `${totalStockRetailValue.toLocaleString()} ETB`
+                    },
+                    headers: ["Metric", "Value", "Notes"],
+                    data: [
+                        { Metric: "Total Revenue", Value: `${totalRevenue.toLocaleString()} ETB`, Notes: "Sales Income" },
+                        { Metric: "Total Investment", Value: `${totalInvestment.toLocaleString()} ETB`, Notes: "Purchased Price (Cost)" },
+                        { Metric: "Net Profit (Net Worth)", Value: `${netWorth.toLocaleString()} ETB`, Notes: "Revenue - Investment" },
+                        { Metric: "Potential Revenue (Assets)", Value: `${totalStockRetailValue.toLocaleString()} ETB`, Notes: "Sales Value of Stock" }
+                    ]
+                },
+                {
+                    title: "Recent Orders",
+                    headers: ["Order ID", "Date", "Total", "Status"],
+                    data: filteredOrders.slice(0, 50).map(o => ({
+                        "Order ID": o._id.slice(-6),
+                        "Date": new Date(o.createdAt).toLocaleDateString(),
+                        "Total": `${o.totalAmount} ETB`,
+                        "Status": o.status
+                    }))
+                },
+                {
+                    title: "Inventory Status",
+                    headers: ["Item", "Quantity", "Value"],
+                    data: stockItems.map(i => ({
+                        "Item": i.name,
+                        "Quantity": `${i.quantity} ${i.unit}`,
+                        "Value": `${((i.quantity || 0) * (i.unitCost || 0)).toLocaleString()} ETB`
+                    }))
+                }
+            ],
+            metadata: { companyName: settings.app_name || "Prime Addis" }
+        }
+        ReportExporter.exportComprehensiveToWord(exportData)
     }
 
-    ReportExporter.exportComprehensiveToWord(exportData)
-  }
 
-
-
-
-  return (
-    <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <BentoNavbar />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Controls Sidebar */}
-            <div className="lg:col-span-3 space-y-6">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
-                <h2 className="text-2xl font-bold mb-2 bubbly-text">{t("adminReports.title")}</h2>
-                <div className="flex flex-col gap-2">
-                  {[
-                    { id: "today", label: t("adminReports.todayView") },
-                    { id: "week", label: t("adminReports.weekView") },
-                    { id: "month", label: t("adminReports.monthView") },
-                    { id: "year", label: "Year View" },
-                  ].map((range) => (
-                    <button
-                      key={range.id}
-                      onClick={() => setTimeRange(range.id)}
-                      className={`w-full py-4 rounded-[25px] font-bold transition-all duration-300 capitalize ${timeRange === range.id ? "bg-[#8B4513] text-white shadow-lg scale-105" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-                        }`}
-                    >
-                      {range.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow flex flex-col gap-4">
-                <h3 className="text-xl font-bold text-[#1a1a1a]">{t("adminReports.managementTools")}</h3>
-
-                {/* Enhanced Export Options */}
-                <div className="grid grid-cols-1 gap-3">
-
-                  <button
-                    onClick={exportSummaryWord}
-                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
-                  >
-                    <Download size={20} /> Export Summary Word
-                  </button>
-
-                  <button
-                    onClick={exportSummaryPDF}
-                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
-                  >
-                    <FileText size={20} /> Export Summary PDF
-                  </button>
-
-                  <button
-                    onClick={exportSummaryCSV}
-                    className="w-full bg-white text-[#1a1a1a] font-bold py-4 rounded-[25px] flex items-center justify-center gap-2 hover:scale-105 transition-transform active:scale-95 custom-shadow"
-                  >
-                    <Download size={20} /> Export Summary CSV
-                  </button>
-
-
-
-                </div>
-              </div>
+    if (loading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-gray-50">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8B4513] border-t-transparent"></div>
             </div>
+        )
+    }
 
-            {/* Main Stats */}
-            <div className="lg:col-span-9 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard label={t("adminReports.totalRevenue")} value={`${stats.totalRevenue.toFixed(0)} ${t("common.currencyBr")}`} icon="💸" color="emerald" subtext={`${stats.completedOrders} ${t("adminReports.ordersTotal")}`} />
+    return (
+        <ProtectedRoute requiredRoles={["admin"]}>
+            <div className="min-h-screen bg-gray-50 font-sans text-slate-800">
+                <div className="max-w-[1600px] mx-auto p-6">
+                    <BentoNavbar />
 
-                {/* Net Worth Summary using formula: Revenue - Expenses - Assets */}
-                {(() => {
-                  if (!profitData) {
-                    return <StatCard label={t("adminReports.netWorth")} value="Loading..." icon="💎" color="purple" subtext="Calculating..." />
-                  }
+                    <div className="mt-8 flex flex-col gap-8">
 
-                  return (
-                    <StatCard
-                      label={t("adminReports.netWorth")}
-                      value={`${profitData.netProfit.toLocaleString()} ${t("common.currencyBr")}`}
-                      icon="💎"
-                      color={profitData.netProfit >= 0 ? "purple" : "orange"}
-                      subtext={`Orders - Expenses - Physical Stock`}
-                    />
-                  );
-                })()}
-                <StatCard label={t("chef.ready")} value={`${stats.completedOrders}`} icon="🔥" color="orange" subtext={t("adminReports.ordersServed")} />
+                        {/* 1. Header & Controls */}
+                        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[25px] custom-shadow">
+                            <div>
+                                <h1 className="text-3xl font-black text-slate-900 bubbly-text">Business Intelligence</h1>
+                                <p className="text-gray-500 font-medium">Consolidated financial and operational reports</p>
+                            </div>
 
-                <Link href="/admin/reports/inventory" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-purple-500 hover:scale-105 transition-transform group">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t("adminReports.netWorth")}</p>
-                  <h3 className="text-4xl font-black text-purple-600">
-                    {profitData ? profitData.netProfit.toLocaleString() : "..."} {t("common.currencyBr")}
-                  </h3>
-                  <p className="text-xs text-purple-400 font-bold mt-2 flex justify-between items-center">
-                    💎 Orders - Expenses - Physical Stock
-                    <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Detailed Analysis →</span>
-                  </p>
-                </Link>
+                            <div className="flex flex-wrap gap-4 items-center mt-4 md:mt-0">
+                                <div className="flex bg-gray-100 p-1.5 rounded-[20px]">
+                                    {["today", "week", "month", "year"].map((r) => (
+                                        <button
+                                            key={r}
+                                            onClick={() => setTimeRange(r)}
+                                            className={`px-6 py-2 rounded-[16px] text-sm font-bold capitalize transition-all ${timeRange === r ? "bg-[#8B4513] text-white shadow-md" : "text-gray-500 hover:text-gray-700"
+                                                }`}
+                                        >
+                                            {r}
+                                        </button>
+                                    ))}
+                                </div>
 
-                {/* New Report Links */}
-                <Link href="/admin/reports/orders" className="bg-[#8B4513] rounded-[40px] p-8 custom-shadow hover:scale-105 transition-transform group relative overflow-hidden">
-                  <div className="relative z-10">
-                    <p className="text-xs font-bold text-white opacity-60 uppercase tracking-widest mb-1">Transaction History</p>
-                    <h3 className="text-2xl font-black text-white mb-2">Orders Report</h3>
-                    <p className="text-xs text-white font-medium flex items-center gap-2">
-                      View Details <span className="text-white group-hover:translate-x-1 transition-transform">→</span>
-                    </p>
-                  </div>
-                  <div className="absolute right-[-20px] bottom-[-20px] opacity-10 rotate-12">
-                    <span className="text-9xl">💸</span>
-                  </div>
-                </Link>
+                                <button
+                                    onClick={exportFullReport}
+                                    className="bg-[#D2691E] text-white px-6 py-3 rounded-[20px] font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+                                >
+                                    <Download size={18} /> Export Full Report
+                                </button>
 
-                <Link href="/admin/reports/stock-usage" className="bg-white rounded-[40px] p-8 custom-shadow border-b-8 border-[#D2691E] hover:scale-105 transition-transform group relative overflow-hidden">
-                  <div className="relative z-10">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Inventory Movement Analysis</p>
-                    <h3 className="text-2xl font-black text-slate-800 mb-2">Stock Usage Report</h3>
-                    <p className="text-xs text-[#D2691E] font-bold flex items-center gap-2">
-                      Complete Analysis <span className="group-hover:translate-x-1 transition-transform">→</span>
-                    </p>
-                  </div>
-                  <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-                    <span className="text-8xl">📊</span>
-                  </div>
-                </Link>
-              </div>
+                                <button
+                                    onClick={() => window.print()}
+                                    className="bg-white border-2 border-slate-200 text-slate-600 px-4 py-3 rounded-[20px] hover:bg-slate-50 transition-colors"
+                                >
+                                    <Printer size={18} />
+                                </button>
+                            </div>
+                        </div>
 
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h3 className="text-2xl font-bold mb-8 bubbly-text">{t("adminReports.distribution")}</h3>
-                <div className="space-y-6">
-                  <StatusProgress label={t("chef.pending")} count={stats.statusDistribution.pending} total={stats.totalOrders} color="#D2691E" />
-                  <StatusProgress label={t("chef.preparing")} count={stats.statusDistribution.preparing} total={stats.totalOrders} color="#CD853F" />
-                  <StatusProgress label={t("chef.ready")} count={stats.statusDistribution.ready} total={stats.totalOrders} color="#8B4513" />
-                  <StatusProgress label={t("chef.complete")} count={stats.statusDistribution.completed} total={stats.totalOrders} color="#e5e7eb" />
+                        {/* 2. Financial Summary (Net Worth) Table */}
+                        <div className="bg-white rounded-[30px] p-8 custom-shadow border-t-[10px] border-[#8B4513]">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="h-10 w-10 bg-[#8B4513] rounded-full flex items-center justify-center text-white">
+                                    <FileText size={20} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-800">Financial Summary</h2>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-[#f8f5f2] text-[#8B4513] uppercase text-xs font-black tracking-wider border-b-2 border-[#8B4513]">
+                                        <tr>
+                                            <th className="p-4 rounded-tl-[15px]">Metric</th>
+                                            <th className="p-4 text-center">Type</th>
+                                            <th className="p-4 text-right">Amount</th>
+                                            <th className="p-4 rounded-tr-[15px] hidden md:table-cell">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 font-medium">
+                                        <tr className="hover:bg-amber-50/50 transition-colors">
+                                            <td className="p-4 text-lg text-slate-700">Total Revenue</td>
+                                            <td className="p-4 text-center"><span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-xs font-bold">INCOME</span></td>
+                                            <td className="p-4 text-right text-lg font-bold text-green-600">+{totalRevenue.toLocaleString()} ETB</td>
+                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Total completed orders value</td>
+                                        </tr>
+                                        <tr className="hover:bg-amber-50/50 transition-colors">
+                                            <td className="p-4 text-lg text-slate-700">Total Investment</td>
+                                            <td className="p-4 text-center"><span className="bg-red-100 text-red-700 py-1 px-3 rounded-full text-xs font-bold">EXPENSE</span></td>
+                                            <td className="p-4 text-right text-lg font-bold text-red-600">-{totalInvestment.toLocaleString()} ETB</td>
+                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Purchases + Operational Expenses</td>
+                                        </tr>
+                                        <tr className="bg-[#fffbf7] border-t-2 border-[#D2691E]">
+                                            <td className="p-4 text-xl font-black text-[#8B4513]">NET WORTH (Profit)</td>
+                                            <td className="p-4 text-center"><span className="bg-[#8B4513] text-white py-1 px-3 rounded-full text-xs font-bold">RESULT</span></td>
+                                            <td className={`p-4 text-right text-2xl font-black ${netWorth >= 0 ? "text-[#8B4513]" : "text-red-600"}`}>
+                                                {netWorth.toLocaleString()} ETB
+                                            </td>
+                                            <td className="p-4 text-[#D2691E] font-bold text-sm hidden md:table-cell">Revenue - Total Investment</td>
+                                        </tr>
+                                        {/* Asset Section Separate */}
+                                        <tr className="hover:bg-blue-50/50 transition-colors border-t border-gray-200">
+                                            <td className="p-4 text-lg text-slate-700 pl-8 relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">↳</span>
+                                                Stock Assets
+                                            </td>
+                                            <td className="p-4 text-center"><span className="bg-blue-100 text-blue-700 py-1 px-3 rounded-full text-xs font-bold">ASSET</span></td>
+                                            <td className="p-4 text-right text-lg font-bold text-blue-600">{totalStockRetailValue.toLocaleString()} ETB</td>
+                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Potential revenue from physical inventory</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        {/* 3. Orders Section Table */}
+                        <div className="bg-white rounded-[30px] p-8 custom-shadow">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 bg-[#D2691E] rounded-full flex items-center justify-center text-white">
+                                        <ShoppingCart size={20} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-800">Order History</h2>
+                                </div>
+                                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{filteredOrders.length} Orders</div>
+                            </div>
+
+                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                        <tr>
+                                            <th className="p-4 w-1/3">Item Names</th>
+                                            <th className="p-4 text-center">Table</th>
+                                            <th className="p-4 text-center">Items (Qty)</th>
+                                            <th className="p-4 text-right">Total Payment</th>
+                                            <th className="p-4 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                        {filteredOrders.length === 0 ? (
+                                            <tr><td colSpan={5} className="p-8 text-center text-gray-400 italic">No orders found for this period.</td></tr>
+                                        ) : (
+                                            filteredOrders.map((order) => {
+                                                const itemNames = order.items.map((i: any) => i.name).join(", ")
+                                                const totalQty = order.items.reduce((acc: number, i: any) => acc + (i.quantity || 0), 0)
+
+                                                return (
+                                                    <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="p-4 text-slate-700">
+                                                            <div className="line-clamp-2" title={itemNames}>
+                                                                {itemNames}
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-400 font-mono mt-1">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            {order.tableNumber ? (
+                                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold">T-{order.tableNumber}</span>
+                                                            ) : (
+                                                                <span className="text-gray-300">-</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-4 text-center font-bold text-slate-600">{totalQty}</td>
+                                                        <td className="p-4 text-right font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} ETB</td>
+                                                        <td className="p-4 text-center">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                                                    'bg-amber-100 text-amber-700'
+                                                                }`}>
+                                                                {order.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* 4. Stock & Inventory Section Table */}
+                        <div className="bg-white rounded-[30px] p-8 custom-shadow">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white">
+                                        <Clock size={20} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-800">Inventory Investment Details</h2>
+                                </div>
+
+                                {stockUsageData && (
+                                    <div className="flex gap-4 text-sm font-bold">
+                                        <div className="text-red-500 flex items-center gap-1">
+                                            <AlertTriangle size={16} />
+                                            {stockUsageData.summary.lowStockItemsCount} Low Stock
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                        <tr>
+                                            <th className="p-4">Item Name</th>
+                                            <th className="p-4 text-center text-orange-600">Unit Cost</th>
+                                            <th className="p-4 text-center">Quantity</th>
+                                            <th className="p-4 text-center text-green-600">Total Purchase</th>
+                                            <th className="p-4 text-center text-red-500">Consumed</th>
+                                            <th className="p-4 text-center">Remains</th>
+                                            <th className="p-4 text-right text-blue-600">Potential Rev.</th>
+                                            <th className="p-4 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                        {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
+                                            const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+
+                                            // Mapping based on user request "item name, unit cost, how much or how many, total purchase, consumed, current stock remains, potential revenue, status"
+                                            const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
+                                            const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
+                                            const opening = item.openingStock ?? 0;
+                                            const purchased = item.purchased ?? 0;
+                                            const totalHandled = opening + purchased;
+                                            const totalPurchaseValue = totalHandled * costPrice;
+                                            const consumedCount = item.consumed ?? 0;
+                                            const remains = item.closingStock ?? item.quantity ?? 0;
+                                            const potentialRevenue = remains * sellingPrice;
+
+                                            return (
+                                                <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/50' : ''}`}>
+                                                    <td className="p-4 font-bold text-slate-700">{item.name}</td>
+                                                    <td className="p-4 text-center text-orange-600 font-mono">
+                                                        {Math.round(sellingPrice).toLocaleString()}
+                                                    </td>
+                                                    <td className="p-4 text-center font-bold text-slate-600">
+                                                        {totalHandled} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                    </td>
+                                                    <td className="p-4 text-center font-bold text-green-600">
+                                                        {totalPurchaseValue.toLocaleString()} ETB
+                                                        <div className="text-[10px] text-gray-400 font-normal">@{Math.round(costPrice).toLocaleString()} Avg</div>
+                                                    </td>
+                                                    <td className="p-4 text-center font-bold text-red-500">
+                                                        {consumedCount} <span className="text-xs text-red-300 font-normal">Usage</span>
+                                                    </td>
+                                                    <td className="p-4 text-center font-bold text-slate-700">
+                                                        {remains} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                    </td>
+                                                    <td className="p-4 text-right font-bold text-blue-600">
+                                                        {potentialRevenue.toLocaleString()} ETB
+                                                    </td>
+                                                    <td className="p-4 text-center">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${isLow ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                                                            }`}>
+                                                            {isLow ? 'Low Stock' : 'OK'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 rounded-[30px] p-6 text-center">
-                  <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">{t("adminReports.peakHour")}</p>
-                  <p className="text-2xl font-black text-gray-800">12:30 PM</p>
-                </div>
-                <div className="bg-gray-50 rounded-[30px] p-6 text-center">
-                  <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">{t("adminReports.waitTime")}</p>
-                  <p className="text-2xl font-black text-gray-800">~8.5 min</p>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </ProtectedRoute>
-  )
+        </ProtectedRoute>
+    )
 }
