@@ -252,15 +252,7 @@ export default function ReportsPage() {
                                             <td className="p-4 text-[#D2691E] font-bold text-sm hidden md:table-cell">Revenue - Total Investment</td>
                                         </tr>
                                         {/* Asset Section Separate */}
-                                        <tr className="hover:bg-blue-50/50 transition-colors border-t border-gray-200">
-                                            <td className="p-4 text-lg text-slate-700 pl-8 relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">↳</span>
-                                                Stock Assets
-                                            </td>
-                                            <td className="p-4 text-center"><span className="bg-blue-100 text-blue-700 py-1 px-3 rounded-full text-xs font-bold">ASSET</span></td>
-                                            <td className="p-4 text-right text-lg font-bold text-blue-600">{totalStockRetailValue.toLocaleString()} ETB</td>
-                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Potential revenue from physical inventory</td>
-                                        </tr>
+
                                     </tbody>
                                 </table>
                             </div>
