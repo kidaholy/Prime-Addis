@@ -7,6 +7,8 @@ import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
 import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
 import { useConfirmation } from "@/hooks/use-confirmation"
+import { RefreshCw, Clock, ChefHat } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
 
 interface OrderItem {
   menuItemId: string
@@ -38,41 +40,28 @@ export default function KitchenDisplayPage() {
 
   useEffect(() => {
     fetchOrders()
-    // Reduced interval to 1 second for immediate updates
     const interval = setInterval(fetchOrders, 1000)
     return () => clearInterval(interval)
   }, [token])
 
-  // Add visibility change listener for immediate refresh when tab becomes active
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchOrders()
-      }
+      if (!document.hidden) fetchOrders()
     }
-
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
-  // Add focus listener for immediate refresh when window gets focus
   useEffect(() => {
-    const handleFocus = () => {
-      fetchOrders()
-    }
-
+    const handleFocus = () => fetchOrders()
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
-  // Add localStorage listener for cross-page updates
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') {
-        fetchOrders()
-      }
+      if (e.key === 'orderUpdated' || e.key === 'newOrderCreated') fetchOrders()
     }
-
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
@@ -106,7 +95,7 @@ export default function KitchenDisplayPage() {
   const handleCancelOrder = async (orderId: string) => {
     const confirmed = await confirm({
       title: "Cancel Order",
-      message: "Are you sure you want to cancel this order?\n\nThis action cannot be undone.",
+      message: "Are you sure you want to cancel this order?\\n\\nThis action cannot be undone.",
       type: "warning",
       confirmText: "Cancel Order",
       cancelText: "Keep Order"
@@ -115,7 +104,6 @@ export default function KitchenDisplayPage() {
     if (!confirmed) return
 
     try {
-      // Optimistic update
       setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId))
 
       const response = await fetch(`/api/orders/${orderId}/status`, {
@@ -150,7 +138,6 @@ export default function KitchenDisplayPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      // Optimistic update
       setOrders(prevOrders =>
         prevOrders.map(order =>
           order._id === orderId ? { ...order, status: newStatus as any } : order
@@ -183,121 +170,105 @@ export default function KitchenDisplayPage() {
 
   return (
     <ProtectedRoute requiredRoles={["chef"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <BentoNavbar />
 
-          <div className="mb-6">
-            <div className="bg-[#8B4513] rounded-[40px] p-8 custom-shadow flex flex-col md:flex-row justify-between items-center gap-6 text-white">
+          {/* Clean Header */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-4xl">🍳</div>
+                <div className="p-3 bg-orange-50 rounded-lg">
+                  <ChefHat className="h-8 w-8 text-orange-600" />
+                </div>
                 <div>
-                  <h1 className="text-4xl font-bold bubbly-text">{t("chef.kitchenDisplay")}</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">
-                      {t("adminDashboard.kitchenRunningSmooth")}
-                    </p>
+                  <h1 className="text-3xl font-bold text-gray-900">Kitchen Display</h1>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span>System Active</span>
                   </div>
                 </div>
               </div>
-              <div className="flex bg-white/10 p-2 rounded-[30px] backdrop-blur-md">
-                {["pending", "preparing", "ready"].map((s) => (
-                  <div key={s} className="px-6 py-2 text-center">
-                    <div className="text-2xl font-black">{orders.filter(o => o.status === s).length}</div>
-                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60">{t(`chef.${s}`)}</div>
-                  </div>
-                ))}
+              <button
+                onClick={fetchOrders}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <RefreshCw className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Stats Bar */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="text-3xl font-bold text-orange-600">{pendingOrders.length}</div>
+                <div className="text-sm text-gray-600 mt-1">Pending</div>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-3xl font-bold text-blue-600">{preparingOrders.length}</div>
+                <div className="text-sm text-gray-600 mt-1">Preparing</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-3xl font-bold text-green-600">{readyOrders.length}</div>
+                <div className="text-sm text-gray-600 mt-1">Ready</div>
               </div>
             </div>
           </div>
 
+          {/* New Order Alert */}
           {newOrderAlert && (
-            <div className="mb-6 p-4 bg-[#D2691E] text-white rounded-[20px] shadow-2xl animate-pulse flex items-center justify-between border-4 border-white custom-shadow transform scale-105 transition-transform">
+            <div className="p-4 bg-orange-500 text-white rounded-xl shadow-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-3xl animate-bounce">🔔</span>
+                <span className="text-2xl">🔔</span>
                 <div>
-                  <p className="font-bold text-lg">{t("chef.newOrderIncoming")}</p>
-                  <p className="text-sm opacity-90">{t("chef.checkQueueImmediately")}</p>
+                  <p className="font-bold">New Order Incoming!</p>
+                  <p className="text-sm opacity-90">Check the pending queue</p>
                 </div>
               </div>
-              <button onClick={() => setNewOrderAlert(false)} className="text-2xl font-bold hover:opacity-75">
+              <button onClick={() => setNewOrderAlert(false)} className="text-xl hover:opacity-75">
                 ✕
               </button>
             </div>
           )}
 
+          {/* Orders Grid */}
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
-              <div className="text-6xl animate-bounce mb-4">🍳</div>
-              <h2 className="text-2xl font-bold text-gray-400">{t("chef.loadingKitchenData")}</h2>
+              <RefreshCw className="h-12 w-12 animate-spin text-gray-400 mb-4" />
+              <p className="text-gray-600">Loading kitchen orders...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Pending Column */}
-              <BentoColumn
-                title={t("chef.pending")}
-                icon="⏳"
-                color="bg-orange-50 border-orange-100"
-                headerColor="text-orange-600"
-              >
-                {pendingOrders.map(order => (
-                  <OrderCard
-                    key={order._id}
-                    order={order}
-                    onStatusChange={handleStatusChange}
-                    onCancelOrder={handleCancelOrder}
-                    nextStatus="preparing"
-                    accentColor="orange"
-                    t={t}
-                  />
-                ))}
-              </BentoColumn>
-
-              {/* Preparing Column */}
-              <BentoColumn
-                title={t("chef.preparing")}
-                icon="🔥"
-                color="bg-blue-50 border-blue-100"
-                headerColor="text-blue-600"
-              >
-                {preparingOrders.map(order => (
-                  <OrderCard
-                    key={order._id}
-                    order={order}
-                    onStatusChange={handleStatusChange}
-                    onCancelOrder={handleCancelOrder}
-                    nextStatus="ready"
-                    accentColor="blue"
-                    t={t}
-                  />
-                ))}
-              </BentoColumn>
-
-              {/* Ready Column */}
-              <BentoColumn
-                title={t("chef.readyForPickup")}
-                icon="✅"
-                color="bg-green-50 border-green-100"
-                headerColor="text-green-600"
-              >
-                {readyOrders.map(order => (
-                  <OrderCard
-                    key={order._id}
-                    order={order}
-                    onStatusChange={handleStatusChange}
-                    onCancelOrder={handleCancelOrder}
-                    nextStatus="completed"
-                    accentColor="green"
-                    t={t}
-                  />
-                ))}
-              </BentoColumn>
+              <OrderColumn
+                title="Pending"
+                color="orange"
+                orders={pendingOrders}
+                onStatusChange={handleStatusChange}
+                onCancelOrder={handleCancelOrder}
+                nextStatus="preparing"
+                t={t}
+              />
+              <OrderColumn
+                title="Preparing"
+                color="blue"
+                orders={preparingOrders}
+                onStatusChange={handleStatusChange}
+                onCancelOrder={handleCancelOrder}
+                nextStatus="ready"
+                t={t}
+              />
+              <OrderColumn
+                title="Ready"
+                color="green"
+                orders={readyOrders}
+                onStatusChange={handleStatusChange}
+                onCancelOrder={handleCancelOrder}
+                nextStatus="completed"
+                t={t}
+              />
             </div>
           )}
         </div>
 
-        {/* Confirmation and Notification Cards */}
         <ConfirmationCard
           isOpen={confirmationState.isOpen}
           onClose={closeConfirmation}
@@ -324,103 +295,139 @@ export default function KitchenDisplayPage() {
   )
 }
 
-function BentoColumn({ title, icon, children, color, headerColor }: { title: string, icon: string, children: React.ReactNode, color: string, headerColor: string }) {
+function OrderColumn({
+  title,
+  color,
+  orders,
+  onStatusChange,
+  onCancelOrder,
+  nextStatus,
+  t
+}: {
+  title: string
+  color: "orange" | "blue" | "green"
+  orders: Order[]
+  onStatusChange: (orderId: string, newStatus: string) => void
+  onCancelOrder: (orderId: string) => void
+  nextStatus: string
+  t: (key: string) => string
+}) {
+  const colorClasses = {
+    orange: "bg-orange-50 border-orange-200",
+    blue: "bg-blue-50 border-blue-200",
+    green: "bg-green-50 border-green-200"
+  }
+
   return (
-    <div className={`rounded-[35px] custom-shadow p-5 min-h-[600px] flex flex-col ${color} border-2`}>
-      <h2 className={`text-xl font-bold mb-4 flex items-center gap-2 ${headerColor} pl-2`}>
-        <span>{icon}</span> {title}
-      </h2>
-      <div className="space-y-4 flex-1 overflow-y-auto pr-1 custom-scrollbar">
-        {children}
+    <div className={`rounded-xl p-4 border ${colorClasses[color]} min-h-[500px]`}>
+      <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
+      <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+        {orders.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">No orders</p>
+        ) : (
+          orders.map(order => (
+            <OrderCard
+              key={order._id}
+              order={order}
+              onStatusChange={onStatusChange}
+              onCancelOrder={onCancelOrder}
+              nextStatus={nextStatus}
+              color={color}
+              t={t}
+            />
+          ))
+        )}
       </div>
     </div>
   )
 }
 
-interface OrderCardProps {
+function OrderCard({
+  order,
+  onStatusChange,
+  onCancelOrder,
+  nextStatus,
+  color,
+  t
+}: {
   order: Order
   onStatusChange: (orderId: string, newStatus: string) => void
   onCancelOrder: (orderId: string) => void
   nextStatus: string
-  accentColor: "orange" | "blue" | "green"
+  color: "orange" | "blue" | "green"
   t: (key: string) => string
-}
-
-function OrderCard({ order, onStatusChange, onCancelOrder, nextStatus, accentColor, t }: OrderCardProps) {
+}) {
   const createdTime = new Date(order.createdAt)
   const elapsedMinutes = Math.floor((Date.now() - createdTime.getTime()) / 60000)
 
-  const accents = {
-    orange: "border-l-orange-500 hover:shadow-orange-100",
-    blue: "border-l-blue-500 hover:shadow-blue-100",
-    green: "border-l-green-500 hover:shadow-green-100"
+  const borderColors = {
+    orange: "border-l-orange-500",
+    blue: "border-l-blue-500",
+    green: "border-l-green-500"
   }
 
   return (
-    <div className={`bg-white rounded-[25px] p-5 border-l-[6px] shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 ${accents[accentColor]}`}>
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="font-bold text-lg text-gray-800">#{order.orderNumber}</h3>
-          <p className="text-xs text-gray-500 font-medium">
-            ⏱ {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : t("chef.justNow")}
-          </p>
-        </div>
-        {order.notes && (
-          <span className="text-xl animate-pulse" title={order.notes}>📝</span>
-        )}
-      </div>
-
-      <div className="space-y-2 mb-4 bg-gray-50 p-3 rounded-2xl">
-        {order.items.map((item, idx) => (
-          <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-100 last:border-0 pb-1 last:pb-0">
-            <span className="font-medium text-gray-700">
-              {item.name}
-              {item.menuId && <span className="text-xs text-gray-400 font-mono ml-2">({item.menuId})</span>}
-            </span>
-            <span className="font-bold bg-gray-200 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">
-              {item.quantity}
-            </span>
+    <Card className={`border-l-4 ${borderColors[color]} hover:shadow-md transition-shadow`}>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h3 className="font-bold text-lg text-gray-900">#{order.orderNumber}</h3>
+            <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+              <Clock className="h-3 w-3" />
+              {elapsedMinutes > 0 ? `${elapsedMinutes}m ago` : "Just now"}
+            </p>
           </div>
-        ))}
-      </div>
+          {order.notes && (
+            <span className="text-lg" title={order.notes}>📝</span>
+          )}
+        </div>
 
-      <div className="mt-auto">
+        <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
+          {order.items.map((item, idx) => (
+            <div key={idx} className="flex justify-between items-center text-sm">
+              <span className="font-medium text-gray-700">{item.name}</span>
+              <span className="font-bold bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
+                {item.quantity}
+              </span>
+            </div>
+          ))}
+        </div>
+
         <div className="flex gap-2">
           {order.status === "pending" && (
-            <button
-              onClick={() => onStatusChange(order._id, "preparing")}
-              className="flex-1 bg-blue-100 text-blue-600 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all transform active:scale-95"
-            >
-              {t("chef.startPrep")}
-            </button>
+            <>
+              <button
+                onClick={() => onStatusChange(order._id, "preparing")}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors"
+              >
+                Start Prep
+              </button>
+              <button
+                onClick={() => onCancelOrder(order._id)}
+                className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </>
           )}
           {order.status === "preparing" && (
             <button
               onClick={() => onStatusChange(order._id, "ready")}
-              className="flex-1 bg-[#8B4513] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-[#8B4513]/20 transform hover:scale-105 active:scale-95"
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-green-700 transition-colors"
             >
-              {t("chef.markReady")}
+              Mark Ready
             </button>
           )}
           {order.status === "ready" && (
             <button
               onClick={() => onStatusChange(order._id, "completed")}
-              className="flex-1 bg-gray-800 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all transform active:scale-95"
+              className="flex-1 bg-gray-800 text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors"
             >
-              {t("chef.complete")}
-            </button>
-          )}
-          {order.status === "pending" && (
-            <button
-              onClick={() => onCancelOrder(order._id)}
-              className="px-4 py-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-bold transition-all"
-              title={t("common.delete")}
-            >
-              ✕
+              Complete
             </button>
           )}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
