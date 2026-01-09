@@ -71,6 +71,10 @@ export default function MenuPage() {
   const { t } = useLanguage()
   const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
 
+  // Selection state for Table/Waiter
+  const [waiterBatchNumber, setWaiterBatchNumber] = useState("")
+  const [tableNumber, setTableNumber] = useState("")
+
   // Fetch menu items from API
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -144,6 +148,8 @@ export default function MenuPage() {
           totalAmount: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
           paymentMethod: "cash",
           status: "pending",
+          tableNumber,
+          waiterBatchNumber,
         }),
       })
 
@@ -279,6 +285,10 @@ export default function MenuPage() {
                     onQuantityChange={handleQuantityChange}
                     onCheckout={handleCheckout}
                     isLoading={loading}
+                    waiterBatchNumber={waiterBatchNumber}
+                    setWaiterBatchNumber={setWaiterBatchNumber}
+                    tableNumber={tableNumber}
+                    setTableNumber={setTableNumber}
                   />
                 </div>
               </div>

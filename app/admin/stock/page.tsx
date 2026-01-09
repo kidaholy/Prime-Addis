@@ -44,7 +44,7 @@ interface StockItem {
 }
 
 export default function StockAndExpensesPage() {
-    const [activeTab, setActiveTab] = useState<"inventory">("inventory")
+    const [activeTab, setActiveTab] = useState<"inventory" | "expenses">("inventory")
     const [expenses, setExpenses] = useState<DailyExpense[]>([])
     const [stockItems, setStockItems] = useState<StockItem[]>([])
     const [loading, setLoading] = useState(true)
@@ -87,6 +87,7 @@ export default function StockAndExpensesPage() {
     useEffect(() => {
         if (token) {
             fetchStockItems()
+            fetchExpenses()
         }
 
         // Fallback: if loading takes too long, stop loading state
@@ -133,14 +134,22 @@ export default function StockAndExpensesPage() {
             }
         } catch (error) {
             console.error("❌ Error fetching stock:", error)
-            notify({
-                title: "Network Error",
-                message: "Failed to connect to server. Please check your connection.",
-                type: "error"
-            })
         } finally {
             setLoading(false)
-            console.log("✅ Stock fetch completed")
+        }
+    }
+
+    const fetchExpenses = async () => {
+        try {
+            const response = await fetch("/api/admin/expenses", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setExpenses(data)
+            }
+        } catch (error) {
+            console.error("Error fetching expenses:", error)
         }
     }
 
@@ -166,6 +175,7 @@ export default function StockAndExpensesPage() {
 
             if (response.ok) {
                 fetchStockItems()
+                fetchExpenses()
                 resetExpenseForm()
                 notify({
                     title: "Expense Saved",
@@ -644,7 +654,7 @@ export default function StockAndExpensesPage() {
                                                                                 {item.trackQuantity ? (item.quantity || 0).toLocaleString() : '-'}
                                                                                 <span className="text-xs font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
                                                                             </p>
-                                                                            {item.trackQuantity && item.minLimit > 0 && (
+                                                                            {item.trackQuantity && (item.minLimit ?? 0) > 0 && (
                                                                                 <p className="text-[10px] font-medium text-gray-400">
                                                                                     Min: {item.minLimit} {item.unit}
                                                                                 </p>
@@ -665,9 +675,9 @@ export default function StockAndExpensesPage() {
                                                                                 <p className="text-xs font-bold text-green-500">
                                                                                     Revenue: {((item.quantity || 0) * (item.unitCost || 0)).toLocaleString()} Br
                                                                                 </p>
-                                                                                {(item.unitCost || 0) > 0 && (item.averagePurchasePrice || 0) > 0 && (
+                                                                                {(item.unitCost ?? 0) > 0 && (item.averagePurchasePrice ?? 0) > 0 && (
                                                                                     <p className="text-xs font-bold text-blue-600">
-                                                                                        Margin: {(((item.unitCost - item.averagePurchasePrice) / item.unitCost) * 100).toFixed(1)}%
+                                                                                        Margin: {(((item.unitCost! - item.averagePurchasePrice!) / item.unitCost!) * 100).toFixed(1)}%
                                                                                     </p>
                                                                                 )}
                                                                             </div>

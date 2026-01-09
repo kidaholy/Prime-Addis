@@ -23,14 +23,14 @@ export async function POST(request: Request) {
         console.log(`🍽️ Processing order for table ${tableNumber} with ${orderItems.length} items`)
 
         // Step 1: Validate all menu items and check stock availability
-        const validationResults = []
-        const menuItemsData = []
+        const validationResults: any[] = []
+        const menuItemsData: any[] = []
 
         for (const orderItem of orderItems) {
             const menuItem = await MenuItem.findOne({ menuId: orderItem.menuId }).populate('recipe.stockItemId')
-            
+
             if (!menuItem) {
-                return NextResponse.json({ 
+                return NextResponse.json({
                     message: `Menu item ${orderItem.menuId} not found`,
                     type: "validation_error"
                 }, { status: 400 })
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
             // Check if menu item can be prepared with current stock
             const availability = await menuItem.canBePrepared(orderItem.quantity)
-            
+
             if (!availability.available) {
                 return NextResponse.json({
                     message: `Cannot prepare ${menuItem.name}`,
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
                 modifiers: item.modifiers || [],
                 notes: item.notes || ""
             })),
-            totalAmount: orderItems.reduce((sum: number, item: any, index: number) => 
+            totalAmount: orderItems.reduce((sum: number, item: any, index: number) =>
                 sum + (menuItemsData[index].menuItem.price * item.quantity), 0
             ),
             status: "pending",
@@ -110,17 +110,17 @@ export async function POST(request: Request) {
         console.log(`📝 Order ${orderNumber} created successfully`)
 
         // Step 5: Consume stock for each menu item
-        const stockConsumptionLog = []
-        
+        const stockConsumptionLog: any[] = []
+
         for (const { orderItem, menuItem } of menuItemsData) {
             const consumptionResult = await menuItem.consumeIngredients(orderItem.quantity)
-            
+
             if (!consumptionResult.success) {
                 // If stock consumption fails, we need to rollback the order
                 await Order.findByIdAndDelete(newOrder._id)
-                
+
                 console.error(`❌ Stock consumption failed for ${menuItem.name}:`, consumptionResult.errors)
-                
+
                 return NextResponse.json({
                     message: `Stock consumption failed for ${menuItem.name}`,
                     details: consumptionResult.errors,
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error("❌ Process order error:", error)
-        return NextResponse.json({ 
+        return NextResponse.json({
             message: error.message || "Failed to process order",
             type: "server_error"
         }, { status: 500 })
@@ -176,7 +176,7 @@ export async function GET(request: Request) {
 
         await connectDB()
 
-        const availabilityCheck = []
+        const availabilityCheck: any[] = []
 
         for (let i = 0; i < menuIds.length; i++) {
             const menuId = menuIds[i]
@@ -209,7 +209,7 @@ export async function GET(request: Request) {
 
     } catch (error: any) {
         console.error("❌ Check availability error:", error)
-        return NextResponse.json({ 
+        return NextResponse.json({
             message: error.message || "Failed to check availability"
         }, { status: 500 })
     }
