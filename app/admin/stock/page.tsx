@@ -908,18 +908,12 @@ export default function StockAndExpensesPage() {
                                             >
                                                 <optgroup label="🏋️ Weight">
                                                     <option value="kg">Kilograms (kg)</option>
-                                                    <option value="g">Grams (g)</option>
                                                 </optgroup>
                                                 <optgroup label="🥤 Volume">
                                                     <option value="L">Liters (L)</option>
-                                                    <option value="ml">Milliliters (ml)</option>
                                                 </optgroup>
                                                 <optgroup label="🔢 Count">
                                                     <option value="pcs">Pieces (pcs)</option>
-                                                    <option value="bottles">Bottles</option>
-                                                    <option value="cans">Cans</option>
-                                                    <option value="boxes">Boxes</option>
-                                                    <option value="bags">Bags</option>
                                                 </optgroup>
                                             </select>
                                         </div>
