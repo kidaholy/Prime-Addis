@@ -148,14 +148,22 @@ export async function GET(request: Request) {
             ordersByDate[orderDate].push(order)
 
             for (const item of order.items) {
-                if (!item.menuItemId) continue;
+                if (!item.menuItemId) {
+                    console.log(`⚠️ Item in order ${order._id} missing menuItemId`)
+                    continue;
+                }
                 const menuData = menuMap.get(item.menuItemId?.toString())
 
                 if (menuData) {
+                    // console.log(`🔍 Processing ${item.name} (${item.quantity}) -> Menu: ${menuData.name}`)
+
                     // Recipe System
                     if (menuData.recipe && menuData.recipe.length > 0) {
                         for (const ingredient of menuData.recipe) {
-                            if (!ingredient.stockItemId) continue;
+                            if (!ingredient.stockItemId) {
+                                log(`⚠️ Ingredient ${ingredient.stockItemName} missing stockItemId`)
+                                continue;
+                            }
                             const unit = ingredient.unit || 'piece'
                             const amount = (ingredient.quantityRequired || 0) * item.quantity
 
@@ -183,6 +191,7 @@ export async function GET(request: Request) {
                                 waiter: order.waiterName || 'Unknown',
                                 menuItemName: menuData.name
                             })
+                            log(`✅ Consumed ${amount} ${unit} of ${ingredient.stockItemName} (StockID: ${stockId})`)
                         }
                     }
                     // Legacy Fallback
@@ -214,7 +223,12 @@ export async function GET(request: Request) {
                             date: order.createdAt,
                             waiter: order.waiterName || 'Unknown'
                         })
+                        // console.log(`✅ Consumed ${amount} ${unit} (Legacy) via ${menuData.name} (StockID: ${stockId})`)
+                    } else {
+                        console.log(`⚠️ Menu item ${menuData.name} has no recipe or stockItemId`)
                     }
+                } else {
+                    console.log(`⚠️ Menu Data not found for ID: ${item.menuItemId}`)
                 }
             }
         }

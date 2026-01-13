@@ -1,0 +1,10 @@
+Fetching stock-usage...
+--- API RESPONSE ---
+Matched Count: 2
+Order Count: 2
+Logs:
+✅ Consumed 3 piece (Legacy) via ኮካ (StockID: 6964fea916f2b09c1d74d25b)
+✅ Consumed 101 piece (Legacy) via ኮካ (StockID: 6964fea916f2b09c1d74d25b)
+Checking Stock: ኮካ ID: 69656dc27c58cce1098b80f6
+Checking Stock: ኮካ ID: 69656dc27c58cce1098b80f6
+--- END ---
