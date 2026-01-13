@@ -36,6 +36,7 @@ export async function POST(request: Request) {
                 }, { status: 400 })
             }
 
+            /* Permissive Stock: We no longer block orders based on quantity. 
             // Check if menu item can be prepared with current stock
             const availability = await menuItem.canBePrepared(orderItem.quantity)
 
@@ -51,6 +52,8 @@ export async function POST(request: Request) {
                     }
                 }, { status: 409 }) // 409 Conflict for stock issues
             }
+            */
+            const availability = { available: true, missingIngredients: [] } // Fake availability for logic flow
 
             menuItemsData.push({
                 orderItem,

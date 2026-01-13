@@ -17,10 +17,10 @@ interface IMenuItem {
   description?: string
   image?: string
   preparationTime?: number
-  
+
   // Enhanced recipe system
   recipe: IRecipeIngredient[] // List of stock items consumed when this item is ordered
-  
+
   // Legacy fields (kept for backward compatibility)
   ingredients?: string[]
   stockItemId?: mongoose.Types.ObjectId
@@ -46,10 +46,10 @@ const menuItemSchema = new Schema<IMenuItem>(
     description: { type: String },
     image: { type: String },
     preparationTime: { type: Number, default: 10 },
-    
+
     // Enhanced recipe system
     recipe: [RecipeIngredientSchema],
-    
+
     // Legacy fields (kept for backward compatibility)
     ingredients: [{ type: String }],
     stockItemId: { type: Schema.Types.ObjectId, ref: "Stock" },
@@ -61,17 +61,18 @@ const menuItemSchema = new Schema<IMenuItem>(
 )
 
 // Method to check if menu item can be prepared (all ingredients available)
-menuItemSchema.methods.canBePrepared = async function(quantity: number = 1): Promise<{ available: boolean, missingIngredients: string[] }> {
+menuItemSchema.methods.canBePrepared = async function (quantity: number = 1): Promise<{ available: boolean, missingIngredients: string[] }> {
   const Stock = mongoose.model('Stock')
   const missingIngredients: string[] = []
-  
+
   for (const ingredient of this.recipe) {
     const stockItem = await Stock.findById(ingredient.stockItemId)
-    if (!stockItem || !stockItem.isAvailableForOrder(ingredient.quantityRequired * quantity)) {
-      missingIngredients.push(`${ingredient.stockItemName} (need ${ingredient.quantityRequired * quantity} ${ingredient.unit})`)
+    // Permissive stock: Only block if stock item is missing or manually set to 'finished'
+    if (!stockItem || (stockItem.status === 'finished')) {
+      missingIngredients.push(`${ingredient.stockItemName} (Finished/Unavailable)`)
     }
   }
-  
+
   return {
     available: missingIngredients.length === 0,
     missingIngredients
@@ -79,11 +80,11 @@ menuItemSchema.methods.canBePrepared = async function(quantity: number = 1): Pro
 }
 
 // Method to consume ingredients when item is ordered
-menuItemSchema.methods.consumeIngredients = async function(quantity: number = 1): Promise<{ success: boolean, errors: string[] }> {
+menuItemSchema.methods.consumeIngredients = async function (quantity: number = 1): Promise<{ success: boolean, errors: string[] }> {
   const Stock = mongoose.model('Stock')
   const errors: string[] = []
   const consumedItems: { item: any, quantity: number }[] = []
-  
+
   // First, check if all ingredients are available
   const availability = await this.canBePrepared(quantity)
   if (!availability.available) {
@@ -92,7 +93,7 @@ menuItemSchema.methods.consumeIngredients = async function(quantity: number = 1)
       errors: [`Cannot prepare ${this.name}: Missing ingredients - ${availability.missingIngredients.join(', ')}`]
     }
   }
-  
+
   // Consume each ingredient
   for (const ingredient of this.recipe) {
     const stockItem = await Stock.findById(ingredient.stockItemId)
@@ -115,7 +116,7 @@ menuItemSchema.methods.consumeIngredients = async function(quantity: number = 1)
       errors.push(`Stock item ${ingredient.stockItemName} not found`)
     }
   }
-  
+
   return {
     success: errors.length === 0,
     errors

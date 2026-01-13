@@ -158,7 +158,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate sufficient stock quantities
+    // Permissive Stock: We no longer block orders based on quantity. 
+    // We allow stock to go negative. Only 'finished' status blocks (checked above).
+    /*
     for (const [stockId, requiredAmount] of stockConsumptionMap) {
       const stockItem = await Stock.findById(stockId)
       if (stockItem && stockItem.trackQuantity) {
@@ -170,6 +172,7 @@ export async function POST(request: Request) {
         }
       }
     }
+    */
 
     // Generate order number based on highest existing number + 1
     const lastOrder = await Order.findOne({}, { orderNumber: 1 }).sort({ orderNumber: -1 })

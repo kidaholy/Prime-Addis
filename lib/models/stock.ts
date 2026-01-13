@@ -45,9 +45,9 @@ const StockSchema = new Schema<IStock>(
         category: { type: String, required: true },
         quantity: { type: Number, required: true, default: 0, min: 0 },
         unit: { type: String, required: true }, // e.g., 'kg', 'g', 'L', 'ml', 'pcs'
-        unitType: { 
-            type: String, 
-            required: true, 
+        unitType: {
+            type: String,
+            required: true,
             enum: ['weight', 'volume', 'count'],
             default: 'count'
         },
@@ -56,10 +56,10 @@ const StockSchema = new Schema<IStock>(
         unitCost: { type: Number, required: true, default: 0, min: 0 },
         trackQuantity: { type: Boolean, default: true },
         showStatus: { type: Boolean, default: true },
-        status: { 
-            type: String, 
-            enum: ['active', 'finished', 'out_of_stock'], 
-            default: 'active' 
+        status: {
+            type: String,
+            enum: ['active', 'finished', 'out_of_stock'],
+            default: 'active'
         },
         restockHistory: [RestockEntrySchema],
         totalPurchased: { type: Number, default: 0, min: 0 },
@@ -72,17 +72,17 @@ const StockSchema = new Schema<IStock>(
 )
 
 // Middleware to auto-update status based on quantity
-StockSchema.pre('save', async function() {
+StockSchema.pre('save', async function () {
     if (this.trackQuantity) {
+        // We allow orders even if quantity is 0 or less
+        // Status remains 'active' to permit ordering, but can be manually set to 'out_of_stock' or 'finished'
         if (this.quantity <= 0) {
-            this.status = 'out_of_stock'
-        } else if (this.quantity <= this.minLimit) {
-            // Keep as active but will show low stock warning
-            if (this.status === 'out_of_stock') {
-                this.status = 'active'
-            }
-        } else {
-            if (this.status === 'out_of_stock') {
+            // Only auto-mark as out_of_stock if it was active and just hit 0
+            // but we want to stay active to allow negative stock unless user manually intervention.
+            // For now, let's keep it 'active' if trackQuantity is on, so cashier can still sell.
+            if (this.status === 'finished') {
+                // keep finished
+            } else {
                 this.status = 'active'
             }
         }
@@ -90,24 +90,24 @@ StockSchema.pre('save', async function() {
 })
 
 // Helper method to check if item is available for ordering
-StockSchema.methods.isAvailableForOrder = function(requiredQuantity: number = 1): boolean {
+StockSchema.methods.isAvailableForOrder = function (requiredQuantity: number = 1): boolean {
     if (!this.trackQuantity) return true
-    return this.status === 'active' && this.quantity >= requiredQuantity
+    // Permissive stock: Allow ordering even if quantity < requiredQuantity
+    // Only block if status is manually set to 'finished' or 'out_of_stock'
+    return this.status === 'active'
 }
 
 // Helper method to consume stock (deduct quantity)
-StockSchema.methods.consumeStock = function(quantity: number): boolean {
+StockSchema.methods.consumeStock = function (quantity: number): boolean {
     if (!this.trackQuantity) return true
-    if (this.quantity >= quantity) {
-        this.quantity -= quantity
-        this.totalConsumed += quantity
-        return true
-    }
-    return false
+    // Permissive stock: Always allow consumption, even into negative
+    this.quantity -= quantity
+    this.totalConsumed += quantity
+    return true
 }
 
 // Helper method to restock
-StockSchema.methods.restock = function(quantityAdded: number, totalPurchaseCost: number, newUnitCost: number, notes?: string, restockedBy?: mongoose.Types.ObjectId) {
+StockSchema.methods.restock = function (quantityAdded: number, totalPurchaseCost: number, newUnitCost: number, notes?: string, restockedBy?: mongoose.Types.ObjectId) {
     // Add to restock history
     this.restockHistory.push({
         date: new Date(),
@@ -117,19 +117,19 @@ StockSchema.methods.restock = function(quantityAdded: number, totalPurchaseCost:
         notes,
         restockedBy
     })
-    
+
     // Update current values
     this.quantity += quantityAdded
     this.totalPurchased += quantityAdded
     this.totalInvestment += totalPurchaseCost
-    
+
     // Calculate new average purchase price
     if (this.totalPurchased > 0) {
         this.averagePurchasePrice = this.totalInvestment / this.totalPurchased
     }
-    
+
     this.unitCost = newUnitCost // Update to latest selling price
-    
+
     // Status will be auto-updated by pre-save middleware
 }
 
