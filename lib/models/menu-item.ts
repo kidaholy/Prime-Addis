@@ -67,9 +67,8 @@ menuItemSchema.methods.canBePrepared = async function (quantity: number = 1): Pr
 
   for (const ingredient of this.recipe) {
     const stockItem = await Stock.findById(ingredient.stockItemId)
-    // Permissive stock: Only block if stock item is missing or manually set to 'finished'
-    if (!stockItem || (stockItem.status === 'finished')) {
-      missingIngredients.push(`${ingredient.stockItemName} (Finished/Unavailable)`)
+    if (!stockItem || !stockItem.isAvailableForOrder(ingredient.quantityRequired * quantity)) {
+      missingIngredients.push(`${ingredient.stockItemName} (need ${ingredient.quantityRequired * quantity} ${ingredient.unit})`)
     }
   }
 

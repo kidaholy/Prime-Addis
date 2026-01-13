@@ -74,15 +74,15 @@ const StockSchema = new Schema<IStock>(
 // Middleware to auto-update status based on quantity
 StockSchema.pre('save', async function () {
     if (this.trackQuantity) {
-        // We allow orders even if quantity is 0 or less
-        // Status remains 'active' to permit ordering, but can be manually set to 'out_of_stock' or 'finished'
         if (this.quantity <= 0) {
-            // Only auto-mark as out_of_stock if it was active and just hit 0
-            // but we want to stay active to allow negative stock unless user manually intervention.
-            // For now, let's keep it 'active' if trackQuantity is on, so cashier can still sell.
-            if (this.status === 'finished') {
-                // keep finished
-            } else {
+            this.status = 'out_of_stock'
+        } else if (this.quantity <= this.minLimit) {
+            // Keep as active but will show low stock warning
+            if (this.status === 'out_of_stock') {
+                this.status = 'active'
+            }
+        } else {
+            if (this.status === 'out_of_stock') {
                 this.status = 'active'
             }
         }
@@ -92,18 +92,18 @@ StockSchema.pre('save', async function () {
 // Helper method to check if item is available for ordering
 StockSchema.methods.isAvailableForOrder = function (requiredQuantity: number = 1): boolean {
     if (!this.trackQuantity) return true
-    // Permissive stock: Allow ordering even if quantity < requiredQuantity
-    // Only block if status is manually set to 'finished' or 'out_of_stock'
-    return this.status === 'active'
+    return this.status === 'active' && this.quantity >= requiredQuantity
 }
 
 // Helper method to consume stock (deduct quantity)
 StockSchema.methods.consumeStock = function (quantity: number): boolean {
     if (!this.trackQuantity) return true
-    // Permissive stock: Always allow consumption, even into negative
-    this.quantity -= quantity
-    this.totalConsumed += quantity
-    return true
+    if (this.quantity >= quantity) {
+        this.quantity -= quantity
+        this.totalConsumed += quantity
+        return true
+    }
+    return false
 }
 
 // Helper method to restock
