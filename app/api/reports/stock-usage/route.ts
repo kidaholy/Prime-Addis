@@ -161,7 +161,7 @@ export async function GET(request: Request) {
                     if (menuData.recipe && menuData.recipe.length > 0) {
                         for (const ingredient of menuData.recipe) {
                             if (!ingredient.stockItemId) {
-                                log(`⚠️ Ingredient ${ingredient.stockItemName} missing stockItemId`)
+                                console.log(`⚠️ Ingredient ${ingredient.stockItemName} missing stockItemId`)
                                 continue;
                             }
                             const unit = ingredient.unit || 'piece'
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
                                 waiter: order.waiterName || 'Unknown',
                                 menuItemName: menuData.name
                             })
-                            log(`✅ Consumed ${amount} ${unit} of ${ingredient.stockItemName} (StockID: ${stockId})`)
+                            // console.log(`✅ Consumed ${amount} ${unit} of ${ingredient.stockItemName} (StockID: ${stockId})`)
                         }
                     }
                     // Legacy Fallback
