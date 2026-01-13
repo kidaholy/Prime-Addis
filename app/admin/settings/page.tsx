@@ -37,6 +37,11 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("branding")
   const [tables, setTables] = useState<any[]>([])
   const [waiters, setWaiters] = useState<any[]>([])
+
+  // Edit States
+  const [editingTable, setEditingTable] = useState<any>(null)
+  const [editingWaiter, setEditingWaiter] = useState<any>(null)
+
   const [newTable, setNewTable] = useState({ tableNumber: "", capacity: "" })
   const [newWaiter, setNewWaiter] = useState({ waiterId: "", name: "", tables: [] as string[] })
 
@@ -71,24 +76,39 @@ export default function AdminSettingsPage() {
 
   const handleAddTable = async () => {
     try {
-      const res = await fetch("/api/admin/tables", {
-        method: "POST",
+      const url = "/api/admin/tables"
+      const method = editingTable ? "PUT" : "POST"
+      const body = editingTable ? { ...newTable, id: editingTable._id } : newTable
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(newTable)
+        body: JSON.stringify(body)
       })
       if (res.ok) {
         setNewTable({ tableNumber: "", capacity: "" })
+        setEditingTable(null)
         fetchTables()
-        notify({ title: "Success", message: "Table added successfully", type: "success" })
+        notify({ title: "Success", message: `Table ${editingTable ? 'updated' : 'added'} successfully`, type: "success" })
       } else {
         const err = await res.json()
         notify({ title: "Error", message: err.message, type: "error" })
       }
-    } catch (err) { notify({ title: "Error", message: "Failed to add table", type: "error" }) }
+    } catch (err) { notify({ title: "Error", message: "Failed to save table", type: "error" }) }
+  }
+
+  const handleEditTable = (table: any) => {
+    setEditingTable(table)
+    setNewTable({ tableNumber: table.tableNumber, capacity: table.capacity || "" })
+  }
+
+  const handleCancelEditTable = () => {
+    setEditingTable(null)
+    setNewTable({ tableNumber: "", capacity: "" })
   }
 
   const handleDeleteTable = async (id: string) => {
-    if (!await confirm({ title: "Delete Table", message: "Are you sure?", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
+    if (!await confirm({ title: "Delete Table", message: "Are you sure? This cannot be undone.", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
     try {
       const res = await fetch(`/api/admin/tables?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
       if (res.ok) {
@@ -100,24 +120,43 @@ export default function AdminSettingsPage() {
 
   const handleAddWaiter = async () => {
     try {
-      const res = await fetch("/api/admin/waiters", {
-        method: "POST",
+      const url = "/api/admin/waiters"
+      const method = editingWaiter ? "PUT" : "POST"
+      const body = editingWaiter ? { ...newWaiter, id: editingWaiter._id } : newWaiter
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(newWaiter)
+        body: JSON.stringify(body)
       })
       if (res.ok) {
         setNewWaiter({ waiterId: "", name: "", tables: [] })
+        setEditingWaiter(null)
         fetchWaiters()
-        notify({ title: "Success", message: "Waiter added successfully", type: "success" })
+        notify({ title: "Success", message: `Waiter ${editingWaiter ? 'updated' : 'added'} successfully`, type: "success" })
       } else {
         const err = await res.json()
         notify({ title: "Error", message: err.message, type: "error" })
       }
-    } catch (err) { notify({ title: "Error", message: "Failed to add waiter", type: "error" }) }
+    } catch (err) { notify({ title: "Error", message: "Failed to save waiter", type: "error" }) }
+  }
+
+  const handleEditWaiter = (waiter: any) => {
+    setEditingWaiter(waiter)
+    setNewWaiter({
+      waiterId: waiter.waiterId,
+      name: waiter.name,
+      tables: waiter.tables || []
+    })
+  }
+
+  const handleCancelEditWaiter = () => {
+    setEditingWaiter(null)
+    setNewWaiter({ waiterId: "", name: "", tables: [] })
   }
 
   const handleDeleteWaiter = async (id: string) => {
-    if (!await confirm({ title: "Delete Waiter", message: "Are you sure?", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
+    if (!await confirm({ title: "Delete Waiter", message: "Are you sure? This cannot be undone.", type: "warning", confirmText: "Delete", cancelText: "Cancel" })) return
     try {
       const res = await fetch(`/api/admin/waiters?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
       if (res.ok) {
@@ -126,6 +165,33 @@ export default function AdminSettingsPage() {
       }
     } catch (err) { notify({ title: "Error", message: "Failed to delete waiter", type: "error" }) }
   }
+
+  // ... (existing helper functions: handleSaveSetting, handleSubmit, handleFileUpload, handleRemoveLogo) ...
+  // Since I can't overwrite logic that relies on these helpers without seeing them, 
+  // I will assume they are outside the replaced block or I will preserve them if they were inside.
+  // Wait, I am replacing a huge chunk from line 36. Let's make sure I don't delete handleSaveSetting etc.
+  // The block I am replacing ends just before handleSaveSetting (line 130).
+  // Ah, the view_file showed handleSaveSetting starts at 130. 
+  // My ReplacementContent above includes handleAddTable/Waiter logic which was previously ~36-129.
+  // So I need to verify line numbers.
+
+  // Re-checking view_file:
+  // 36:   // Table & Waiter Management State
+  // ...
+  // 129:   }
+  // 130:   const handleSaveSetting = ...
+
+  // Okay, duplicate declaration warnings in my thought process. 
+  // I will replace from line 36 to 129 with the updated logic including edit handlers.
+
+  // THE REPLACEMENT CONTENT BELOW IS ONLY THE LOGIC PART.
+  // I will do a separate call for the JSX part in render.
+
+  // WAIT. I need to be careful. React hooks must execute in same order. 
+  // I am adding new state hooks at the top. This is fine as long as it's consistent.
+
+  // Let's replace the logic block first.
+
 
   const handleSaveSetting = async (key: string, value: string, type: string = "string", description?: string) => {
     try {
@@ -524,7 +590,19 @@ export default function AdminSettingsPage() {
                 {activeTab === "tables" && (
                   <div className="space-y-6">
                     <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                      <h3 className="font-bold text-lg mb-4 text-[#8B4513]">Add New Table</h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg text-[#8B4513]">
+                          {editingTable ? "Update Table" : "Add New Table"}
+                        </h3>
+                        {editingTable && (
+                          <button
+                            onClick={handleCancelEditTable}
+                            className="text-xs font-bold text-gray-500 hover:text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-gray-200"
+                          >
+                            Cancel Edit
+                          </button>
+                        )}
+                      </div>
                       <div className="flex gap-4">
                         <div className="flex-1">
                           <input
@@ -532,7 +610,7 @@ export default function AdminSettingsPage() {
                             placeholder="Table Number (e.g. T-01)"
                             value={newTable.tableNumber}
                             onChange={(e) => setNewTable({ ...newTable, tableNumber: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20 ${editingTable ? 'border-[#8B4513]/50' : 'border-gray-200'}`}
                           />
                         </div>
                         <div className="flex-1">
@@ -547,9 +625,9 @@ export default function AdminSettingsPage() {
                         <button
                           onClick={handleAddTable}
                           disabled={!newTable.tableNumber}
-                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors"
+                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors shadow-lg shadow-[#8B4513]/20"
                         >
-                          Add
+                          {editingTable ? "Update" : "Add"}
                         </button>
                       </div>
                     </div>
@@ -561,12 +639,22 @@ export default function AdminSettingsPage() {
                             <div className="font-black text-lg text-gray-800">{table.tableNumber}</div>
                             {table.capacity && <div className="text-xs text-gray-400 font-bold">{table.capacity} Seats</div>}
                           </div>
-                          <button
-                            onClick={() => handleDeleteTable(table._id)}
-                            className="text-gray-300 hover:text-red-500 transition-colors p-2"
-                          >
-                            🗑️
-                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleEditTable(table)}
+                              className="text-gray-300 hover:text-[#8B4513] transition-colors p-2 rounded-lg hover:bg-[#8B4513]/5"
+                              title="Edit Table"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTable(table._id)}
+                              className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+                              title="Delete Table"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                       ))}
                       {tables.length === 0 && (
@@ -581,7 +669,19 @@ export default function AdminSettingsPage() {
                 {activeTab === "waiters" && (
                   <div className="space-y-6">
                     <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                      <h3 className="font-bold text-lg mb-4 text-[#8B4513]">Add New Waiter/Batch</h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg text-[#8B4513]">
+                          {editingWaiter ? "Update Waiter/Batch" : "Add New Waiter/Batch"}
+                        </h3>
+                        {editingWaiter && (
+                          <button
+                            onClick={handleCancelEditWaiter}
+                            className="text-xs font-bold text-gray-500 hover:text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-gray-200"
+                          >
+                            Cancel Edit
+                          </button>
+                        )}
+                      </div>
                       <div className="flex flex-col gap-4">
                         <div className="flex gap-4">
                           <div className="flex-1">
@@ -590,7 +690,7 @@ export default function AdminSettingsPage() {
                               placeholder="Batch Number (e.g. B-01)"
                               value={newWaiter.waiterId}
                               onChange={(e) => setNewWaiter({ ...newWaiter, waiterId: e.target.value })}
-                              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                              className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20 ${editingWaiter ? 'border-[#8B4513]/50' : 'border-gray-200'}`}
                             />
                           </div>
                           <div className="flex-1">
@@ -632,9 +732,9 @@ export default function AdminSettingsPage() {
                         <button
                           onClick={handleAddWaiter}
                           disabled={!newWaiter.waiterId || !newWaiter.name}
-                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors w-full"
+                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors w-full shadow-lg shadow-[#8B4513]/20"
                         >
-                          Add Waiter
+                          {editingWaiter ? "Update Waiter" : "Add Waiter"}
                         </button>
                       </div>
                     </div>
@@ -652,12 +752,22 @@ export default function AdminSettingsPage() {
                                 <div className="text-xs text-[#8B4513] font-mono font-bold">{waiter.waiterId}</div>
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleDeleteWaiter(waiter._id)}
-                              className="text-gray-300 hover:text-red-500 transition-colors p-2"
-                            >
-                              🗑️
-                            </button>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleEditWaiter(waiter)}
+                                className="text-gray-300 hover:text-[#8B4513] transition-colors p-2 rounded-lg hover:bg-[#8B4513]/5"
+                                title="Edit Waiter"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteWaiter(waiter._id)}
+                                className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+                                title="Delete Waiter"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
 
                           {/* Display Assigned Tables */}

@@ -43,6 +43,44 @@ export async function POST(request: Request) {
     }
 }
 
+export async function PUT(request: Request) {
+    try {
+        const token = request.headers.get("authorization")?.replace("Bearer ", "")
+        if (!token) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        const decoded = jwt.verify(token, JWT_SECRET) as any
+        if (decoded.role !== "admin" && decoded.role !== "super-admin") {
+            return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+        }
+
+        await connectDB()
+        const { id, tableNumber, name, capacity } = await request.json()
+
+        if (!id || !tableNumber) {
+            return NextResponse.json({ message: "ID and Table Number are required" }, { status: 400 })
+        }
+
+        // Check if new table number exists (excluding current table)
+        const existing = await Table.findOne({ tableNumber, _id: { $ne: id } })
+        if (existing) {
+            return NextResponse.json({ message: "Table Number already exists" }, { status: 400 })
+        }
+
+        const updatedTable = await Table.findByIdAndUpdate(
+            id,
+            { tableNumber, name, capacity },
+            { new: true }
+        )
+
+        if (!updatedTable) {
+            return NextResponse.json({ message: "Table not found" }, { status: 404 })
+        }
+
+        return NextResponse.json(updatedTable)
+    } catch (error: any) {
+        return NextResponse.json({ message: error.message || "Failed to update table" }, { status: 500 })
+    }
+}
+
 export async function DELETE(request: Request) {
     try {
         const token = request.headers.get("authorization")?.replace("Bearer ", "")
