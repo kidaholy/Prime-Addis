@@ -154,17 +154,17 @@ export default function ReportsPage() {
             const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
             const closingQuantity = item.closingStock ?? item.quantity ?? 0;
             const consumedCount = item.consumed ?? 0;
-            const totalAvailable = closingQuantity + consumedCount;
+            const displayedQuantity = closingQuantity;
 
-            const totalPurchaseValue = totalAvailable * costPrice;
-            const remains = totalAvailable - consumedCount;
+            const totalPurchaseValue = displayedQuantity * costPrice;
+            const remains = closingQuantity - consumedCount;
             const potentialRevenue = remains * sellingPrice;
-            const isLow = item.isLowStock || (closingQuantity <= (item.minLimit || 5));
+            const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
             return {
                 "Item Name": item.name,
                 "Unit Cost": Math.round(sellingPrice).toLocaleString(),
-                "Quantity": `${totalAvailable} ${item.unit || "unit"}`,
+                "Quantity": `${displayedQuantity} ${item.unit || "unit"}`,
                 "Low Limit": `${item.minLimit || 0} ${item.unit || "unit"}`,
                 "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
                 "Consumed": `${consumedCount} Usage`,
@@ -466,7 +466,7 @@ export default function ReportsPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 font-medium text-sm">
                                     {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
-                                        const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+                                        // Removed early isLow calc to defer after remains calculation
 
                                         // Improved Logic: 
                                         // Quantity = Total Available (Closing + Consumed)
@@ -476,11 +476,12 @@ export default function ReportsPage() {
 
                                         const closingQuantity = item.closingStock ?? item.quantity ?? 0;
                                         const consumedCount = item.consumed ?? 0;
-                                        const totalAvailable = closingQuantity + consumedCount;
+                                        const displayedQuantity = closingQuantity;
 
-                                        const totalPurchaseValue = totalAvailable * costPrice; // Value of total stock handled
-                                        const remains = closingQuantity;
+                                        const totalPurchaseValue = displayedQuantity * costPrice; // Value of current stock
+                                        const remains = closingQuantity - consumedCount;
                                         const potentialRevenue = remains * sellingPrice;
+                                        const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
                                         return (
                                             <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/50' : ''}`}>
@@ -488,8 +489,8 @@ export default function ReportsPage() {
                                                 <td className="p-4 text-center text-orange-600 font-mono">
                                                     {Math.round(sellingPrice).toLocaleString()}
                                                 </td>
-                                                <td className="p-4 text-center font-bold text-slate-600">
-                                                    {totalAvailable} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                <td className="p-4 text-center font-bold text-slate-700">
+                                                    {displayedQuantity} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
                                                 </td>
                                                 <td className="p-4 text-center font-medium text-gray-500">
                                                     {(item.minLimit || 0)} <span className="text-xs text-gray-300 font-normal">{item.unit || "unit"}</span>
