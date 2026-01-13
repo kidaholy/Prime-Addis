@@ -127,14 +127,33 @@ export async function POST(request: Request) {
 
     for (const orderItem of items) {
       const menuData = linkedMenuItems.find(m => m._id.toString() === orderItem.menuItemId)
-      if (menuData && menuData.stockItemId && menuData.reportQuantity > 0) {
-        const stockId = (menuData.stockItemId as any)._id.toString()
-        const consumptionAmount = menuData.reportQuantity * orderItem.quantity
 
-        if (stockConsumptionMap.has(stockId)) {
-          stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
-        } else {
-          stockConsumptionMap.set(stockId, consumptionAmount)
+      if (menuData) {
+        // 1. Check Recipe System (Priority)
+        if (menuData.recipe && menuData.recipe.length > 0) {
+          for (const ingredient of menuData.recipe) {
+            if (ingredient.stockItemId) {
+              const stockId = ingredient.stockItemId.toString()
+              const consumptionAmount = (ingredient.quantityRequired || 0) * orderItem.quantity
+
+              if (stockConsumptionMap.has(stockId)) {
+                stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
+              } else {
+                stockConsumptionMap.set(stockId, consumptionAmount)
+              }
+            }
+          }
+        }
+        // 2. Fallback to Legacy System
+        else if (menuData.stockItemId && menuData.reportQuantity > 0) {
+          const stockId = (menuData.stockItemId as any)._id.toString()
+          const consumptionAmount = menuData.reportQuantity * orderItem.quantity
+
+          if (stockConsumptionMap.has(stockId)) {
+            stockConsumptionMap.set(stockId, stockConsumptionMap.get(stockId) + consumptionAmount)
+          } else {
+            stockConsumptionMap.set(stockId, consumptionAmount)
+          }
         }
       }
     }
@@ -218,6 +237,26 @@ export async function POST(request: Request) {
     // Create order
     const order = await Order.create(orderData)
     console.log("✅ Order saved to database:", order._id)
+
+    // 📉 BUSINESS LOGIC: Deduct stock quantities
+    // We already validated availability, now we commit the consumption
+    try {
+      for (const [stockId, amount] of stockConsumptionMap) {
+        const stockItem = await Stock.findById(stockId)
+        if (stockItem) {
+          if (stockItem.trackQuantity) {
+            stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - amount)
+            stockItem.totalConsumed = (stockItem.totalConsumed || 0) + amount
+            await stockItem.save()
+            console.log(`📉 Deducted ${amount} ${stockItem.unit} from ${stockItem.name}`)
+          }
+        }
+      }
+    } catch (stockError) {
+      console.error("❌ Failed to update stock quantities:", stockError)
+      // Note: We don't fail the order here as the order is already created
+      // detailed error logging is crucial for reconciliation
+    }
 
     // Send notifications to kitchen staff
     try {

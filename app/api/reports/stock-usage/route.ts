@@ -73,10 +73,14 @@ export async function GET(request: Request) {
 
         // 2. Fetch Data
         checkTimeout()
+        checkTimeout()
+        // FIX: Include ALL active orders (not just completed) to reflect real-time stock deductions
+        // Stock is deducted at creation, so 'pending', 'preparing', 'ready', 'served', and 'completed'
+        // should all count towards consumption. Only 'cancelled' is excluded.
         const orders = await Order.find({
             createdAt: { $gte: startDate, $lte: endDate },
-            status: "completed"
-        }).select('items totalAmount createdAt waiterName').lean()
+            status: { $ne: "cancelled" }
+        }).select('items totalAmount createdAt waiterName status').lean()
 
         const stockItems = await Stock.find({}).select('name category quantity unit unitCost averagePurchasePrice totalInvestment minLimit status supplier updatedAt').lean()
         const menuItems = await MenuItem.find({}).select('name reportUnit reportQuantity stockItemId recipe').lean()

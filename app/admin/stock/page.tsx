@@ -455,18 +455,17 @@ export default function StockAndExpensesPage() {
 
     return (
         <ProtectedRoute requiredRoles={["admin"]}>
-            <div className="min-h-screen bg-white p-4 md:p-8 font-sans text-slate-800">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen bg-gray-50 p-6">
+                <div className="max-w-7xl mx-auto space-y-6">
                     <BentoNavbar />
 
-                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        {/* Summary & Controls Sidebar */}
-                        <div className="lg:col-span-4 space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-4 space-y-4">
                             {/* Overview Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="bg-[#8B4513] rounded-[40px] p-8 text-white custom-shadow overflow-hidden relative"
+                                className="bg-[#8B4513] rounded-xl p-6 text-white shadow-sm overflow-hidden relative"
                             >
                                 <div className="absolute -right-10 -bottom-10 opacity-10">
                                     {activeTab === 'expenses' ? <TrendingUp className="w-48 h-48" /> : <Package className="w-48 h-48" />}
@@ -518,15 +517,14 @@ export default function StockAndExpensesPage() {
                                 </div>
                             </motion.div>
 
-                            {/* Action Card */}
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="bg-white rounded-[40px] p-8 custom-shadow flex flex-col gap-6"
+                                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 flex flex-col gap-4"
                             >
                                 <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-black text-slate-800 tracking-tight">
+                                    <h2 className="text-lg font-bold text-gray-900">
                                         Physical Operations
                                     </h2>
                                     <div className="p-2 bg-[#8B4513]/10 rounded-xl">
@@ -538,22 +536,21 @@ export default function StockAndExpensesPage() {
                                 </p>
                                 <button
                                     onClick={() => { resetStockForm(); setShowStockForm(true); }}
-                                    className="w-full bg-[#D2691E] text-slate-900 py-4 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[#D2691E]/20 hover:scale-[1.02] active:scale-98 transition-all"
+                                    className="w-full bg-[#D2691E] text-white py-3 rounded-lg font-medium shadow-sm hover:bg-[#8B4513] transition-colors"
                                 >
                                     Add Physical Item
                                 </button>
                             </motion.div>
                         </div>
 
-                        {/* Main Feed Area */}
-                        <div className="lg:col-span-8 space-y-6">
+                        <div className="lg:col-span-8 space-y-4">
                             {/* Header */}
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                                    <h2 className="text-xl font-bold text-gray-900">
                                         📦 Physical Stock & Expenses Management
                                     </h2>
-                                    <p className="text-gray-500 font-medium mt-1">
+                                    <p className="text-gray-600 text-sm mt-1">
                                         Manage inventory items and operational costs
                                     </p>
                                 </div>
@@ -562,14 +559,14 @@ export default function StockAndExpensesPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-[40px] p-8 custom-shadow min-h-[600px]"
+                                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]"
                             >
-                                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                                     <div>
-                                        <h1 className="text-3xl font-black text-slate-900 tracking-tight bubbly-text">
+                                        <h1 className="text-2xl font-bold text-gray-900">
                                             Physical <span className="text-[#8B4513]">Stock</span>
                                         </h1>
-                                        <p className="text-gray-500 font-medium mt-1">
+                                        <p className="text-gray-600 text-sm mt-1">
                                             Itemized list of all physical assets and quantities.
                                         </p>
                                     </div>
@@ -618,6 +615,7 @@ export default function StockAndExpensesPage() {
                                                         <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                                             <th className="pb-4 pl-4">Item Details</th>
                                                             <th className="pb-4">Quantity</th>
+                                                            <th className="pb-4">Low Stock Limit</th>
                                                             <th className="pb-4">Purchase & Selling</th>
                                                             <th className="pb-4">Status</th>
                                                             <th className="pb-4 text-right pr-4">Actions</th>
@@ -658,6 +656,25 @@ export default function StockAndExpensesPage() {
                                                                                 <p className="text-[10px] font-medium text-gray-400">
                                                                                     Min: {item.minLimit} {item.unit}
                                                                                 </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="py-6">
+                                                                        <div>
+                                                                            {item.trackQuantity ? (
+                                                                                <>
+                                                                                    <p className={`text-lg font-bold ${isLow ? 'text-yellow-600' : 'text-gray-600'}`}>
+                                                                                        {(item.minLimit || 0).toLocaleString()}
+                                                                                        <span className="text-xs font-medium text-gray-400 ml-1 uppercase">{item.unit}</span>
+                                                                                    </p>
+                                                                                    {isLow && (
+                                                                                        <p className="text-[10px] font-medium text-yellow-500 mt-1">
+                                                                                            ⚠️ Below threshold
+                                                                                        </p>
+                                                                                    )}
+                                                                                </>
+                                                                            ) : (
+                                                                                <span className="text-gray-300 text-sm">N/A</span>
                                                                             )}
                                                                         </div>
                                                                     </td>
@@ -839,15 +856,15 @@ export default function StockAndExpensesPage() {
                 {/* Stock Modal */}
                 <AnimatePresence>
                     {showStockForm && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={resetStockForm} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative bg-white rounded-[3.5rem] shadow-2xl p-10 md:p-14 max-w-2xl w-full border border-white"
+                                className="relative bg-white rounded-[3.5rem] shadow-2xl max-w-2xl w-full border border-white flex flex-col max-h-[90vh]"
                             >
-                                <div className="flex justify-between items-start mb-10">
+                                <div className="flex justify-between items-start p-10 md:p-14 pb-6">
                                     <div>
                                         <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">Stock <span className="text-[#2d5a41]">Detail</span></h2>
                                         <p className="text-gray-500 mt-2 font-medium">Manage physical inventory items.</p>
@@ -857,179 +874,161 @@ export default function StockAndExpensesPage() {
                                     </button>
                                 </div>
 
-                                <form onSubmit={handleSaveStock} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Item Name</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Coke 500ml"
-                                                value={stockFormData.name}
-                                                onChange={e => setStockFormData({ ...stockFormData, name: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Category</label>
-                                            <select
-                                                value={stockFormData.category}
-                                                onChange={e => setStockFormData({ ...stockFormData, category: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] px-6 py-[22px] outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg appearance-none"
-                                            >
-                                                <option value="meat">Meat & Livestock</option>
-                                                <option value="drinks">Soft Drinks</option>
-                                                <option value="dairy">Dairy & Milk</option>
-                                                <option value="supplies">General Supplies</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Quantity</label>
-                                            <input
-                                                type="number"
-                                                placeholder="0"
-                                                min="0"
-                                                step="0.01"
-                                                value={stockFormData.quantity}
-                                                onChange={e => setStockFormData({ ...stockFormData, quantity: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit & Type</label>
-                                            <select
-                                                value={stockFormData.unit}
-                                                onChange={e => setStockFormData({ ...stockFormData, unit: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] px-6 py-[22px] outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg appearance-none"
-                                                required
-                                            >
-                                                <optgroup label="🏋️ Weight">
-                                                    <option value="kg">Kilograms (kg)</option>
-                                                    <option value="g">Grams (g)</option>
-                                                </optgroup>
-                                                <optgroup label="🥤 Volume">
-                                                    <option value="L">Liters (L)</option>
-                                                    <option value="ml">Milliliters (ml)</option>
-                                                </optgroup>
-                                                <optgroup label="🔢 Count">
-                                                    <option value="pcs">Pieces (pcs)</option>
-                                                    <option value="bottles">Bottles</option>
-                                                    <option value="cans">Cans</option>
-                                                    <option value="boxes">Boxes</option>
-                                                    <option value="bags">Bags</option>
-                                                </optgroup>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Total Purchase Cost (Br)</label>
-                                            <input
-                                                type="number"
-                                                placeholder="Total amount paid"
-                                                min="0"
-                                                step="0.01"
-                                                value={stockFormData.totalPurchaseCost}
-                                                onChange={e => setStockFormData({ ...stockFormData, totalPurchaseCost: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💵 Selling Price (Br)</label>
-                                            <input
-                                                type="number"
-                                                placeholder="What you charge"
-                                                min="0"
-                                                step="0.01"
-                                                value={stockFormData.unitCost}
-                                                onChange={e => setStockFormData({ ...stockFormData, unitCost: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Minimum Stock Alert</label>
-                                            <input
-                                                type="number"
-                                                placeholder="Alert when below this amount"
-                                                min="0"
-                                                step="0.01"
-                                                value={stockFormData.minLimit}
-                                                onChange={e => setStockFormData({ ...stockFormData, minLimit: e.target.value })}
-                                                className="w-full bg-gray-50 border-none rounded-[1.5rem] p-6 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-xl"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💸 Total Investment</label>
-                                            <div className="w-full bg-red-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-red-600">
-                                                {(Number(stockFormData.totalPurchaseCost) || 0).toLocaleString()} Br
+                                <form onSubmit={handleSaveStock} className="flex flex-col flex-1 overflow-hidden">
+                                    {/* Scrollable Content Area */}
+                                    <div className="flex-1 overflow-y-auto px-10 md:px-14 space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Item Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Coke 500ml"
+                                                    value={stockFormData.name}
+                                                    onChange={e => setStockFormData({ ...stockFormData, name: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Category</label>
+                                                <select
+                                                    value={stockFormData.category}
+                                                    onChange={e => setStockFormData({ ...stockFormData, category: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] px-5 py-[18px] outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg appearance-none"
+                                                >
+                                                    <option value="meat">Meat & Livestock</option>
+                                                    <option value="drinks">Soft Drinks</option>
+                                                    <option value="dairy">Dairy & Milk</option>
+                                                    <option value="supplies">General Supplies</option>
+                                                </select>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Potential Revenue</label>
-                                            <div className="w-full bg-green-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-green-600">
-                                                {((Number(stockFormData.quantity) || 0) * (Number(stockFormData.unitCost) || 0)).toLocaleString()} Br
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">📊 Avg Cost/Unit</label>
-                                            <div className="w-full bg-blue-50 border-none rounded-[1.5rem] p-6 font-black text-xl text-blue-600">
-                                                {Number(stockFormData.quantity) > 0 ?
-                                                    ((Number(stockFormData.totalPurchaseCost) || 0) / Number(stockFormData.quantity)).toFixed(2)
-                                                    : '0.00'} Br
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {/* Profit Margin Display */}
-                                    {Number(stockFormData.totalPurchaseCost) > 0 && Number(stockFormData.unitCost) > 0 && Number(stockFormData.quantity) > 0 && (
-                                        <div className="bg-blue-50 rounded-[1.5rem] p-6 border border-blue-100">
-                                            <div className="flex justify-between items-center">
-                                                <div>
-                                                    <p className="text-sm font-black text-blue-800">Profit Analysis</p>
-                                                    <p className="text-xs text-blue-600">Per unit profit and margin percentage</p>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Quantity</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="0"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={stockFormData.quantity}
+                                                    onChange={e => setStockFormData({ ...stockFormData, quantity: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Unit</label>
+                                                <select
+                                                    value={stockFormData.unit}
+                                                    onChange={e => setStockFormData({ ...stockFormData, unit: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] px-5 py-[18px] outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg appearance-none"
+                                                    required
+                                                >
+                                                    <optgroup label="🏋️ Weight">
+                                                        <option value="kg">Kilogram</option>
+                                                        <option value="g">Gram</option>
+                                                    </optgroup>
+                                                    <optgroup label="🥤 Volume">
+                                                        <option value="L">Liter</option>
+                                                        <option value="ml">Milliliter</option>
+                                                    </optgroup>
+                                                    <optgroup label="🔢 Count">
+                                                        <option value="pcs">Pieces</option>
+                                                        <option value="bottles">Bottles</option>
+                                                        <option value="cans">Cans</option>
+                                                        <option value="boxes">Boxes</option>
+                                                        <option value="bags">Bags</option>
+                                                    </optgroup>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Purchase Cost</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Total paid"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={stockFormData.totalPurchaseCost}
+                                                    onChange={e => setStockFormData({ ...stockFormData, totalPurchaseCost: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💵 Selling Price</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Per unit"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={stockFormData.unitCost}
+                                                    onChange={e => setStockFormData({ ...stockFormData, unitCost: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Min Alert</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Low stock"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={stockFormData.minLimit}
+                                                    onChange={e => setStockFormData({ ...stockFormData, minLimit: e.target.value })}
+                                                    className="w-full bg-gray-50 border-none rounded-[1.5rem] p-5 outline-none focus:ring-4 focus:ring-[#2d5a41]/10 font-black text-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💸 Investment</label>
+                                                <div className="w-full bg-red-50 border-none rounded-[1.5rem] p-5 font-black text-lg text-red-600">
+                                                    {(Number(stockFormData.totalPurchaseCost) || 0).toLocaleString()} Br
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-2xl font-black text-blue-800">
-                                                        {((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) || 0).toLocaleString()} Br
-                                                    </p>
-                                                    <p className="text-sm font-bold text-blue-600">
-                                                        {Number(stockFormData.unitCost) > 0 ?
-                                                            (((Number(stockFormData.unitCost) - (Number(stockFormData.totalPurchaseCost) / Number(stockFormData.quantity))) / Number(stockFormData.unitCost)) * 100).toFixed(1)
-                                                            : 0}% margin
-                                                    </p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">💰 Revenue</label>
+                                                <div className="w-full bg-green-50 border-none rounded-[1.5rem] p-5 font-black text-lg text-green-600">
+                                                    {((Number(stockFormData.quantity) || 0) * (Number(stockFormData.unitCost) || 0)).toLocaleString()} Br
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">📊 Avg/Unit</label>
+                                                <div className="w-full bg-blue-50 border-none rounded-[1.5rem] p-5 font-black text-lg text-blue-600">
+                                                    {Number(stockFormData.quantity) > 0 ?
+                                                        ((Number(stockFormData.totalPurchaseCost) || 0) / Number(stockFormData.quantity)).toFixed(2)
+                                                        : '0.00'} Br
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
 
-                                    <div className="flex flex-wrap gap-8 items-center py-4">
-                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                checked={stockFormData.trackQuantity}
-                                                onChange={e => setStockFormData({ ...stockFormData, trackQuantity: e.target.checked })}
-                                                className="w-5 h-5 rounded-lg border-2 border-gray-200 text-[#2d5a41] focus:ring-[#2d5a41] transition-all"
-                                            />
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-800">Track Quantities</span>
-                                        </label>
-                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                checked={stockFormData.showStatus}
-                                                onChange={e => setStockFormData({ ...stockFormData, showStatus: e.target.checked })}
-                                                className="w-5 h-5 rounded-lg border-2 border-gray-200 text-[#2d5a41] focus:ring-[#2d5a41] transition-all"
-                                            />
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-800">Public Status</span>
-                                        </label>
+                                        <div className="flex flex-wrap gap-6 items-center py-2">
+                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={stockFormData.trackQuantity}
+                                                    onChange={e => setStockFormData({ ...stockFormData, trackQuantity: e.target.checked })}
+                                                    className="w-5 h-5 rounded-lg border-2 border-gray-200 text-[#2d5a41] focus:ring-[#2d5a41] transition-all"
+                                                />
+                                                <span className="text-xs font-black uppercase tracking-widest text-slate-800">Track Quantities</span>
+                                            </label>
+                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={stockFormData.showStatus}
+                                                    onChange={e => setStockFormData({ ...stockFormData, showStatus: e.target.checked })}
+                                                    className="w-5 h-5 rounded-lg border-2 border-gray-200 text-[#2d5a41] focus:ring-[#2d5a41] transition-all"
+                                                />
+                                                <span className="text-xs font-black uppercase tracking-widest text-slate-800">Public Status</span>
+                                            </label>
+                                        </div>
                                     </div>
 
-                                    <div className="flex gap-4 pt-6">
-                                        <button type="button" onClick={resetStockForm} className="flex-1 py-6 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
-                                        <button type="submit" disabled={saveLoading} className="flex-[1.5] py-6 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                    {/* Fixed Footer with Buttons */}
+                                    <div className="flex gap-4 px-10 md:px-14 py-6 border-t border-gray-100 bg-white rounded-b-[3.5rem]">
+                                        <button type="button" onClick={resetStockForm} className="flex-1 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
+                                        <button type="submit" disabled={saveLoading} className="flex-[1.5] py-5 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
                                             {saveLoading ? "Saving..." : (editingStock ? "Update Stock" : "Add to Inventory")}
                                         </button>
                                     </div>

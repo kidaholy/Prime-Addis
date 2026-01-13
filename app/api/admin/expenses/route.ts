@@ -176,16 +176,32 @@ export async function POST(request: Request) {
                         }
                         await stockItem.save()
                     } else {
-                        // Create new stock item
+                        // Create new stock item with all required fields
+                        const unit = (item.unit || 'pcs').toLowerCase()
+                        let unitType = 'count'
+                        if (['kg', 'g', 'gram', 'kilogram'].includes(unit)) {
+                            unitType = 'weight'
+                        } else if (['l', 'ml', 'liter', 'litre', 'milliliter'].includes(unit)) {
+                            unitType = 'volume'
+                        }
+
+                        const unitCost = item.quantity > 0 ? (item.amount / item.quantity) : 0
+
                         await Stock.create({
                             name: item.name,
                             category: 'supplies',
                             quantity: item.quantity,
                             unit: item.unit || 'pcs',
-                            unitCost: item.quantity > 0 ? (item.amount / item.quantity) : 0,
+                            unitType,
+                            minLimit: 0,
+                            averagePurchasePrice: unitCost,
+                            unitCost,
                             trackQuantity: true,
                             showStatus: true,
-                            status: 'active'
+                            status: 'active',
+                            totalPurchased: item.quantity,
+                            totalConsumed: 0,
+                            totalInvestment: item.amount || 0
                         })
                     }
                 }

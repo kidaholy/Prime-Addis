@@ -152,17 +152,20 @@ export default function ReportsPage() {
         const data = (stockUsageData?.stockAnalysis || stockItems || []).map((item: any) => {
             const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
             const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
-            const currentQuantity = item.closingStock ?? item.quantity ?? 0;
-            const totalPurchaseValue = currentQuantity * costPrice;
+            const closingQuantity = item.closingStock ?? item.quantity ?? 0;
             const consumedCount = item.consumed ?? 0;
-            const remains = currentQuantity - consumedCount;
+            const totalAvailable = closingQuantity + consumedCount;
+
+            const totalPurchaseValue = totalAvailable * costPrice;
+            const remains = totalAvailable - consumedCount;
             const potentialRevenue = remains * sellingPrice;
-            const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+            const isLow = item.isLowStock || (closingQuantity <= (item.minLimit || 5));
 
             return {
                 "Item Name": item.name,
                 "Unit Cost": Math.round(sellingPrice).toLocaleString(),
-                "Quantity": `${currentQuantity} ${item.unit || "unit"}`,
+                "Quantity": `${totalAvailable} ${item.unit || "unit"}`,
+                "Low Limit": `${item.minLimit || 0} ${item.unit || "unit"}`,
                 "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
                 "Consumed": `${consumedCount} Usage`,
                 "Remains": `${remains} ${item.unit || "unit"}`,
@@ -173,7 +176,7 @@ export default function ReportsPage() {
         ReportExporter.exportToWord({
             title: "Inventory Investment Report",
             period: timeRange,
-            headers: ["Item Name", "Unit Cost", "Quantity", "Total Purchase", "Consumed", "Remains", "Potential Rev.", "Status"],
+            headers: ["Item Name", "Unit Cost", "Quantity", "Low Limit", "Total Purchase", "Consumed", "Remains", "Potential Rev.", "Status"],
             data,
             metadata: { companyName: settings.app_name || "Prime Addis" }
         })
@@ -248,26 +251,25 @@ export default function ReportsPage() {
 
     return (
         <ProtectedRoute requiredRoles={["admin"]}>
-            <div className="min-h-screen bg-gray-50 font-sans text-slate-800">
-                <div className="max-w-[1600px] mx-auto p-6">
+            <div className="min-h-screen bg-gray-50 p-6">
+                <div className="max-w-7xl mx-auto space-y-6">
                     <BentoNavbar />
 
-                    <div className="mt-8 flex flex-col gap-8">
-
-                        {/* 1. Header & Controls */}
-                        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[25px] custom-shadow">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <h1 className="text-3xl font-black text-slate-900 bubbly-text">Business Intelligence</h1>
-                                <p className="text-gray-500 font-medium">Consolidated financial and operational reports</p>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-1">Business Intelligence</h1>
+                                <p className="text-gray-600">Consolidated financial and operational reports</p>
                             </div>
 
-                            <div className="flex flex-wrap gap-4 items-center mt-4 md:mt-0">
-                                <div className="flex bg-gray-100 p-1.5 rounded-[20px]">
+                            <div className="flex flex-wrap gap-3 items-center">
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
                                     {["today", "week", "month", "year"].map((r) => (
                                         <button
                                             key={r}
                                             onClick={() => setTimeRange(r)}
-                                            className={`px-6 py-2 rounded-[16px] text-sm font-bold capitalize transition-all ${timeRange === r ? "bg-[#8B4513] text-white shadow-md" : "text-gray-500 hover:text-gray-700"
+                                            className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${timeRange === r ? "bg-[#8B4513] text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
                                                 }`}
                                         >
                                             {r}
@@ -277,239 +279,248 @@ export default function ReportsPage() {
 
                                 <button
                                     onClick={exportFullReport}
-                                    className="bg-[#D2691E] text-white px-6 py-3 rounded-[20px] font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+                                    className="bg-[#8B4513] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-[#D2691E] transition-colors flex items-center gap-2"
                                 >
-                                    <Download size={18} /> Export Full Report
+                                    <Download size={16} /> Export Report
                                 </button>
 
                                 <button
                                     onClick={() => window.print()}
-                                    className="bg-white border-2 border-slate-200 text-slate-600 px-4 py-3 rounded-[20px] hover:bg-slate-50 transition-colors"
+                                    className="bg-white border border-gray-300 text-gray-600 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
-                                    <Printer size={18} />
+                                    <Printer size={16} />
                                 </button>
                             </div>
                         </div>
+                    </div>
 
-                        {/* 2. Financial Summary (Net Worth) Table */}
-                        <div className="bg-white rounded-[30px] p-8 custom-shadow border-t-[10px] border-[#8B4513]">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-[#8B4513] rounded-full flex items-center justify-center text-white">
-                                        <FileText size={20} />
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-800">Financial Summary</h2>
+                    {/* Financial Summary */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 bg-[#8B4513] rounded-full flex items-center justify-center text-white">
+                                    <FileText size={20} />
                                 </div>
+                                <h2 className="text-2xl font-bold text-slate-800">Financial Summary</h2>
+                            </div>
+                            <button
+                                onClick={exportFinancialReport}
+                                className="flex items-center gap-2 text-[#8B4513] hover:text-[#D2691E] font-bold text-sm transition-colors"
+                            >
+                                <Download size={16} /> Export Section
+                            </button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold tracking-wider border-b border-gray-200">
+                                    <tr>
+                                        <th className="p-4">Metric</th>
+                                        <th className="p-4 text-center">Type</th>
+                                        <th className="p-4 text-right">Amount</th>
+                                        <th className="p-4 hidden md:table-cell">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 font-medium">
+                                    <tr className="hover:bg-amber-50/50 transition-colors">
+                                        <td className="p-4 text-lg text-slate-700">Total Revenue</td>
+                                        <td className="p-4 text-center"><span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-xs font-bold">INCOME</span></td>
+                                        <td className="p-4 text-right text-lg font-bold text-green-600">+{totalRevenue.toLocaleString()} ETB</td>
+                                        <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Total completed orders value</td>
+                                    </tr>
+                                    <tr className="hover:bg-amber-50/50 transition-colors">
+                                        <td className="p-4 text-lg text-slate-700">Total Investment</td>
+                                        <td className="p-4 text-center"><span className="bg-red-100 text-red-700 py-1 px-3 rounded-full text-xs font-bold">EXPENSE</span></td>
+                                        <td className="p-4 text-right text-lg font-bold text-red-600">-{totalInvestment.toLocaleString()} ETB</td>
+                                        <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Purchases + Operational Expenses</td>
+                                    </tr>
+                                    <tr className="bg-gray-50 border-t border-gray-200">
+                                        <td className="p-4 text-lg font-bold text-gray-900">NET WORTH (Profit)</td>
+                                        <td className="p-4 text-center"><span className="bg-[#8B4513] text-white py-1 px-3 rounded-full text-xs font-bold">RESULT</span></td>
+                                        <td className={`p-4 text-right text-2xl font-black ${netWorth >= 0 ? "text-[#8B4513]" : "text-red-600"}`}>
+                                            {netWorth.toLocaleString()} ETB
+                                        </td>
+                                        <td className="p-4 text-[#D2691E] font-bold text-sm hidden md:table-cell">Revenue - Total Investment</td>
+                                    </tr>
+                                    {/* Asset Section Separate */}
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                    {/* Order History */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 bg-[#D2691E] rounded-full flex items-center justify-center text-white">
+                                    <ShoppingCart size={20} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-800">Order History</h2>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{filteredOrders.length} Orders</div>
                                 <button
-                                    onClick={exportFinancialReport}
-                                    className="flex items-center gap-2 text-[#8B4513] hover:text-[#D2691E] font-bold text-sm transition-colors"
+                                    onClick={exportOrdersReport}
+                                    className="flex items-center gap-2 text-[#D2691E] hover:text-[#8B4513] font-bold text-sm transition-colors"
                                 >
-                                    <Download size={16} /> Export Section
+                                    <Download size={16} /> Export
                                 </button>
                             </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-[#f8f5f2] text-[#8B4513] uppercase text-xs font-black tracking-wider border-b-2 border-[#8B4513]">
-                                        <tr>
-                                            <th className="p-4 rounded-tl-[15px]">Metric</th>
-                                            <th className="p-4 text-center">Type</th>
-                                            <th className="p-4 text-right">Amount</th>
-                                            <th className="p-4 rounded-tr-[15px] hidden md:table-cell">Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 font-medium">
-                                        <tr className="hover:bg-amber-50/50 transition-colors">
-                                            <td className="p-4 text-lg text-slate-700">Total Revenue</td>
-                                            <td className="p-4 text-center"><span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-xs font-bold">INCOME</span></td>
-                                            <td className="p-4 text-right text-lg font-bold text-green-600">+{totalRevenue.toLocaleString()} ETB</td>
-                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Total completed orders value</td>
-                                        </tr>
-                                        <tr className="hover:bg-amber-50/50 transition-colors">
-                                            <td className="p-4 text-lg text-slate-700">Total Investment</td>
-                                            <td className="p-4 text-center"><span className="bg-red-100 text-red-700 py-1 px-3 rounded-full text-xs font-bold">EXPENSE</span></td>
-                                            <td className="p-4 text-right text-lg font-bold text-red-600">-{totalInvestment.toLocaleString()} ETB</td>
-                                            <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Purchases + Operational Expenses</td>
-                                        </tr>
-                                        <tr className="bg-[#fffbf7] border-t-2 border-[#D2691E]">
-                                            <td className="p-4 text-xl font-black text-[#8B4513]">NET WORTH (Profit)</td>
-                                            <td className="p-4 text-center"><span className="bg-[#8B4513] text-white py-1 px-3 rounded-full text-xs font-bold">RESULT</span></td>
-                                            <td className={`p-4 text-right text-2xl font-black ${netWorth >= 0 ? "text-[#8B4513]" : "text-red-600"}`}>
-                                                {netWorth.toLocaleString()} ETB
-                                            </td>
-                                            <td className="p-4 text-[#D2691E] font-bold text-sm hidden md:table-cell">Revenue - Total Investment</td>
-                                        </tr>
-                                        {/* Asset Section Separate */}
-
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
 
-
-                        {/* 3. Orders Section Table */}
-                        <div className="bg-white rounded-[30px] p-8 custom-shadow">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-[#D2691E] rounded-full flex items-center justify-center text-white">
-                                        <ShoppingCart size={20} />
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-800">Order History</h2>
-                                </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{filteredOrders.length} Orders</div>
-                                    <button
-                                        onClick={exportOrdersReport}
-                                        className="flex items-center gap-2 text-[#D2691E] hover:text-[#8B4513] font-bold text-sm transition-colors"
-                                    >
-                                        <Download size={16} /> Export
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
-                                        <tr>
-                                            <th className="p-4 w-1/3">Item Names</th>
-                                            <th className="p-4 text-center">Table</th>
-                                            <th className="p-4 text-center">Items (Qty)</th>
-                                            <th className="p-4 text-right">Total Payment</th>
-                                            <th className="p-4 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 font-medium text-sm">
-                                        {filteredOrders.length === 0 ? (
-                                            <tr><td colSpan={5} className="p-8 text-center text-gray-400 italic">No orders found for this period.</td></tr>
-                                        ) : (
-                                            filteredOrders.map((order) => {
-                                                const itemNames = order.items.map((i: any) => i.name).join(", ")
-                                                const totalQty = order.items.reduce((acc: number, i: any) => acc + (i.quantity || 0), 0)
-
-                                                return (
-                                                    <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="p-4 text-slate-700">
-                                                            <div className="line-clamp-2" title={itemNames}>
-                                                                {itemNames}
-                                                            </div>
-                                                            <div className="text-[10px] text-gray-400 font-mono mt-1">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            {order.tableNumber ? (
-                                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold">T-{order.tableNumber}</span>
-                                                            ) : (
-                                                                <span className="text-gray-300">-</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-4 text-center font-bold text-slate-600">{totalQty}</td>
-                                                        <td className="p-4 text-right font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} ETB</td>
-                                                        <td className="p-4 text-center">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                                                    'bg-amber-100 text-amber-700'
-                                                                }`}>
-                                                                {order.status}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* 4. Stock & Inventory Section Table */}
-                        <div className="bg-white rounded-[30px] p-8 custom-shadow">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white">
-                                        <Clock size={20} />
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-800">Inventory Investment Details</h2>
-                                </div>
-
-                                <div className="flex items-center gap-6">
-                                    {stockUsageData && (
-                                        <div className="text-sm font-bold text-red-500 flex items-center gap-1">
-                                            <AlertTriangle size={16} />
-                                            {stockUsageData.summary.lowStockItemsCount} Low Stock
-                                        </div>
-                                    )}
-                                    <button
-                                        onClick={exportInventoryReport}
-                                        className="flex items-center gap-2 text-purple-600 hover:text-purple-800 font-bold text-sm transition-colors"
-                                    >
-                                        <Download size={16} /> Export
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar border rounded-[20px]">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
-                                        <tr>
-                                            <th className="p-4">Item Name</th>
-                                            <th className="p-4 text-center text-orange-600">Unit Cost</th>
-                                            <th className="p-4 text-center">Quantity</th>
-                                            <th className="p-4 text-center text-green-600">Total Purchase</th>
-                                            <th className="p-4 text-center text-red-500">Consumed</th>
-                                            <th className="p-4 text-center">Remains</th>
-                                            <th className="p-4 text-right text-blue-600">Potential Rev.</th>
-                                            <th className="p-4 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 font-medium text-sm">
-                                        {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
-                                            const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
-
-                                            // Simplified - show current stock quantities
-                                            const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
-                                            const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
-                                            const currentQuantity = item.closingStock ?? item.quantity ?? 0;
-                                            const totalPurchaseValue = currentQuantity * costPrice;
-                                            const consumedCount = item.consumed ?? 0;
-                                            const remains = currentQuantity - consumedCount;
-                                            const potentialRevenue = remains * sellingPrice;
+                        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                    <tr>
+                                        <th className="p-4 w-1/3">Item Names</th>
+                                        <th className="p-4 text-center">Table</th>
+                                        <th className="p-4 text-center">Items (Qty)</th>
+                                        <th className="p-4 text-right">Total Payment</th>
+                                        <th className="p-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                    {filteredOrders.length === 0 ? (
+                                        <tr><td colSpan={5} className="p-8 text-center text-gray-400 italic">No orders found for this period.</td></tr>
+                                    ) : (
+                                        filteredOrders.map((order) => {
+                                            const itemNames = order.items.map((i: any) => i.name).join(", ")
+                                            const totalQty = order.items.reduce((acc: number, i: any) => acc + (i.quantity || 0), 0)
 
                                             return (
-                                                <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/50' : ''}`}>
-                                                    <td className="p-4 font-bold text-slate-700">{item.name}</td>
-                                                    <td className="p-4 text-center text-orange-600 font-mono">
-                                                        {Math.round(sellingPrice).toLocaleString()}
-                                                    </td>
-                                                    <td className="p-4 text-center font-bold text-slate-600">
-                                                        {currentQuantity} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
-                                                    </td>
-                                                    <td className="p-4 text-center font-bold text-green-600">
-                                                        {totalPurchaseValue.toLocaleString()} ETB
-                                                        <div className="text-[10px] text-gray-400 font-normal">@{Math.round(costPrice).toLocaleString()} Avg</div>
-                                                    </td>
-                                                    <td className="p-4 text-center font-bold text-red-500">
-                                                        {consumedCount} <span className="text-xs text-red-300 font-normal">Usage</span>
-                                                    </td>
-                                                    <td className="p-4 text-center font-bold text-slate-700">
-                                                        {remains} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
-                                                    </td>
-                                                    <td className="p-4 text-right font-bold text-blue-600">
-                                                        {potentialRevenue.toLocaleString()} ETB
+                                                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="p-4 text-slate-700">
+                                                        <div className="line-clamp-2" title={itemNames}>
+                                                            {itemNames}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-400 font-mono mt-1">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                                     </td>
                                                     <td className="p-4 text-center">
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${isLow ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                                                        {order.tableNumber ? (
+                                                            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold">T-{order.tableNumber}</span>
+                                                        ) : (
+                                                            <span className="text-gray-300">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-center font-bold text-slate-600">{totalQty}</td>
+                                                    <td className="p-4 text-right font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} ETB</td>
+                                                    <td className="p-4 text-center">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                                                'bg-amber-100 text-amber-700'
                                                             }`}>
-                                                            {isLow ? 'Low Stock' : 'OK'}
+                                                            {order.status}
                                                         </span>
                                                     </td>
                                                 </tr>
                                             )
-                                        })}
-                                    </tbody>
-                                </table>
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Inventory Investment */}
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white">
+                                    <Clock size={20} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-800">Inventory Investment Details</h2>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                                {stockUsageData && (
+                                    <div className="text-sm font-bold text-red-500 flex items-center gap-1">
+                                        <AlertTriangle size={16} />
+                                        {stockUsageData.summary.lowStockItemsCount} Low Stock
+                                    </div>
+                                )}
+                                <button
+                                    onClick={exportInventoryReport}
+                                    className="flex items-center gap-2 text-purple-600 hover:text-purple-800 font-bold text-sm transition-colors"
+                                >
+                                    <Download size={16} /> Export
+                                </button>
                             </div>
                         </div>
 
+                        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                    <tr>
+                                        <th className="p-4">Item Name</th>
+                                        <th className="p-4 text-center text-orange-600">Unit Cost</th>
+                                        <th className="p-4 text-center">Quantity</th>
+                                        <th className="p-4 text-center">Low Limit</th>
+                                        <th className="p-4 text-center text-green-600">Total Purchase</th>
+                                        <th className="p-4 text-center text-red-500">Consumed</th>
+                                        <th className="p-4 text-center">Remains</th>
+                                        <th className="p-4 text-right text-blue-600">Potential Rev.</th>
+                                        <th className="p-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                    {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
+                                        const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+
+                                        // Improved Logic: 
+                                        // Quantity = Total Available (Closing + Consumed)
+                                        // Remains = Closing Stock
+                                        const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
+                                        const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
+
+                                        const closingQuantity = item.closingStock ?? item.quantity ?? 0;
+                                        const consumedCount = item.consumed ?? 0;
+                                        const totalAvailable = closingQuantity + consumedCount;
+
+                                        const totalPurchaseValue = totalAvailable * costPrice; // Value of total stock handled
+                                        const remains = closingQuantity;
+                                        const potentialRevenue = remains * sellingPrice;
+
+                                        return (
+                                            <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/50' : ''}`}>
+                                                <td className="p-4 font-bold text-slate-700">{item.name}</td>
+                                                <td className="p-4 text-center text-orange-600 font-mono">
+                                                    {Math.round(sellingPrice).toLocaleString()}
+                                                </td>
+                                                <td className="p-4 text-center font-bold text-slate-600">
+                                                    {totalAvailable} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                </td>
+                                                <td className="p-4 text-center font-medium text-gray-500">
+                                                    {(item.minLimit || 0)} <span className="text-xs text-gray-300 font-normal">{item.unit || "unit"}</span>
+                                                </td>
+                                                <td className="p-4 text-center font-bold text-green-600">
+                                                    {totalPurchaseValue.toLocaleString()} ETB
+                                                    <div className="text-[10px] text-gray-400 font-normal">@{Math.round(costPrice).toLocaleString()} Avg</div>
+                                                </td>
+                                                <td className="p-4 text-center font-bold text-red-500">
+                                                    {consumedCount} <span className="text-xs text-red-300 font-normal">Usage</span>
+                                                </td>
+                                                <td className="p-4 text-center font-bold text-slate-700">
+                                                    {remains} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                </td>
+                                                <td className="p-4 text-right font-bold text-blue-600">
+                                                    {potentialRevenue.toLocaleString()} ETB
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${isLow ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                                                        }`}>
+                                                        {isLow ? 'Low Stock' : 'OK'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </ProtectedRoute>

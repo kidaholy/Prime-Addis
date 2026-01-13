@@ -247,15 +247,15 @@ export default function AdminSettingsPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <BentoNavbar />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Sidebar - Preview */}
-            <div className="lg:col-span-4 space-y-6 sticky top-4">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h2 className="text-2xl font-bold mb-6 bubbly-text">{t("adminSettings.logoPreview")}</h2>
+            <div className="lg:col-span-4 space-y-4 sticky top-4">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">{t("adminSettings.logoPreview")}</h2>
 
                 <div className="space-y-6">
                   <div className="text-center">
@@ -300,7 +300,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
+              <div className="bg-[#D2691E] rounded-xl p-6 shadow-sm overflow-hidden relative">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold text-[#1a1a1a] mb-4 flex items-center gap-2">
                     <Info className="w-5 h-5" />
@@ -328,9 +328,8 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* Main Content - Settings Form */}
             <div className="lg:col-span-8">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
 
                 <div className="flex gap-4 mb-8 border-b border-gray-100 pb-4">
                   <button

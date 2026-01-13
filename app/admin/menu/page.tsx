@@ -420,45 +420,45 @@ export default function AdminMenuPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <BentoNavbar />
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Control Sidebar */}
-            <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-6 sticky top-4">
+            <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-4 sticky top-4">
               {/* Add New Button Card */}
-              <div className="bg-white rounded-[40px] p-6 custom-shadow">
-                <h2 className="text-2xl font-bold mb-4 bubbly-text">{t("adminMenu.actions")}</h2>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">{t("adminMenu.actions")}</h2>
                 <button
                   onClick={() => { resetForm(); setShowCreateForm(true); }}
-                  className="w-full bg-[#D2691E] text-white font-bold py-4 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 bubbly-button mb-3"
+                  className="w-full bg-[#D2691E] text-white font-medium py-3 rounded-lg shadow-sm hover:bg-[#8B4513] transition-colors mb-3"
                 >
                   ➕ {t("adminMenu.addNewItem")}
                 </button>
                 <button
                   onClick={() => setShowCategoryManager(true)}
-                  className="w-full bg-[#8B4513] text-white font-bold py-3 rounded-full custom-shadow transform transition-transform hover:scale-105 active:scale-95 text-sm mb-3"
+                  className="w-full bg-[#8B4513] text-white font-medium py-2.5 rounded-lg shadow-sm hover:bg-[#6B3410] transition-colors text-sm mb-3"
                 >
                   📁 {t("adminMenu.manageCategories")}
                 </button>
                 <button
                   onClick={handleExportCSV}
-                  className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-full border border-slate-200 transform transition-transform hover:scale-105 active:scale-95 text-sm mb-3"
+                  className="w-full bg-gray-100 text-gray-700 font-medium py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm mb-3"
                 >
                   📥 Export Menu (CSV)
                 </button>
                 <button
                   onClick={() => { setSwapMode(!swapMode); setSwapSourceId(null); }}
-                  className={`w-full font-bold py-3 rounded-full border transform transition-transform hover:scale-105 active:scale-95 text-sm ${swapMode ? "bg-purple-600 text-white border-purple-600 animate-pulse" : "bg-white text-purple-600 border-purple-200"}`}
+                  className={`w-full font-medium py-2.5 rounded-lg border text-sm transition-colors ${swapMode ? "bg-purple-600 text-white border-purple-600" : "bg-white text-purple-600 border-purple-200 hover:bg-purple-50"}`}
                 >
                   🔄 {swapMode ? "Cancel Swap" : "Swap IDs"}
                 </button>
               </div>
 
               {/* Filters Card */}
-              <div className="bg-[#8B4513] rounded-[40px] p-6 custom-shadow text-white">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <div className="bg-[#8B4513] rounded-xl p-6 shadow-sm text-white">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <span>🔍</span> {t("adminMenu.filters")}
                 </h2>
                 <div className="space-y-4">
@@ -489,15 +489,14 @@ export default function AdminMenuPage() {
               </div>
             </div>
 
-            {/* Menu List Area */}
             <div className="md:col-span-8 lg:col-span-9">
-              <div className="bg-white rounded-[40px] p-6 md:p-8 custom-shadow min-h-[600px]">
-                <div className="flex justify-between items-center mb-8">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
+                <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h1 className="text-3xl font-bold bubbly-text">{t("adminMenu.title")}</h1>
-                    <p className="text-gray-500 font-medium">{t("adminMenu.subtitle")}</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t("adminMenu.title")}</h1>
+                    <p className="text-gray-600 text-sm">{t("adminMenu.subtitle")}</p>
                   </div>
-                  <div className="bg-white px-4 py-2 rounded-full font-bold text-[#8B4513] text-sm">
+                  <div className="bg-gray-100 px-3 py-1.5 rounded-lg font-medium text-[#8B4513] text-sm">
                     {filteredItems.length} {t("adminMenu.itemsFound")}
                   </div>
                 </div>
@@ -516,7 +515,7 @@ export default function AdminMenuPage() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredItems.map((item) => (
-                      <div key={item._id} className="bg-gray-50 rounded-[35px] overflow-hidden border border-gray-100 hover:shadow-xl transition-all group flex flex-col">
+                      <div key={item._id} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group flex flex-col">
                         {/* Item Image */}
                         <div className="h-40 bg-gray-200 relative overflow-hidden">
                           {item.image ? (
@@ -577,10 +576,10 @@ export default function AdminMenuPage() {
         {/* Create/Edit Modal */}
         {showCreateForm && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-[50px] p-8 md:p-10 custom-shadow max-w-2xl w-full max-h-[90vh] overflow-y-auto transform animate-bounce-custom relative">
-              <button onClick={resetForm} className="absolute top-8 right-8 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
+            <div className="bg-white rounded-xl p-6 md:p-8 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+              <button onClick={resetForm} className="absolute top-6 right-6 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-medium text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
 
-              <h2 className="text-3xl font-bold mb-8 bubbly-text">{editingItem ? t("adminMenu.updateItem") : t("adminMenu.newItem")}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingItem ? t("adminMenu.updateItem") : t("adminMenu.newItem")}</h2>
 
               <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">

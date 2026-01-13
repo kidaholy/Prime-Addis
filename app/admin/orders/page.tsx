@@ -208,15 +208,15 @@ export default function AdminOrdersPage() {
 
   return (
     <ProtectedRoute requiredRoles={["admin"]}>
-      <div className="min-h-screen bg-white p-4 font-sans text-slate-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <BentoNavbar />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Sidebar - Filters & Stats */}
-            <div className="lg:col-span-3 flex flex-col gap-6 sticky top-4">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow">
-                <h2 className="text-2xl font-bold mb-6 bubbly-text">{t("adminOrders.title")}</h2>
+            <div className="lg:col-span-3 flex flex-col gap-4 sticky top-4">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{t("adminOrders.title")}</h2>
                 <div className="space-y-3">
                   {[
                     { id: "all", label: t("adminOrders.allOrders"), count: stats.all, emoji: "📋" },
@@ -228,9 +228,9 @@ export default function AdminOrdersPage() {
                     <button
                       key={item.id}
                       onClick={() => setFilter(item.id)}
-                      className={`w-full flex items-center justify-between p-4 rounded-[25px] font-bold transition-all duration-300 ${filter === item.id
-                        ? "bg-[#8B4513] text-white shadow-lg scale-105"
-                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      className={`w-full flex items-center justify-between p-3 rounded-lg font-medium transition-all ${filter === item.id
+                        ? "bg-[#8B4513] text-white shadow-sm"
+                        : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                         }`}
                     >
                       <span className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-[#D2691E] rounded-[40px] p-8 custom-shadow group overflow-hidden relative">
+              <div className="bg-[#D2691E] rounded-xl p-6 shadow-sm overflow-hidden relative">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">{t("adminOrders.needInsights")}</h3>
                   <p className="text-sm font-medium text-[#1a1a1a]/70">{t("adminOrders.checkDailyReports")}</p>
@@ -256,11 +256,11 @@ export default function AdminOrdersPage() {
 
             {/* Main Content - Order List */}
             <div className="lg:col-span-9">
-              <div className="bg-white rounded-[40px] p-8 custom-shadow min-h-[700px]">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
                 {/* Header with Bulk Delete Button */}
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-8">
                   <div>
-                    <h2 className="text-2xl font-bold bubbly-text">{t("adminOrders.orderManagement")}</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{t("adminOrders.orderManagement")}</h2>
                     <p className="text-gray-500 text-sm mt-1">
                       {filteredOrders.length} {filter !== 'all' ? t(`adminOrders.${filter}`) : ''} {t("adminOrders.ordersCount")}
                     </p>
@@ -314,7 +314,7 @@ export default function AdminOrdersPage() {
                     {filteredOrders.map((order) => {
                       const status = getStatusConfig(order.status)
                       return (
-                        <div key={order._id} className="bg-gray-50 rounded-[40px] p-6 border-2 border-transparent hover:border-[#2d5a41]/10 hover:shadow-xl transition-all flex flex-col group animate-slide-in-up">
+                        <div key={order._id} className="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-[#8B4513]/30 hover:shadow-md transition-all flex flex-col">
                           <div className="flex justify-between items-start mb-6">
                             <div>
                               <div className="flex items-center gap-2">
