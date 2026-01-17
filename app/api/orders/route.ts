@@ -162,9 +162,15 @@ export async function POST(request: Request) {
     for (const [stockId, requiredAmount] of stockConsumptionMap) {
       const stockItem = await Stock.findById(stockId)
       if (stockItem && stockItem.trackQuantity) {
-        if ((stockItem.quantity || 0) < requiredAmount) {
+        const availableStock = stockItem.quantity || 0
+
+        // CRITICAL: Prevent order if stock is zero or less than required
+        if (availableStock <= 0 || availableStock < requiredAmount) {
+          console.error(`❌ Insufficient stock for order: ${stockItem.name}. Available: ${availableStock}, Required: ${requiredAmount}`)
           return NextResponse.json({
-            message: `Insufficient stock: ${stockItem.name}. Required: ${requiredAmount} ${stockItem.unit}, Available: ${stockItem.quantity || 0} ${stockItem.unit}`,
+            message: availableStock <= 0
+              ? `Order Failed: ${stockItem.name} is completely out of stock.`
+              : `Insufficient stock: ${stockItem.name}. Required: ${requiredAmount} ${stockItem.unit}, Available: ${availableStock} ${stockItem.unit}`,
             insufficientStock: stockItem.name
           }, { status: 400 })
         }

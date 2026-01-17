@@ -154,17 +154,19 @@ export default function ReportsPage() {
             const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
             const closingQuantity = item.closingStock ?? item.quantity ?? 0;
             const consumedCount = item.consumed ?? 0;
-            const displayedQuantity = closingQuantity;
 
-            const totalPurchaseValue = displayedQuantity * costPrice;
-            const remains = closingQuantity - consumedCount;
+            // Quantity should be Total Handled (Closing + Consumed) to remain constant
+            const totalHandled = closingQuantity + consumedCount;
+            const remains = closingQuantity; // Remains is just the current actual stock
+
+            const totalPurchaseValue = totalHandled * costPrice;
             const potentialRevenue = remains * sellingPrice;
             const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
             return {
                 "Item Name": item.name,
                 "Unit Cost": Math.round(sellingPrice).toLocaleString(),
-                "Quantity": `${displayedQuantity} ${item.unit || "unit"}`,
+                "Quantity": `${totalHandled} ${item.unit || "unit"}`,
                 "Low Limit": `${item.minLimit || 0} ${item.unit || "unit"}`,
                 "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
                 "Consumed": `${consumedCount} Usage`,
@@ -211,17 +213,21 @@ export default function ReportsPage() {
                 data: (stockUsageData?.stockAnalysis || stockItems || []).map((item: any) => {
                     const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
                     const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
-                    const currentQuantity = item.closingStock ?? item.quantity ?? 0;
-                    const totalPurchaseValue = currentQuantity * costPrice;
+                    const closingQuantity = item.closingStock ?? item.quantity ?? 0;
                     const consumedCount = item.consumed ?? 0;
-                    const remains = currentQuantity - consumedCount;
+
+                    // Quantity should be Total Handled (Closing + Consumed) to remain constant
+                    const totalHandled = closingQuantity + consumedCount;
+                    const remains = closingQuantity; // Remains is actual current stock
+
+                    const totalPurchaseValue = totalHandled * costPrice;
                     const potentialRevenue = remains * sellingPrice;
-                    const isLow = item.isLowStock || (item.quantity <= (item.minLimit || 5));
+                    const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
                     return {
                         "Item Name": item.name,
                         "Unit Cost": Math.round(sellingPrice).toLocaleString(),
-                        "Quantity": `${currentQuantity} ${item.unit || "unit"}`,
+                        "Quantity": `${totalHandled} ${item.unit || "unit"}`,
                         "Total Purchase": `${totalPurchaseValue.toLocaleString()} ETB`,
                         "Consumed": `${consumedCount} Usage`,
                         "Remains": `${remains} ${item.unit || "unit"}`,
@@ -466,8 +472,6 @@ export default function ReportsPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 font-medium text-sm">
                                     {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
-                                        // Removed early isLow calc to defer after remains calculation
-
                                         // Improved Logic: 
                                         // Quantity = Total Available (Closing + Consumed)
                                         // Remains = Closing Stock
@@ -476,10 +480,12 @@ export default function ReportsPage() {
 
                                         const closingQuantity = item.closingStock ?? item.quantity ?? 0;
                                         const consumedCount = item.consumed ?? 0;
-                                        const displayedQuantity = closingQuantity;
 
-                                        const totalPurchaseValue = displayedQuantity * costPrice; // Value of current stock
-                                        const remains = closingQuantity - consumedCount;
+                                        // Fix: Quantity should be Total Handled to remain constant
+                                        const totalHandled = closingQuantity + consumedCount;
+                                        const remains = closingQuantity; // Actual remaining stock
+
+                                        const totalPurchaseValue = totalHandled * costPrice; // Value of all stock handled
                                         const potentialRevenue = remains * sellingPrice;
                                         const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
@@ -490,7 +496,7 @@ export default function ReportsPage() {
                                                     {Math.round(sellingPrice).toLocaleString()}
                                                 </td>
                                                 <td className="p-4 text-center font-bold text-slate-700">
-                                                    {displayedQuantity} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
+                                                    {totalHandled} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
                                                 </td>
                                                 <td className="p-4 text-center font-medium text-gray-500">
                                                     {(item.minLimit || 0)} <span className="text-xs text-gray-300 font-normal">{item.unit || "unit"}</span>
