@@ -317,9 +317,9 @@ export default function AdminSettingsPage() {
         <div className="max-w-7xl mx-auto space-y-6">
           <BentoNavbar />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Sidebar - Preview */}
-            <div className="lg:col-span-4 space-y-4 sticky top-4">
+            <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-4 order-2 lg:order-1">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">{t("adminSettings.logoPreview")}</h2>
 
@@ -394,27 +394,27 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-8">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="lg:col-span-8 order-1 lg:order-2">
+              <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
 
-                <div className="flex gap-4 mb-8 border-b border-gray-100 pb-4">
+                <div className="flex gap-4 mb-8 border-b border-gray-100 pb-2 overflow-x-auto scrollbar-hide">
                   <button
                     onClick={() => setActiveTab("branding")}
-                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "branding" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`pb-2 text-xs md:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "branding" ? "text-[#8B4513] border-b-2 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
                   >
                     Branding
                   </button>
                   <button
                     onClick={() => setActiveTab("tables")}
-                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "tables" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`pb-2 text-xs md:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "tables" ? "text-[#8B4513] border-b-2 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
                   >
-                    Table Management
+                    Tables
                   </button>
                   <button
                     onClick={() => setActiveTab("waiters")}
-                    className={`pb-2 text-sm font-bold transition-all ${activeTab === "waiters" ? "text-[#8B4513] border-b-4 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`pb-2 text-xs md:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === "waiters" ? "text-[#8B4513] border-b-2 border-[#8B4513]" : "text-gray-400 hover:text-gray-600"}`}
                   >
-                    Waiter Management
+                    Waiters
                   </button>
                 </div>
 
@@ -589,28 +589,28 @@ export default function AdminSettingsPage() {
 
                 {activeTab === "tables" && (
                   <div className="space-y-6">
-                    <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                    <div className="bg-gray-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg text-[#8B4513]">
+                        <h3 className="font-black text-xs uppercase tracking-widest text-[#8B4513]">
                           {editingTable ? "Update Table" : "Add New Table"}
                         </h3>
                         {editingTable && (
                           <button
                             onClick={handleCancelEditTable}
-                            className="text-xs font-bold text-gray-500 hover:text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-gray-200"
+                            className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 bg-white px-3 py-1.5 rounded-lg border border-gray-200"
                           >
-                            Cancel Edit
+                            Cancel
                           </button>
                         )}
                       </div>
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1">
                           <input
                             type="text"
-                            placeholder="Table Number (e.g. T-01)"
+                            placeholder="Number (e.g. T-01)"
                             value={newTable.tableNumber}
                             onChange={(e) => setNewTable({ ...newTable, tableNumber: e.target.value })}
-                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20 ${editingTable ? 'border-[#8B4513]/50' : 'border-gray-200'}`}
+                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-[#8B4513]/5 ${editingTable ? 'border-[#8B4513]' : 'border-gray-200'}`}
                           />
                         </div>
                         <div className="flex-1">
@@ -619,13 +619,13 @@ export default function AdminSettingsPage() {
                             placeholder="Capacity (Optional)"
                             value={newTable.capacity}
                             onChange={(e) => setNewTable({ ...newTable, capacity: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B4513]/20"
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-[#8B4513]/5"
                           />
                         </div>
                         <button
                           onClick={handleAddTable}
                           disabled={!newTable.tableNumber}
-                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#A0522D] transition-colors shadow-lg shadow-[#8B4513]/20"
+                          className="bg-[#8B4513] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-50 hover:bg-[#A0522D] transition-all shadow-lg shadow-[#8B4513]/20"
                         >
                           {editingTable ? "Update" : "Add"}
                         </button>

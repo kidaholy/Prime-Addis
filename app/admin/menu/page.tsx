@@ -426,64 +426,80 @@ export default function AdminMenuPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Control Sidebar */}
-            <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-4 sticky top-4">
+            <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-4 md:sticky md:top-4">
               {/* Add New Button Card */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">{t("adminMenu.actions")}</h2>
-                <button
-                  onClick={() => { resetForm(); setShowCreateForm(true); }}
-                  className="w-full bg-[#D2691E] text-white font-medium py-3 rounded-lg shadow-sm hover:bg-[#8B4513] transition-colors mb-3"
-                >
-                  ➕ {t("adminMenu.addNewItem")}
-                </button>
-                <button
-                  onClick={() => setShowCategoryManager(true)}
-                  className="w-full bg-[#8B4513] text-white font-medium py-2.5 rounded-lg shadow-sm hover:bg-[#6B3410] transition-colors text-sm mb-3"
-                >
-                  📁 {t("adminMenu.manageCategories")}
-                </button>
-                <button
-                  onClick={handleExportCSV}
-                  className="w-full bg-gray-100 text-gray-700 font-medium py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm mb-3"
-                >
-                  📥 Export Menu (CSV)
-                </button>
-                <button
-                  onClick={() => { setSwapMode(!swapMode); setSwapSourceId(null); }}
-                  className={`w-full font-medium py-2.5 rounded-lg border text-sm transition-colors ${swapMode ? "bg-purple-600 text-white border-purple-600" : "bg-white text-purple-600 border-purple-200 hover:bg-purple-50"}`}
-                >
-                  🔄 {swapMode ? "Cancel Swap" : "Swap IDs"}
-                </button>
+              <div className="bg-[#8B4513] rounded-2xl p-6 md:p-8 shadow-xl shadow-[#8B4513]/20 text-white relative overflow-hidden">
+                <div className="relative z-10">
+                  <h2 className="text-xl md:text-2xl font-black mb-4 tracking-tight">{t("adminMenu.actions")}</h2>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => { resetForm(); setShowCreateForm(true); }}
+                      className="w-full bg-white text-[#8B4513] font-black py-4 rounded-xl shadow-lg hover:bg-gray-50 transition-all text-xs uppercase tracking-widest transform active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      ➕ {t("adminMenu.addNewItem")}
+                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setShowCategoryManager(true)}
+                        className="bg-white/10 hover:bg-white/20 text-white font-black py-3 rounded-xl transition-all text-[10px] uppercase tracking-widest border border-white/20"
+                      >
+                        📁 {t("adminMenu.manageCategories")}
+                      </button>
+                      <button
+                        onClick={handleExportCSV}
+                        className="bg-white/10 hover:bg-white/20 text-white font-black py-3 rounded-xl transition-all text-[10px] uppercase tracking-widest border border-white/20"
+                      >
+                        📥 CSV
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => { setSwapMode(!swapMode); setSwapSourceId(null); }}
+                      className={`w-full font-black py-3 rounded-xl border text-[10px] uppercase tracking-widest transition-all ${swapMode ? "bg-purple-600 text-white border-purple-600" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+                    >
+                      🔄 {swapMode ? "Cancel Swap" : "Swap IDs"}
+                    </button>
+                  </div>
+                </div>
+                <div className="absolute -bottom-4 -right-4 text-8xl opacity-10 transform -rotate-12">☕</div>
               </div>
 
               {/* Filters Card */}
-              <div className="bg-[#8B4513] rounded-xl p-6 shadow-sm text-white">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
                   <span>🔍</span> {t("adminMenu.filters")}
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">{t("adminMenu.searchName")}</label>
+                    <label className="block text-[10px] font-black uppercase tracking-wider mb-2 text-gray-400">{t("adminMenu.searchName")}</label>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D2691E] placeholder:text-white/30"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-[#8B4513]/5 font-bold"
                       placeholder={t("adminMenu.searchPlaceholder")}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">{t("adminMenu.category")}</label>
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D2691E] appearance-none cursor-pointer"
-                    >
-                      <option value="all" className="bg-[#2d5a41]">{t("adminMenu.allCategories")}</option>
-                      {categories.map((cat: any) => (
-                        <option key={cat._id || cat.name} value={cat.name} className="bg-[#2d5a41]">{cat.name}</option>
-                      ))}
-                    </select>
+                    <label className="block text-[10px] font-black uppercase tracking-wider mb-2 text-gray-400">{t("adminMenu.category")}</label>
+                    <div className="flex flex-wrap gap-2 md:grid md:grid-cols-1 md:gap-2">
+                      <button
+                        onClick={() => setCategoryFilter("all")}
+                        className={`flex-1 md:w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${categoryFilter === "all" ? "bg-[#8B4513] text-white border-[#8B4513] shadow-md" : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"}`}
+                      >
+                        {t("adminMenu.allCategories")}
+                      </button>
+                      <div className="flex gap-2 w-full overflow-x-auto pb-1 scrollbar-hide md:flex-col md:overflow-visible">
+                        {categories.map((cat: any) => (
+                          <button
+                            key={cat._id || cat.name}
+                            onClick={() => setCategoryFilter(cat.name)}
+                            className={`whitespace-nowrap md:w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${categoryFilter === cat.name ? "bg-[#8B4513] text-white border-[#8B4513] shadow-md" : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"}`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -491,12 +507,12 @@ export default function AdminMenuPage() {
 
             <div className="md:col-span-8 lg:col-span-9">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t("adminMenu.title")}</h1>
-                    <p className="text-gray-600 text-sm">{t("adminMenu.subtitle")}</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">{t("adminMenu.title")}</h1>
+                    <p className="text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest">{t("adminMenu.subtitle")}</p>
                   </div>
-                  <div className="bg-gray-100 px-3 py-1.5 rounded-lg font-medium text-[#8B4513] text-sm">
+                  <div className="bg-[#8B4513]/5 px-4 py-2 rounded-xl border border-[#8B4513]/10 text-[#8B4513] text-[10px] font-black uppercase tracking-widest">
                     {filteredItems.length} {t("adminMenu.itemsFound")}
                   </div>
                 </div>
@@ -513,44 +529,47 @@ export default function AdminMenuPage() {
                     <p className="text-gray-400 font-bold">{t("adminMenu.loading")}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                     {filteredItems.map((item) => (
-                      <div key={item._id} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group flex flex-col">
+                      <div key={item._id} className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all group flex flex-col relative">
                         {/* Item Image */}
-                        <div className="h-40 bg-gray-200 relative overflow-hidden">
+                        <div className="h-40 md:h-48 bg-gray-200 relative overflow-hidden">
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">☕</div>
+                            <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">☕</div>
                           )}
-                          <div className="absolute top-4 left-4 flex flex-col gap-2">
-                            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-[#8B4513] shadow-sm">
+                          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                            <div className="bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-black text-[#8B4513] shadow-sm border border-white/50">
                               #{item.menuId || "NO ID"}
                             </div>
                           </div>
-                          <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${item.available ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                          <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest z-10 backdrop-blur-md border border-white/50 shadow-sm ${item.available ? "bg-green-100/90 text-green-700" : "bg-red-100/90 text-red-700"}`}>
                             {item.available ? t("adminMenu.active") : t("adminMenu.hidden")}
                           </div>
                         </div>
 
-                        <div className="p-5 flex-1 flex flex-col">
-                          <h3 className="font-bold text-lg mb-1 truncate">{item.name}</h3>
-                          <p className="text-xs font-bold text-[#8B4513] uppercase tracking-wider mb-3">{item.category}</p>
-                          <p className="text-2xl font-black text-gray-800 mb-4">{item.price} {t("common.currencyBr")}</p>
+                        <div className="p-5 flex-1 flex flex-col relative bg-white/50 backdrop-blur-sm">
+                          <h3 className="font-black text-lg text-slate-800 mb-0.5 truncate">{item.name}</h3>
+                          <p className="text-[10px] font-black text-[#8B4513] uppercase tracking-widest mb-4 opacity-70">{item.category}</p>
+                          <div className="flex items-end gap-1 mb-6">
+                            <span className="text-2xl font-black text-slate-900">{item.price}</span>
+                            <span className="text-xs font-black text-slate-400 mb-1">{t("common.currencyBr")}</span>
+                          </div>
 
                           <div className="flex gap-2 mt-auto">
                             <button
                               onClick={() => swapMode ? handleSwap(item.menuId) : handleEdit(item)}
-                              className={`flex-1 font-bold py-2.5 rounded-2xl transition-colors text-sm border ${swapMode
-                                ? (swapSourceId === item.menuId ? "bg-purple-600 text-white border-purple-600" : "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100")
-                                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                              className={`flex-1 font-black py-3 rounded-xl transition-all text-[10px] uppercase tracking-widest border transform active:scale-95 ${swapMode
+                                ? (swapSourceId === item.menuId ? "bg-purple-600 text-white border-purple-600 shadow-lg" : "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100")
+                                : "bg-white border-gray-100 text-slate-600 hover:border-[#8B4513]/20 hover:text-[#8B4513] hover:shadow-md"
                                 }`}
                             >
-                              {swapMode ? (swapSourceId === item.menuId ? "Selected" : "Swap With") : t("adminMenu.edit")}
+                              {swapMode ? (swapSourceId === item.menuId ? "Selected" : "Swap ID") : t("adminMenu.edit")}
                             </button>
                             <button
                               onClick={() => handleDelete(item)}
-                              className="px-4 bg-red-50 text-red-500 font-bold py-2.5 rounded-2xl hover:bg-red-100 transition-colors text-sm"
+                              className="w-10 h-10 bg-white border border-gray-100 text-red-500 flex items-center justify-center rounded-xl hover:bg-red-50 hover:border-red-100 transition-all transform active:scale-95 shadow-sm"
                             >
                               🗑️
                             </button>
@@ -575,273 +594,280 @@ export default function AdminMenuPage() {
 
         {/* Create/Edit Modal */}
         {showCreateForm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl p-6 md:p-8 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-              <button onClick={resetForm} className="absolute top-6 right-6 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-medium text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">✕</button>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+            <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl max-w-2xl w-full relative overflow-hidden flex flex-col max-h-[90vh]">
+              <button
+                onClick={resetForm}
+                className="absolute top-6 right-6 w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center font-bold text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all z-10"
+              >✕</button>
 
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingItem ? t("adminMenu.updateItem") : t("adminMenu.newItem")}</h2>
+              <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-16 md:pt-20 scrollbar-hide">
+                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8 tracking-tight">
+                  {editingItem ? t("adminMenu.updateItem") : t("adminMenu.newItem")}
+                </h2>
 
-              <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {/* Image Upload Section */}
-                  <div className="md:col-span-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm font-bold text-gray-700">{t("adminMenu.itemImage") || "Item Image"}</label>
-                      <div className="flex bg-gray-100 p-1 rounded-lg">
-                        <button
-                          type="button"
-                          onClick={() => setImageInputType('file')}
-                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'file' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
-                        >
-                          Upload File
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setImageInputType('url')}
-                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'url' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
-                        >
-                          Image URL
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-4">
-                      <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-200">
-                        {formData.image ? (
-                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📷</div>
-                        )}
+                <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="md:col-span-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-sm font-bold text-gray-700">{t("adminMenu.itemImage") || "Item Image"}</label>
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                          <button
+                            type="button"
+                            onClick={() => setImageInputType('file')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'file' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
+                          >
+                            Upload File
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setImageInputType('url')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${imageInputType === 'url' ? 'bg-white shadow text-[#2d5a41]' : 'text-gray-500'}`}
+                          >
+                            Image URL
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex-1 space-y-3">
-                        {imageInputType === 'file' ? (
-                          <>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              disabled={imageProcessing}
-                              className="block w-full text-sm text-gray-500
+                      <div className="flex items-start gap-4">
+                        <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-200">
+                          {formData.image ? (
+                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📷</div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 space-y-3">
+                          {imageInputType === 'file' ? (
+                            <>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                disabled={imageProcessing}
+                                className="block w-full text-sm text-gray-500
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-full file:border-0
                                 file:text-sm file:font-semibold
                                 file:bg-[#2d5a41] file:text-white
                                 hover:file:bg-[#1a3828] cursor-pointer"
-                            />
-                            <p className="text-xs text-gray-500">{imageProcessing ? "⏳ Processing..." : "Supports JPG, PNG, WebP. Max 5MB."}</p>
-                          </>
-                        ) : (
-                          <div>
-                            <input
-                              type="url"
-                              value={formData.image}
-                              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                              placeholder="https://example.com/image.jpg"
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                            />
-                            <p className="mt-2 text-xs text-gray-500">Enter a direct link to an image.</p>
-                          </div>
-                        )}
+                              />
+                              <p className="text-xs text-gray-500">{imageProcessing ? "⏳ Processing..." : "Supports JPG, PNG, WebP. Max 5MB."}</p>
+                            </>
+                          ) : (
+                            <div>
+                              <input
+                                type="url"
+                                value={formData.image}
+                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                placeholder="https://example.com/image.jpg"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                              />
+                              <p className="mt-2 text-xs text-gray-500">Enter a direct link to an image.</p>
+                            </div>
+                          )}
 
-                        {formData.image && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, image: "" }))}
-                            className="text-xs text-red-500 font-bold hover:underline"
-                          >
-                            Remove Image
-                          </button>
-                        )}
+                          {formData.image && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, image: "" }))}
+                              className="text-xs text-red-500 font-bold hover:underline"
+                            >
+                              Remove Image
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Menu ID (Optional)</label>
-                      <input
-                        type="text"
-                        value={formData.menuId}
-                        onChange={(e) => setFormData({ ...formData, menuId: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                        placeholder="AUTO-GEN"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Menu ID (Optional)</label>
+                        <input
+                          type="text"
+                          value={formData.menuId}
+                          onChange={(e) => setFormData({ ...formData, menuId: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                          placeholder="AUTO-GEN"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                          placeholder="Flat White"
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.itemName")} *</label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                        placeholder="Flat White"
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.category")} *</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
                         required
-                      />
+                      >
+                        <option value="">{t("adminMenu.category")}</option>
+                        {categories.map((cat: any) => <option key={cat._id || cat.name} value={cat.name}>{cat.name}</option>)}
+                      </select>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.category")} *</label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                      required
-                    >
-                      <option value="">{t("adminMenu.category")}</option>
-                      {categories.map((cat: any) => <option key={cat._id || cat.name} value={cat.name}>{cat.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.priceBr")} *</label>
-                      <input
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
-                        placeholder="120"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.prepTime")}</label>
-                      <input
-                        type="number"
-                        value={formData.preparationTime}
-                        onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
-                        placeholder="10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.description")}</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm h-[80px]"
-                      placeholder={t("adminMenu.descPlaceholder")}
-                    />
-                  </div>
-
-                  {/* Reporting Configuration */}
-                  <div className="bg-[#2d5a41]/5 p-6 rounded-[30px] border border-[#2d5a41]/10">
-                    <h3 className="text-sm font-black text-[#2d5a41] uppercase tracking-widest mb-4">Reporting Configuration</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Reporting Unit</label>
-                        <select
-                          value={formData.reportUnit}
-                          onChange={(e) => setFormData({ ...formData, reportUnit: e.target.value as any })}
-                          className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
-                        >
-                          <option value="kg">kg (Beef)</option>
-                          <option value="liter">liter (Drinks/Milk)</option>
-                          <option value="piece">piece (Soft Drinks)</option>
-                        </select>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.priceBr")} *</label>
+                        <input
+                          type="number"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
+                          placeholder="120"
+                          required
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Amount per Sale</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="any"
-                            value={formData.reportQuantity}
-                            onChange={(e) => setFormData({ ...formData, reportQuantity: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
-                            placeholder="0.00"
-                          />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2d5a41] text-xs font-bold uppercase">
-                            {formData.reportUnit}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-[10px] text-gray-400 font-medium">Used for calculating total consumption in reports.</p>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.prepTime")}</label>
+                        <input
+                          type="number"
+                          value={formData.preparationTime}
+                          onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
+                          placeholder="10"
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Stock Linkage Configuration */}
-                  <div className="bg-[#f5bc6b]/10 p-6 rounded-[30px] border border-[#f5bc6b]/20">
-                    <h3 className="text-sm font-black text-[#8b6e3f] uppercase tracking-widest mb-4 flex items-center gap-2">
-                      <span>📦</span> Stock Linkage (Optional)
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Link to Stock Item</label>
-                        <select
-                          value={formData.stockItemId}
-                          onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
-                          className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#f5bc6b]"
-                        >
-                          <option value="">No Stock Linked</option>
-                          {stockItems.map((stock: any) => (
-                            <option key={stock._id} value={stock._id}>
-                              {stock.name} ({stock.unit})
-                            </option>
-                          ))}
-                        </select>
-                        <p className="mt-2 text-[10px] text-gray-400 font-medium italic">Select a stock item to auto-track inventory on every sale.</p>
-                      </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t("adminMenu.description")}</label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm h-[80px]"
+                        placeholder={t("adminMenu.descPlaceholder")}
+                      />
+                    </div>
 
-                      {formData.stockItemId && (
+                    {/* Reporting Configuration */}
+                    <div className="bg-[#2d5a41]/5 p-6 rounded-[30px] border border-[#2d5a41]/10">
+                      <h3 className="text-sm font-black text-[#2d5a41] uppercase tracking-widest mb-4">Reporting Configuration</h3>
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">Stock Used Per Sale</label>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Reporting Unit</label>
+                          <select
+                            value={formData.reportUnit}
+                            onChange={(e) => setFormData({ ...formData, reportUnit: e.target.value as any })}
+                            className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2d5a41]"
+                          >
+                            <option value="kg">kg (Beef)</option>
+                            <option value="liter">liter (Drinks/Milk)</option>
+                            <option value="piece">piece (Soft Drinks)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Amount per Sale</label>
                           <div className="relative">
                             <input
                               type="number"
                               step="any"
-                              value={formData.stockConsumption}
-                              onChange={(e) => setFormData({ ...formData, stockConsumption: e.target.value })}
+                              value={formData.reportQuantity}
+                              onChange={(e) => setFormData({ ...formData, reportQuantity: e.target.value })}
                               className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
-                              placeholder="1.0"
+                              placeholder="0.00"
                             />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#f5bc6b] text-xs font-black">
-                              {stockItems.find(s => s._id === formData.stockItemId)?.unit || 'units'}
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2d5a41] text-xs font-bold uppercase">
+                              {formData.reportUnit}
                             </span>
                           </div>
+                          <p className="mt-2 text-[10px] text-gray-400 font-medium">Used for calculating total consumption in reports.</p>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2 space-y-4 pt-6 border-t border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-12 h-6 rounded-full transition-colors relative ${formData.available ? 'bg-[#2d5a41]' : 'bg-gray-300'}`}>
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.available ? 'left-7' : 'left-1'}`}></div>
                       </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={formData.available}
-                        onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                      />
-                      <span className="font-bold text-gray-700 group-hover:text-black">{t("adminMenu.available")}</span>
-                    </label>
+                    </div>
 
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={resetForm}
-                        className="px-8 py-3.5 rounded-2xl font-bold text-gray-500 hover:bg-gray-50"
-                      >
-                        {t("adminMenu.cancel")}
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={createLoading}
-                        className="px-10 py-3.5 bg-[#2d5a41] text-white rounded-2xl font-bold custom-shadow hover:scale-105 transition-transform disabled:opacity-50"
-                      >
-                        {createLoading ? t("adminMenu.save") : (editingItem ? t("adminMenu.updateItem") : t("adminMenu.add"))}
-                      </button>
+                    {/* Stock Linkage Configuration */}
+                    <div className="bg-[#f5bc6b]/10 p-6 rounded-[30px] border border-[#f5bc6b]/20">
+                      <h3 className="text-sm font-black text-[#8b6e3f] uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span>📦</span> Stock Linkage (Optional)
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">Link to Stock Item</label>
+                          <select
+                            value={formData.stockItemId}
+                            onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#f5bc6b]"
+                          >
+                            <option value="">No Stock Linked</option>
+                            {stockItems.map((stock: any) => (
+                              <option key={stock._id} value={stock._id}>
+                                {stock.name} ({stock.unit})
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-2 text-[10px] text-gray-400 font-medium italic">Select a stock item to auto-track inventory on every sale.</p>
+                        </div>
+
+                        {formData.stockItemId && (
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Stock Used Per Sale</label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step="any"
+                                value={formData.stockConsumption}
+                                onChange={(e) => setFormData({ ...formData, stockConsumption: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm"
+                                placeholder="1.0"
+                              />
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#f5bc6b] text-xs font-black">
+                                {stockItems.find(s => s._id === formData.stockItemId)?.unit || 'units'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </form>
+
+                  <div className="md:col-span-2 space-y-4 pt-6 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-12 h-6 rounded-full transition-colors relative ${formData.available ? 'bg-[#2d5a41]' : 'bg-gray-300'}`}>
+                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.available ? 'left-7' : 'left-1'}`}></div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={formData.available}
+                          onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                        />
+                        <span className="font-bold text-gray-700 group-hover:text-black">{t("adminMenu.available")}</span>
+                      </label>
+
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={resetForm}
+                          className="px-8 py-3.5 rounded-2xl font-bold text-gray-500 hover:bg-gray-50"
+                        >
+                          {t("adminMenu.cancel")}
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={createLoading}
+                          className="px-10 py-3.5 bg-[#2d5a41] text-white rounded-2xl font-bold custom-shadow hover:scale-105 transition-transform disabled:opacity-50"
+                        >
+                          {createLoading ? t("adminMenu.save") : (editingItem ? t("adminMenu.updateItem") : t("adminMenu.add"))}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}

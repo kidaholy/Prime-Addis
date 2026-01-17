@@ -213,11 +213,11 @@ export default function AdminOrdersPage() {
           <BentoNavbar />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Sidebar - Filters & Stats */}
-            <div className="lg:col-span-3 flex flex-col gap-4 sticky top-4">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">{t("adminOrders.title")}</h2>
-                <div className="space-y-3">
+            {/* Sidebar - Filters & Stats */}
+            <div className="lg:col-span-3 flex flex-col gap-4 lg:sticky lg:top-4">
+              <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200 overflow-hidden">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">{t("adminOrders.title")}</h2>
+                <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-3 scrollbar-hide">
                   {[
                     { id: "all", label: t("adminOrders.allOrders"), count: stats.all, emoji: "📋" },
                     { id: "pending", label: t("adminOrders.pending"), count: stats.pending, emoji: "🕒" },
@@ -228,16 +228,16 @@ export default function AdminOrdersPage() {
                     <button
                       key={item.id}
                       onClick={() => setFilter(item.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-lg font-medium transition-all ${filter === item.id
+                      className={`flex-shrink-0 lg:w-full flex items-center justify-between p-3 rounded-lg font-medium transition-all ${filter === item.id
                         ? "bg-[#8B4513] text-white shadow-sm"
                         : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                         }`}
                     >
-                      <span className="flex items-center gap-3">
-                        <span className="text-xl">{item.emoji}</span>
-                        {item.label}
+                      <span className="flex items-center gap-2 md:gap-3">
+                        <span className="text-lg md:text-xl">{item.emoji}</span>
+                        <span className="whitespace-nowrap">{item.label}</span>
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-xs ${filter === item.id ? "bg-white/20" : "bg-gray-200 text-gray-500"}`}>
+                      <span className={`ml-3 px-2 py-0.5 rounded-full text-[10px] md:text-xs ${filter === item.id ? "bg-white/20" : "bg-gray-200 text-gray-500"}`}>
                         {item.count}
                       </span>
                     </button>
@@ -245,7 +245,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <div className="bg-[#D2691E] rounded-xl p-6 shadow-sm overflow-hidden relative">
+              <div className="hidden lg:block bg-[#D2691E] rounded-xl p-6 shadow-sm overflow-hidden relative">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">{t("adminOrders.needInsights")}</h3>
                   <p className="text-sm font-medium text-[#1a1a1a]/70">{t("adminOrders.checkDailyReports")}</p>
@@ -258,7 +258,7 @@ export default function AdminOrdersPage() {
             <div className="lg:col-span-9">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
                 {/* Header with Bulk Delete Button */}
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-8">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{t("adminOrders.orderManagement")}</h2>
                     <p className="text-gray-500 text-sm mt-1">
@@ -266,8 +266,8 @@ export default function AdminOrdersPage() {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
+                  <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                       <input
                         type="text"
@@ -281,17 +281,17 @@ export default function AdminOrdersPage() {
                       <button
                         onClick={handleBulkDeleteOrders}
                         disabled={bulkDeleting}
-                        className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center gap-2 whitespace-nowrap"
+                        className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none flex items-center justify-center gap-2 whitespace-nowrap"
                       >
                         {bulkDeleting ? (
                           <>
                             <span className="animate-spin">⏳</span>
-                            {t("adminOrders.deleting")}
+                            <span className="text-xs">{t("adminOrders.deleting")}</span>
                           </>
                         ) : (
                           <>
                             <span>🗑️</span>
-                            {t("adminOrders.deleteAllOrders")}
+                            <span className="text-xs sm:text-sm">{t("adminOrders.deleteAllOrders")}</span>
                           </>
                         )}
                       </button>

@@ -15,6 +15,7 @@ interface CartSidebarProps {
   onRemove: (id: string) => void
   onQuantityChange: (id: string, quantity: number) => void
   onCheckout: () => void
+  onClose?: () => void
   isLoading?: boolean
   isEmbedded?: boolean
   waiterBatchNumber: string
@@ -28,6 +29,7 @@ export function CartSidebar({
   onRemove,
   onQuantityChange,
   onCheckout,
+  onClose,
   isLoading = false,
   isEmbedded = false,
   waiterBatchNumber,
@@ -75,9 +77,19 @@ export function CartSidebar({
     <div className={containerClasses}>
       {/* Header - Only show if not embedded (POS handles its own header) */}
       {!isEmbedded && (
-        <div className="p-4 border-b border-border bg-primary/10">
-          <h2 className="text-xl font-bold text-foreground">{t("cashier.orderCart")}</h2>
-          <p className="text-sm text-muted-foreground">{items.length} {t("cashier.items")}</p>
+        <div className="p-4 border-b border-border bg-primary/10 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">{t("cashier.orderCart")}</h2>
+            <p className="text-sm text-muted-foreground">{items.length} {t("cashier.items")}</p>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden p-2 hover:bg-black/5 rounded-full transition-colors"
+            >
+              ✕
+            </button>
+          )}
         </div>
       )}
 

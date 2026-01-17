@@ -13,6 +13,8 @@ import { AnimatedLoading } from "@/components/animated-loading"
 import { AnimatedButton } from "@/components/animated-button"
 import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
+import { ShoppingCart, X } from 'lucide-react'
+import { motion, AnimatePresence } from "framer-motion"
 import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
 import { useConfirmation } from "@/hooks/use-confirmation"
 
@@ -74,6 +76,7 @@ export default function MenuPage() {
   // Selection state for Table/Waiter
   const [waiterBatchNumber, setWaiterBatchNumber] = useState("")
   const [tableNumber, setTableNumber] = useState("")
+  const [showMobileCart, setShowMobileCart] = useState(false)
 
   // Fetch menu items from API
   useEffect(() => {
@@ -273,8 +276,8 @@ export default function MenuPage() {
                 </div>
               </div>
 
-              {/* Cart Sidebar - Styled as Bento Card */}
-              <div className="md:col-span-4 lg:col-span-3 sticky top-4">
+              {/* Cart Sidebar - Desktop */}
+              <div className="hidden md:block md:col-span-4 lg:col-span-3 sticky top-4">
                 <div className="bg-white rounded-[40px] p-6 custom-shadow min-h-[500px] border border-gray-100">
                   <h2 className="text-2xl font-bold text-[#1a1a1a] mb-6 flex items-center gap-2">
                     <span>🛒</span> {t("menu.currentOrder")}
@@ -294,6 +297,71 @@ export default function MenuPage() {
               </div>
             </div>
           </div>
+
+          {/* Floating Cart Button - Mobile Only */}
+          <div className="md:hidden fixed bottom-6 right-6 z-40">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowMobileCart(true)}
+              className="bg-[#2d5a41] text-white p-4 rounded-full shadow-2xl relative flex items-center justify-center"
+            >
+              <ShoppingCart size={24} />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">
+                  {cartItems.length}
+                </span>
+              )}
+            </motion.button>
+          </div>
+
+          {/* Mobile Cart Drawer */}
+          <AnimatePresence>
+            {showMobileCart && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowMobileCart(false)}
+                  className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                />
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="md:hidden fixed inset-y-0 right-0 w-full bg-white z-[101] shadow-2xl flex flex-col"
+                >
+                  <div className="p-8 border-b flex justify-between items-center bg-[#D2691E] rounded-b-[40px]">
+                    <div className="flex items-center gap-3 text-white">
+                      <ShoppingCart size={24} />
+                      <h2 className="text-2xl font-bold">{t("menu.currentOrder")}</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowMobileCart(false)}
+                      className="p-2 hover:bg-white/10 text-white rounded-full transition-colors"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden p-6">
+                    <CartSidebar
+                      items={cartItems}
+                      onRemove={handleRemoveFromCart}
+                      onQuantityChange={handleQuantityChange}
+                      onCheckout={handleCheckout}
+                      onClose={() => setShowMobileCart(false)}
+                      isLoading={loading}
+                      waiterBatchNumber={waiterBatchNumber}
+                      setWaiterBatchNumber={setWaiterBatchNumber}
+                      tableNumber={tableNumber}
+                      setTableNumber={setTableNumber}
+                    />
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Confirmation and Notification Cards */}
           <ConfirmationCard

@@ -160,36 +160,39 @@ export default function AdminUsersPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Control Sidebar */}
-            <div className="lg:col-span-3 flex flex-col gap-4 sticky top-4">
-              <div className="bg-[#8B4513] rounded-xl p-6 shadow-sm text-white">
-                <h1 className="text-2xl font-bold mb-2">{t("adminUsers.title")} 👥</h1>
-                <p className="opacity-90 text-sm mb-4">{t("adminUsers.totalActiveStaff")}: {users.length}</p>
-                <button
-                  onClick={() => { resetForm(); setShowForm(true); }}
-                  className="w-full bg-[#D2691E] text-white px-6 py-3 rounded-lg font-medium shadow-sm hover:bg-[#B5651D] transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="text-xl">✨</span> {t("adminUsers.addNewMember")}
-                </button>
+            <div className="lg:col-span-3 flex flex-col gap-4 lg:sticky lg:top-4">
+              <div className="bg-[#8B4513] rounded-2xl p-6 md:p-8 shadow-xl shadow-[#8B4513]/20 text-white relative overflow-hidden">
+                <div className="relative z-10">
+                  <h1 className="text-2xl md:text-3xl font-black mb-2 tracking-tight">{t("adminUsers.title")} 👥</h1>
+                  <p className="opacity-80 text-xs md:text-sm font-bold uppercase tracking-widest mb-6">{t("adminUsers.totalActiveStaff")}: {users.length}</p>
+                  <button
+                    onClick={() => { resetForm(); setShowForm(true); }}
+                    className="w-full bg-white text-[#8B4513] px-6 py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 transform active:scale-95"
+                  >
+                    ✨ {t("adminUsers.addNewMember")}
+                  </button>
+                </div>
+                <div className="absolute -bottom-4 -right-4 text-8xl opacity-10 transform -rotate-12">👥</div>
               </div>
 
-              <div className="bg-[#D2691E] rounded-xl p-6 shadow-sm relative overflow-hidden">
+              <div className="hidden lg:block bg-[#D2691E] rounded-2xl p-6 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
                   <h2 className="text-xl font-bold mb-2 text-white">{t("adminUsers.permissionsCard")}</h2>
-                  <p className="text-white/80 font-medium">{t("adminUsers.permissionsDesc")}</p>
+                  <p className="text-white/80 font-medium text-sm">{t("adminUsers.permissionsDesc")}</p>
                 </div>
-                <div className="absolute -bottom-6 -right-6 text-9xl opacity-10 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">🛡️</div>
+                <div className="absolute -bottom-6 -right-6 text-9xl opacity-10 transform">🛡️</div>
               </div>
             </div>
 
             <div className="lg:col-span-9">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
                 {loading ? (
-                  <div className="flex flex-col items-center justify-center py-32">
-                    <div className="text-6xl animate-bounce mb-4">🧩</div>
-                    <p className="text-gray-400 font-bold">{t("adminUsers.assemblingTeam")}</p>
+                  <div className="flex flex-col items-center justify-center py-20 md:py-32">
+                    <div className="text-5xl md:text-6xl animate-bounce mb-4">🧩</div>
+                    <p className="text-gray-400 font-black uppercase tracking-widest text-xs">{t("adminUsers.assemblingTeam")}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                     {users.map((u) => {
                       const isMe = u._id === currentUser?.id
                       const badge = u.role === "admin"
@@ -199,22 +202,22 @@ export default function AdminUsersPage() {
                           : { color: "bg-[#CD853F] text-white", label: "Cashier" }
 
                       return (
-                        <div key={u._id} className="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-[#8B4513]/30 hover:shadow-md transition-all flex flex-col relative overflow-hidden">
-                          {isMe && <div className="absolute top-4 right-4 text-xs font-black text-[#8B4513] bg-[#8B4513]/10 px-3 py-1 rounded-full uppercase tracking-widest">You</div>}
-                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mb-4 custom-shadow group-hover:scale-110 transition-transform">
+                        <div key={u._id} className="bg-gray-50 rounded-2xl p-5 border border-gray-100 hover:border-[#8B4513]/30 hover:shadow-xl transition-all flex flex-col relative group">
+                          {isMe && <div className="absolute top-4 right-4 text-[9px] font-black text-[#8B4513] bg-white border border-[#8B4513]/20 px-3 py-1 rounded-full uppercase tracking-widest z-10 shadow-sm">You</div>}
+                          <div className="w-14 h-14 md:w-16 md:h-16 bg-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 shadow-sm group-hover:scale-110 transition-transform">
                             {u.role === "admin" ? "🎩" : u.role === "chef" ? "🍳" : "☕"}
                           </div>
-                          <h3 className="font-bold text-lg text-slate-800 mb-1">{u.name}</h3>
-                          <p className="text-sm text-gray-400 mb-6 font-medium truncate">{u.email}</p>
+                          <h3 className="font-black text-lg text-slate-800 mb-0.5">{u.name}</h3>
+                          <p className="text-xs text-gray-400 mb-6 font-bold truncate tracking-tight">{u.email}</p>
 
-                          <div className="flex justify-between items-center mt-auto bg-white/50 rounded-[25px] p-4">
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${badge.color}`}>
+                          <div className="flex justify-between items-center mt-auto bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-white">
+                            <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${badge.color}`}>
                               {badge.label}
                             </span>
                             <div className="flex gap-2">
-                              <button onClick={() => handleEdit(u)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center custom-shadow hover:scale-110 transition-transform">✏️</button>
+                              <button onClick={() => handleEdit(u)} className="w-8 h-8 md:w-9 md:h-9 bg-white rounded-xl flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all text-sm">✏️</button>
                               {!isMe && (
-                                <button onClick={() => handleDelete(u)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center custom-shadow hover:bg-red-50 hover:scale-110 transition-transform">🗑️</button>
+                                <button onClick={() => handleDelete(u)} className="w-8 h-8 md:w-9 md:h-9 bg-white rounded-xl flex items-center justify-center shadow-sm hover:bg-red-50 hover:text-red-500 hover:scale-110 active:scale-95 transition-all text-sm">🗑️</button>
                               )}
                             </div>
                           </div>
@@ -230,11 +233,14 @@ export default function AdminUsersPage() {
 
         {/* Create/Edit Modal */}
         {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl p-6 shadow-lg max-w-md w-full relative">
-              <button onClick={resetForm} className="absolute top-6 right-6 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-medium text-gray-500 hover:bg-red-50 transition-colors">✕</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+            <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl max-w-md w-full relative overflow-hidden flex flex-col max-h-[90vh]">
+              <button
+                onClick={resetForm}
+                className="absolute top-6 right-6 w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center font-bold text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all z-10"
+              >✕</button>
 
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-16 md:pt-20 scrollbar-hide">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
                   {editingUser ? t("adminUsers.editProfile") : t("adminUsers.newMember")}
                 </h2>

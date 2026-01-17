@@ -262,20 +262,20 @@ export default function ReportsPage() {
                     <BentoNavbar />
 
                     {/* Header */}
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-1">Business Intelligence</h1>
-                                <p className="text-gray-600">Consolidated financial and operational reports</p>
+                                <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-1">Business Intelligence</h1>
+                                <p className="text-gray-600 text-sm md:text-base">Consolidated financial and operational reports</p>
                             </div>
 
-                            <div className="flex flex-wrap gap-3 items-center">
-                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                            <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-4 items-stretch sm:items-center">
+                                <div className="flex bg-gray-100 p-1 rounded-xl overflow-x-auto scrollbar-hide">
                                     {["today", "week", "month", "year"].map((r) => (
                                         <button
                                             key={r}
                                             onClick={() => setTimeRange(r)}
-                                            className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${timeRange === r ? "bg-[#8B4513] text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-black uppercase transition-all whitespace-nowrap ${timeRange === r ? "bg-[#8B4513] text-white shadow-sm" : "text-gray-500 hover:text-gray-900"
                                                 }`}
                                         >
                                             {r}
@@ -283,19 +283,21 @@ export default function ReportsPage() {
                                     ))}
                                 </div>
 
-                                <button
-                                    onClick={exportFullReport}
-                                    className="bg-[#8B4513] text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-[#D2691E] transition-colors flex items-center gap-2"
-                                >
-                                    <Download size={16} /> Export Report
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={exportFullReport}
+                                        className="flex-1 lg:flex-none bg-[#8B4513] text-white px-4 py-3 rounded-xl font-black text-xs uppercase shadow-lg shadow-[#8B4513]/20 hover:bg-[#D2691E] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Download size={14} /> Export
+                                    </button>
 
-                                <button
-                                    onClick={() => window.print()}
-                                    className="bg-white border border-gray-300 text-gray-600 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Printer size={16} />
-                                </button>
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="bg-white border border-gray-200 text-gray-500 p-3 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+                                    >
+                                        <Printer size={16} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -317,41 +319,73 @@ export default function ReportsPage() {
                             </button>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold tracking-wider border-b border-gray-200">
+                                <thead className="bg-gray-50 text-gray-600 uppercase text-[10px] font-black tracking-widest border-b border-gray-100">
                                     <tr>
                                         <th className="p-4">Metric</th>
                                         <th className="p-4 text-center">Type</th>
                                         <th className="p-4 text-right">Amount</th>
-                                        <th className="p-4 hidden md:table-cell">Description</th>
+                                        <th className="p-4">Description</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 font-medium">
-                                    <tr className="hover:bg-amber-50/50 transition-colors">
-                                        <td className="p-4 text-lg text-slate-700">Total Revenue</td>
-                                        <td className="p-4 text-center"><span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-xs font-bold">INCOME</span></td>
-                                        <td className="p-4 text-right text-lg font-bold text-green-600">+{totalRevenue.toLocaleString()} ETB</td>
-                                        <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Total completed orders value</td>
-                                    </tr>
-                                    <tr className="hover:bg-amber-50/50 transition-colors">
-                                        <td className="p-4 text-lg text-slate-700">Total Investment</td>
-                                        <td className="p-4 text-center"><span className="bg-red-100 text-red-700 py-1 px-3 rounded-full text-xs font-bold">EXPENSE</span></td>
-                                        <td className="p-4 text-right text-lg font-bold text-red-600">-{totalInvestment.toLocaleString()} ETB</td>
-                                        <td className="p-4 text-gray-400 text-sm hidden md:table-cell">Purchases + Operational Expenses</td>
-                                    </tr>
-                                    <tr className="bg-gray-50 border-t border-gray-200">
-                                        <td className="p-4 text-lg font-bold text-gray-900">NET WORTH (Profit)</td>
-                                        <td className="p-4 text-center"><span className="bg-[#8B4513] text-white py-1 px-3 rounded-full text-xs font-bold">RESULT</span></td>
-                                        <td className={`p-4 text-right text-2xl font-black ${netWorth >= 0 ? "text-[#8B4513]" : "text-red-600"}`}>
-                                            {netWorth.toLocaleString()} ETB
+                                <tbody className="divide-y divide-gray-50 font-bold">
+                                    <tr className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4 text-lg text-slate-800">Total Revenue</td>
+                                        <td className="p-4 text-center">
+                                            <span className="bg-emerald-50 text-emerald-600 py-1 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest">INCOME</span>
                                         </td>
-                                        <td className="p-4 text-[#D2691E] font-bold text-sm hidden md:table-cell">Revenue - Total Investment</td>
+                                        <td className="p-4 text-right text-lg font-black text-emerald-600">+{totalRevenue.toLocaleString()} ETB</td>
+                                        <td className="p-4 text-gray-400 text-xs font-medium">Total completed orders value</td>
                                     </tr>
-                                    {/* Asset Section Separate */}
-
+                                    <tr className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4 text-lg text-slate-800">Total Investment</td>
+                                        <td className="p-4 text-center">
+                                            <span className="bg-red-50 text-red-600 py-1 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest">EXPENSE</span>
+                                        </td>
+                                        <td className="p-4 text-right text-lg font-black text-red-600">-{totalInvestment.toLocaleString()} ETB</td>
+                                        <td className="p-4 text-gray-400 text-xs font-medium">Purchases + Operational Expenses</td>
+                                    </tr>
+                                    <tr className="bg-slate-900 text-white rounded-b-xl">
+                                        <td className="p-6 text-xl font-black">NET WORTH (Profit)</td>
+                                        <td className="p-6 text-center">
+                                            <span className="bg-white/20 text-white py-1 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest">RESULT</span>
+                                        </td>
+                                        <td className={`p-6 text-right text-3xl font-black ${netWorth >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                            {netWorth.toLocaleString()} <span className="text-sm">ETB</span>
+                                        </td>
+                                        <td className="p-6 text-white/50 text-sm font-medium italic">Revenue - Total Investment</td>
+                                    </tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Financial Cards */}
+                        <div className="md:hidden space-y-4">
+                            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Income</span>
+                                    <span className="text-[10px] font-bold text-emerald-600/60 uppercase">Total Revenue</span>
+                                </div>
+                                <p className="text-2xl font-black text-emerald-700">+{totalRevenue.toLocaleString()} <span className="text-xs">ETB</span></p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Expense</span>
+                                    <span className="text-[10px] font-bold text-red-600/60 uppercase">Total Investment</span>
+                                </div>
+                                <p className="text-2xl font-black text-red-700">-{totalInvestment.toLocaleString()} <span className="text-xs">ETB</span></p>
+                            </div>
+                            <div className="p-6 rounded-2xl bg-slate-900 text-white shadow-xl">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Current Position</span>
+                                    <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase">Net Worth</span>
+                                </div>
+                                <p className={`text-4xl font-black ${netWorth >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                    {netWorth.toLocaleString()} <span className="text-lg">ETB</span>
+                                </p>
+                                <p className="text-white/40 text-[10px] mt-4 font-medium italic">Revenue minus all physical investment costs.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -376,20 +410,20 @@ export default function ReportsPage() {
                             </div>
                         </div>
 
-                        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
+                        <div className="hidden lg:block max-h-[400px] overflow-y-auto border border-gray-200 rounded-[1.5rem]">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                <thead className="bg-gray-50 text-gray-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-10">
                                     <tr>
-                                        <th className="p-4 w-1/3">Item Names</th>
+                                        <th className="p-4">Item Names</th>
                                         <th className="p-4 text-center">Table</th>
-                                        <th className="p-4 text-center">Items (Qty)</th>
-                                        <th className="p-4 text-right">Total Payment</th>
+                                        <th className="p-4 text-center">Qty</th>
+                                        <th className="p-4 text-right">Payment</th>
                                         <th className="p-4 text-center">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                <tbody className="divide-y divide-gray-50 font-bold text-sm">
                                     {filteredOrders.length === 0 ? (
-                                        <tr><td colSpan={5} className="p-8 text-center text-gray-400 italic">No orders found for this period.</td></tr>
+                                        <tr><td colSpan={5} className="p-8 text-center text-gray-400 italic font-medium">No orders found for this period.</td></tr>
                                     ) : (
                                         filteredOrders.map((order) => {
                                             const itemNames = order.items.map((i: any) => i.name).join(", ")
@@ -397,25 +431,23 @@ export default function ReportsPage() {
 
                                             return (
                                                 <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="p-4 text-slate-700">
-                                                        <div className="line-clamp-2" title={itemNames}>
-                                                            {itemNames}
-                                                        </div>
-                                                        <div className="text-[10px] text-gray-400 font-mono mt-1">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                    <td className="p-4 text-slate-800">
+                                                        <div className="line-clamp-1 text-base" title={itemNames}>{itemNames}</div>
+                                                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                                     </td>
                                                     <td className="p-4 text-center">
                                                         {order.tableNumber ? (
-                                                            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold">T-{order.tableNumber}</span>
+                                                            <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs font-black">T-{order.tableNumber}</span>
                                                         ) : (
                                                             <span className="text-gray-300">-</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-4 text-center font-bold text-slate-600">{totalQty}</td>
-                                                    <td className="p-4 text-right font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} ETB</td>
-                                                    <td className="p-4 text-center">
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                                                'bg-amber-100 text-amber-700'
+                                                    <td className="p-4 text-center text-slate-500">{totalQty}</td>
+                                                    <td className="p-4 text-right font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} Br</td>
+                                                    <td className="p-4 text-center uppercase tracking-widest text-[9px]">
+                                                        <span className={`px-2 py-1 rounded-lg font-black ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                                                            order.status === 'cancelled' ? 'bg-red-50 text-red-600' :
+                                                                'bg-amber-50 text-amber-600'
                                                             }`}>
                                                             {order.status}
                                                         </span>
@@ -426,6 +458,39 @@ export default function ReportsPage() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Order Cards */}
+                        <div className="lg:hidden space-y-3">
+                            {filteredOrders.length === 0 ? (
+                                <div className="p-8 text-center text-gray-400 italic font-medium">No orders found.</div>
+                            ) : (
+                                filteredOrders.slice(0, 50).map((order) => {
+                                    const itemNames = order.items.map((i: any) => i.name).join(", ")
+                                    return (
+                                        <div key={order._id} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-800 line-clamp-1">{itemNames}</span>
+                                                    <span className="text-[10px] font-mono text-gray-400">#{order._id.slice(-6)} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                    {order.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-end mt-4">
+                                                <div className="flex items-center gap-2">
+                                                    {order.tableNumber && (
+                                                        <span className="bg-white border border-gray-200 px-2 py-1 rounded text-[10px] font-black text-gray-600">TABLE {order.tableNumber}</span>
+                                                    )}
+                                                    <span className="text-[10px] font-bold text-gray-400">{order.items.reduce((s: any, i: any) => s + (i.quantity || 0), 0)} ITEMS</span>
+                                                </div>
+                                                <span className="text-lg font-black text-[#8B4513]">{(order.totalAmount || 0).toLocaleString()} <span className="text-xs">Br</span></span>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            )}
                         </div>
                     </div>
 
@@ -455,69 +520,56 @@ export default function ReportsPage() {
                             </div>
                         </div>
 
-                        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
+                        <div className="hidden lg:block max-h-[500px] overflow-y-auto border border-gray-200 rounded-[1.5rem]">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold sticky top-0 z-10">
+                                <thead className="bg-gray-50 text-gray-500 uppercase text-[10px] font-black tracking-widest sticky top-0 z-10">
                                     <tr>
                                         <th className="p-4">Item Name</th>
-                                        <th className="p-4 text-center text-orange-600">Unit Cost</th>
-                                        <th className="p-4 text-center">Quantity</th>
-                                        <th className="p-4 text-center">Low Limit</th>
-                                        <th className="p-4 text-center text-green-600">Total Purchase</th>
-                                        <th className="p-4 text-center text-red-500">Consumed</th>
+                                        <th className="p-4 text-center text-orange-600">Sell Price</th>
                                         <th className="p-4 text-center">Remains</th>
-                                        <th className="p-4 text-right text-blue-600">Potential Rev.</th>
+                                        <th className="p-4 text-center text-green-600">Total Inv.</th>
+                                        <th className="p-4 text-center text-red-500">Usage</th>
+                                        <th className="p-4 text-right text-blue-600">Potential</th>
                                         <th className="p-4 text-center">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 font-medium text-sm">
+                                <tbody className="divide-y divide-gray-50 font-bold text-sm">
                                     {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
-                                        // Improved Logic: 
-                                        // Quantity = Total Available (Closing + Consumed)
-                                        // Remains = Closing Stock
                                         const costPrice = item.weightedAvgCost ?? item.averagePurchasePrice ?? 0;
                                         const sellingPrice = item.currentUnitCost ?? item.unitCost ?? 0;
-
                                         const closingQuantity = item.closingStock ?? item.quantity ?? 0;
                                         const consumedCount = item.consumed ?? 0;
-
-                                        // Fix: Quantity should be Total Handled to remain constant
                                         const totalHandled = closingQuantity + consumedCount;
-                                        const remains = closingQuantity; // Actual remaining stock
-
-                                        const totalPurchaseValue = totalHandled * costPrice; // Value of all stock handled
+                                        const remains = closingQuantity;
+                                        const totalPurchaseValue = totalHandled * costPrice;
                                         const potentialRevenue = remains * sellingPrice;
                                         const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
 
                                         return (
-                                            <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/50' : ''}`}>
-                                                <td className="p-4 font-bold text-slate-700">{item.name}</td>
-                                                <td className="p-4 text-center text-orange-600 font-mono">
-                                                    {Math.round(sellingPrice).toLocaleString()}
+                                            <tr key={idx} className={`hover:bg-gray-50 transition-colors ${isLow ? 'bg-red-50/30' : ''}`}>
+                                                <td className="p-4">
+                                                    <p className="font-black text-slate-800">{item.name}</p>
+                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{item.category}</p>
                                                 </td>
-                                                <td className="p-4 text-center font-bold text-slate-700">
-                                                    {totalHandled} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
-                                                </td>
-                                                <td className="p-4 text-center font-medium text-gray-500">
-                                                    {(item.minLimit || 0)} <span className="text-xs text-gray-300 font-normal">{item.unit || "unit"}</span>
-                                                </td>
-                                                <td className="p-4 text-center font-bold text-green-600">
-                                                    {totalPurchaseValue.toLocaleString()} ETB
-                                                    <div className="text-[10px] text-gray-400 font-normal">@{Math.round(costPrice).toLocaleString()} Avg</div>
-                                                </td>
-                                                <td className="p-4 text-center font-bold text-red-500">
-                                                    {consumedCount} <span className="text-xs text-red-300 font-normal">Usage</span>
-                                                </td>
-                                                <td className="p-4 text-center font-bold text-slate-700">
-                                                    {remains} <span className="text-xs text-gray-400 font-normal">{item.unit || "unit"}</span>
-                                                </td>
-                                                <td className="p-4 text-right font-bold text-blue-600">
-                                                    {potentialRevenue.toLocaleString()} ETB
+                                                <td className="p-4 text-center text-orange-600">
+                                                    {Math.round(sellingPrice).toLocaleString()} <span className="text-[10px]">Br</span>
                                                 </td>
                                                 <td className="p-4 text-center">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${isLow ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                                                        }`}>
-                                                        {isLow ? 'Low Stock' : 'OK'}
+                                                    <p className={`text-sm ${isLow ? 'text-red-600' : 'text-slate-800'}`}>{remains} <span className="text-[10px] text-gray-400">{item.unit}</span></p>
+                                                </td>
+                                                <td className="p-4 text-center text-green-600">
+                                                    {totalPurchaseValue.toLocaleString()} <span className="text-[10px]">Br</span>
+                                                    <div className="text-[9px] text-gray-400 font-medium">@{Math.round(costPrice)} avg</div>
+                                                </td>
+                                                <td className="p-4 text-center text-red-400">
+                                                    {consumedCount} <span className="text-[10px] uppercase font-black tracking-tighter">Used</span>
+                                                </td>
+                                                <td className="p-4 text-right text-blue-600">
+                                                    {potentialRevenue.toLocaleString()} <span className="text-[10px]">Br</span>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${isLow ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                        {isLow ? 'LOW' : 'OK'}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -525,6 +577,54 @@ export default function ReportsPage() {
                                     })}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Inventory Cards */}
+                        <div className="lg:hidden space-y-4">
+                            {(stockUsageData?.stockAnalysis || stockItems || []).map((item: any, idx: number) => {
+                                const closingQuantity = item.closingStock ?? item.quantity ?? 0;
+                                const consumedCount = item.consumed ?? 0;
+                                const remains = closingQuantity;
+                                const isLow = item.isLowStock || (remains <= (item.minLimit || 5));
+
+                                return (
+                                    <div key={idx} className={`p-4 rounded-2xl border ${isLow ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
+                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">{item.category}</p>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${isLow ? 'bg-red-500 text-white shadow-lg shadow-red-200' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}>
+                                                {isLow ? 'Low Stock' : 'Healthy'}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 mt-4">
+                                            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Stock Remains</p>
+                                                <p className={`text-xl font-black ${isLow ? 'text-red-600' : 'text-slate-800'}`}>
+                                                    {remains} <span className="text-xs text-gray-400 uppercase">{item.unit}</span>
+                                                </p>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-xl border border-gray-100">
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Usage Count</p>
+                                                <p className="text-xl font-black text-slate-800">
+                                                    {consumedCount} <span className="text-xs text-gray-400 uppercase">Usage</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                                            <div>
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Potential Revenue</p>
+                                                <p className="text-lg font-black text-blue-600">{(remains * (item.unitCost || 0)).toLocaleString()} Br</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
+                                                <p className="text-lg font-black text-orange-600">{(item.unitCost || 0).toLocaleString()} Br</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
 

@@ -10,7 +10,8 @@ import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
 import { ConfirmationCard, NotificationCard } from "@/components/confirmation-card"
 import { useConfirmation } from "@/hooks/use-confirmation"
-import { ShoppingCart, RefreshCw } from 'lucide-react'
+import { ShoppingCart, RefreshCw, X } from 'lucide-react'
+import { motion, AnimatePresence } from "framer-motion"
 
 interface MenuItem {
   _id: string
@@ -42,6 +43,7 @@ export default function CashierPOSPage() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   const [waiterBatchNumber, setWaiterBatchNumber] = useState("")
   const [tableNumber, setTableNumber] = useState("")
+  const [showMobileCart, setShowMobileCart] = useState(false)
   const { token, user } = useAuth()
   const { t } = useLanguage()
   const { confirmationState, confirm, closeConfirmation, notificationState, notify, closeNotification } = useConfirmation()
@@ -226,8 +228,8 @@ export default function CashierPOSPage() {
                       key={cat}
                       onClick={() => setCategoryFilter(cat)}
                       className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${categoryFilter === cat
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                         }`}
                     >
                       {cat === "all" ? "All Items" : cat}
@@ -282,8 +284,8 @@ export default function CashierPOSPage() {
               </div>
             </div>
 
-            {/* Cart Sidebar */}
-            <div className="lg:col-span-4 sticky top-6">
+            {/* Cart Sidebar - Desktop */}
+            <div className="hidden lg:block lg:col-span-4 sticky top-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
                 <div className="flex items-center gap-3 mb-6">
                   <ShoppingCart className="h-6 w-6 text-blue-600" />
@@ -305,6 +307,72 @@ export default function CashierPOSPage() {
             </div>
           </div>
         </div>
+
+        {/* Floating Cart Button - Mobile Only */}
+        <div className="lg:hidden fixed bottom-6 right-6 z-40">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowMobileCart(true)}
+            className="bg-[#2d5a41] text-white p-4 rounded-full shadow-2xl relative flex items-center justify-center"
+          >
+            <ShoppingCart size={24} />
+            {cartItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">
+                {cartItems.length}
+              </span>
+            )}
+          </motion.button>
+        </div>
+
+        {/* Mobile Cart Drawer */}
+        <AnimatePresence>
+          {showMobileCart && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMobileCart(false)}
+                className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+              />
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="lg:hidden fixed inset-y-0 right-0 w-full md:w-[400px] bg-white z-[101] shadow-2xl flex flex-col"
+              >
+                <div className="p-6 border-b flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <ShoppingCart className="text-[#2d5a41]" />
+                    <h2 className="text-xl font-bold">Your Order</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowMobileCart(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-hidden p-6">
+                  <CartSidebar
+                    items={cartItems}
+                    onRemove={handleRemoveFromCart}
+                    onQuantityChange={handleQuantityChange}
+                    onCheckout={handleCheckout}
+                    onClose={() => setShowMobileCart(false)}
+                    isLoading={isCheckoutLoading}
+                    isEmbedded={true}
+                    waiterBatchNumber={waiterBatchNumber}
+                    setWaiterBatchNumber={setWaiterBatchNumber}
+                    tableNumber={tableNumber}
+                    setTableNumber={setTableNumber}
+                  />
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Order Animation */}
         {showOrderAnimation && (

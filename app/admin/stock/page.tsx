@@ -631,139 +631,136 @@ export default function StockAndExpensesPage() {
                                                         <button onClick={() => setShowStockForm(true)} className="mt-4 text-[#2d5a41] font-bold text-sm hover:underline">Add Your First Item</button>
                                                     </div>
                                                 ) : (
-                                                    <div className="overflow-x-auto bg-white rounded-[2.5rem] custom-shadow p-4">
-                                                        <table className="w-full text-left">
-                                                            <thead>
-                                                                <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                                                    <th className="pb-4 pl-4">Item Details</th>
-                                                                    <th className="pb-4">Quantity</th>
-                                                                    <th className="pb-4">Low Stock Limit</th>
-                                                                    <th className="pb-4">Purchase & Selling</th>
-                                                                    <th className="pb-4">Status</th>
-                                                                    <th className="pb-4 text-right pr-4">Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-gray-50">
-                                                                {filteredStock.map((item, idx) => {
-                                                                    const isLow = item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0) && (item.quantity || 0) > 0;
-                                                                    const isOutOfStock = item.trackQuantity && (item.quantity || 0) <= 0;
-                                                                    return (
-                                                                        <motion.tr
-                                                                            key={item._id}
-                                                                            initial={{ opacity: 0, x: -10 }}
-                                                                            animate={{ opacity: 1, x: 0 }}
-                                                                            transition={{ delay: idx * 0.02 }}
-                                                                            className={`group hover:bg-gray-50/50 transition-colors ${isOutOfStock ? 'bg-red-50/30' : isLow ? 'bg-yellow-50/30' : ''}`}
-                                                                        >
-                                                                            <td className="py-6 pl-4">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <div>
-                                                                                        <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
-                                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{item.category}</p>
-                                                                                            <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 uppercase">
-                                                                                                {item.unit}
-                                                                                            </span>
+                                                    <div className="bg-white rounded-[2.5rem] custom-shadow p-4 overflow-hidden">
+                                                        {/* Desktop Table */}
+                                                        <div className="hidden md:block overflow-x-auto">
+                                                            <table className="w-full text-left">
+                                                                <thead>
+                                                                    <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                                                        <th className="pb-4 pl-4">Item Details</th>
+                                                                        <th className="pb-4">Quantity</th>
+                                                                        <th className="pb-4 text-right pr-4">Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-50">
+                                                                    {filteredStock.map((item, idx) => {
+                                                                        const isLow = item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0) && (item.quantity || 0) > 0;
+                                                                        const isOutOfStock = item.trackQuantity && (item.quantity || 0) <= 0;
+                                                                        return (
+                                                                            <motion.tr
+                                                                                key={item._id}
+                                                                                initial={{ opacity: 0, x: -10 }}
+                                                                                animate={{ opacity: 1, x: 0 }}
+                                                                                transition={{ delay: idx * 0.02 }}
+                                                                                className={`group hover:bg-gray-50/50 transition-colors ${isOutOfStock ? 'bg-red-50/30' : isLow ? 'bg-yellow-50/30' : ''}`}
+                                                                            >
+                                                                                <td className="py-6 pl-4">
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div>
+                                                                                            <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
+                                                                                            <div className="flex items-center gap-2 mt-1">
+                                                                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{item.category}</p>
+                                                                                                <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 uppercase">
+                                                                                                    {item.unit}
+                                                                                                </span>
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="py-6">
-                                                                                <div>
-                                                                                    <p className={`text-xl font-black ${isOutOfStock ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-slate-800'}`}>
-                                                                                        {item.trackQuantity ? (item.quantity || 0).toLocaleString() : '-'}
-                                                                                        <span className="text-xs font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
-                                                                                    </p>
-                                                                                    {item.trackQuantity && (item.minLimit ?? 0) > 0 && (
-                                                                                        <p className="text-[10px] font-medium text-gray-400">
-                                                                                            Min: {item.minLimit} {item.unit}
+                                                                                </td>
+                                                                                <td className="py-6">
+                                                                                    <div className="flex flex-col gap-1">
+                                                                                        <p className={`text-xl font-black ${isOutOfStock ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-slate-800'}`}>
+                                                                                            {item.trackQuantity ? (item.quantity || 0).toLocaleString() : '-'}
+                                                                                            <span className="text-xs font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
                                                                                         </p>
-                                                                                    )}
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="py-6">
-                                                                                <div>
-                                                                                    {item.trackQuantity ? (
-                                                                                        <>
-                                                                                            <p className={`text-lg font-bold ${isLow ? 'text-yellow-600' : 'text-gray-600'}`}>
-                                                                                                {(item.minLimit || 0).toLocaleString()}
-                                                                                                <span className="text-xs font-medium text-gray-400 ml-1 uppercase">{item.unit}</span>
-                                                                                            </p>
-                                                                                            {isLow && (
-                                                                                                <p className="text-[10px] font-medium text-yellow-500 mt-1">
-                                                                                                    ⚠️ Below threshold
-                                                                                                </p>
+                                                                                        <div className="flex flex-wrap gap-2">
+                                                                                            {item.showStatus && (
+                                                                                                isOutOfStock ? (
+                                                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-red-600">Out of Stock</span>
+                                                                                                ) : isLow ? (
+                                                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-yellow-600">Low Stock</span>
+                                                                                                ) : (
+                                                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Healthy</span>
+                                                                                                )
                                                                                             )}
-                                                                                        </>
-                                                                                    ) : (
-                                                                                        <span className="text-gray-300 text-sm">N/A</span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="py-6">
-                                                                                <div className="space-y-2">
-                                                                                    <div>
-                                                                                        <p className="text-sm font-bold text-red-600">💰 Avg Cost: {(item.averagePurchasePrice || 0).toLocaleString()} Br</p>
-                                                                                        <p className="text-sm font-bold text-green-600">💵 Selling: {(item.unitCost || 0).toLocaleString()} Br</p>
-                                                                                        <p className="text-[10px] font-medium text-gray-400">per {item.unit}</p>
+                                                                                        </div>
                                                                                     </div>
-                                                                                    <div className="pt-2 border-t border-gray-100">
-                                                                                        <p className="text-xs font-bold text-red-500">
-                                                                                            Investment: {((item.quantity || 0) * (item.averagePurchasePrice || 0)).toLocaleString()} Br
-                                                                                        </p>
-                                                                                        <p className="text-xs font-bold text-green-500">
-                                                                                            Revenue: {((item.quantity || 0) * (item.unitCost || 0)).toLocaleString()} Br
-                                                                                        </p>
-                                                                                        {(item.unitCost ?? 0) > 0 && (item.averagePurchasePrice ?? 0) > 0 && (
-                                                                                            <p className="text-xs font-bold text-blue-600">
-                                                                                                Margin: {(((item.unitCost! - item.averagePurchasePrice!) / item.unitCost!) * 100).toFixed(1)}%
-                                                                                            </p>
-                                                                                        )}
+                                                                                </td>
+                                                                                <td className="py-6 text-right pr-4">
+                                                                                    <div className="flex justify-end gap-2 items-center">
+                                                                                        <button
+                                                                                            onClick={() => openRestockModal(item)}
+                                                                                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#8B4513]/5 hover:bg-[#8B4513] text-[#8B4513] hover:text-white rounded-lg transition-all font-black text-[9px] uppercase tracking-wider border border-[#8B4513]/20 hover:border-[#8B4513]"
+                                                                                        >
+                                                                                            <PlusCircle size={12} />
+                                                                                            Restock
+                                                                                        </button>
+                                                                                        <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
+                                                                                            <Edit2 size={16} />
+                                                                                        </button>
+                                                                                        <button onClick={() => deleteStockItem(item._id)} className="p-2 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
+                                                                                            <Trash2 size={16} />
+                                                                                        </button>
                                                                                     </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="py-6">
-                                                                                {item.showStatus ? (
-                                                                                    isOutOfStock ? (
-                                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-100 px-3 py-1 rounded-full border border-red-200">
-                                                                                            <AlertCircle size={10} /> Out of Stock
-                                                                                        </span>
-                                                                                    ) : isLow ? (
-                                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">
-                                                                                            <AlertCircle size={10} /> Low Stock
-                                                                                        </span>
-                                                                                    ) : (
-                                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                                                                                            <CheckCircle2 size={10} /> Healthy
-                                                                                        </span>
-                                                                                    )
-                                                                                ) : (
-                                                                                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Hidden</span>
+                                                                                </td>
+                                                                            </motion.tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        {/* Mobile Card View */}
+                                                        <div className="md:hidden space-y-4">
+                                                            {filteredStock.map((item, idx) => {
+                                                                const isLow = item.trackQuantity && (item.quantity || 0) <= (item.minLimit || 0) && (item.quantity || 0) > 0;
+                                                                const isOutOfStock = item.trackQuantity && (item.quantity || 0) <= 0;
+                                                                return (
+                                                                    <motion.div
+                                                                        key={item._id}
+                                                                        initial={{ opacity: 0, y: 10 }}
+                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                        transition={{ delay: idx * 0.02 }}
+                                                                        className={`p-4 rounded-3xl border ${isOutOfStock ? 'bg-red-50 border-red-100' : isLow ? 'bg-yellow-50 border-yellow-100' : 'bg-gray-50 border-gray-100'}`}
+                                                                    >
+                                                                        <div className="flex justify-between items-start mb-3">
+                                                                            <div>
+                                                                                <p className="font-black text-slate-800 text-lg leading-tight">{item.name}</p>
+                                                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">{item.category}</p>
+                                                                            </div>
+                                                                            <div className="flex gap-1">
+                                                                                <button
+                                                                                    onClick={() => openRestockModal(item)}
+                                                                                    className="p-2 bg-[#8B4513] text-white rounded-xl shadow-lg"
+                                                                                >
+                                                                                    <PlusCircle size={14} />
+                                                                                </button>
+                                                                                <button onClick={() => handleEditStock(item)} className="p-2 bg-white text-[#8B4513] rounded-xl border border-gray-100">
+                                                                                    <Edit2 size={14} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-end mt-4">
+                                                                            <div>
+                                                                                <p className={`text-2xl font-black ${isOutOfStock ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-slate-800'}`}>
+                                                                                    {item.trackQuantity ? (item.quantity || 0).toLocaleString() : '-'}
+                                                                                    <span className="text-sm font-bold text-gray-400 ml-1 uppercase">{item.unit}</span>
+                                                                                </p>
+                                                                                {item.showStatus && (
+                                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${isOutOfStock ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-emerald-600'}`}>
+                                                                                        • {isOutOfStock ? 'Out of Stock' : isLow ? 'Low Stock' : 'Healthy'}
+                                                                                    </span>
                                                                                 )}
-                                                                            </td>
-                                                                            <td className="py-6 text-right pr-4">
-                                                                                <div className="flex justify-end gap-2 items-center">
-                                                                                    <button
-                                                                                        onClick={() => openRestockModal(item)}
-                                                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8B4513]/5 hover:bg-[#8B4513] text-[#8B4513] hover:text-white rounded-lg transition-all font-black text-[9px] uppercase tracking-wider border border-[#8B4513]/20 hover:border-[#8B4513]"
-                                                                                        title="Add Stock"
-                                                                                    >
-                                                                                        <PlusCircle size={12} />
-                                                                                        Restock
-                                                                                    </button>
-                                                                                    <button onClick={() => handleEditStock(item)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
-                                                                                        <Edit2 size={16} />
-                                                                                    </button>
-                                                                                    <button onClick={() => deleteStockItem(item._id)} className="p-2 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
-                                                                                        <Trash2 size={16} />
-                                                                                    </button>
-                                                                                </div>
-                                                                            </td>
-                                                                        </motion.tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
+                                                                            </div>
+                                                                            <div className="text-right">
+                                                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Avg Cost</p>
+                                                                                <p className="font-bold text-[#8B4513]">{item.averagePurchasePrice?.toLocaleString()} Br</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -799,69 +796,119 @@ export default function StockAndExpensesPage() {
                                                         <p className="text-xs text-gray-300 mt-2">Try adjusting the filters or add a new record.</p>
                                                     </div>
                                                 ) : (
-                                                    <div className="overflow-x-auto bg-white rounded-[2.5rem] custom-shadow p-4">
-                                                        <table className="w-full text-left">
-                                                            <thead>
-                                                                <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                                                    <th className="pb-4 pl-4">Date</th>
-                                                                    <th className="pb-4">Items Summary</th>
-                                                                    <th className="pb-4">Total Cost</th>
-                                                                    <th className="pb-4 text-right pr-4">Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-gray-50">
-                                                                {filteredExpenses.map((expense, idx) => (
-                                                                    <motion.tr
-                                                                        key={expense._id}
-                                                                        initial={{ opacity: 0, x: -10 }}
-                                                                        animate={{ opacity: 1, x: 0 }}
-                                                                        transition={{ delay: idx * 0.02 }}
-                                                                        className="group hover:bg-gray-50/50 transition-colors"
-                                                                    >
-                                                                        <td className="py-6 pl-4 align-top">
-                                                                            <div className="flex flex-col">
-                                                                                <span className="font-black text-slate-800 text-lg">
-                                                                                    {new Date(expense.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                                                                                </span>
-                                                                                <span className="text-[10px] font-bold text-gray-400 uppercase">
-                                                                                    {new Date(expense.date).getFullYear()}
-                                                                                </span>
+                                                    <div className="bg-white rounded-[2.5rem] custom-shadow p-4 overflow-hidden">
+                                                        {/* Desktop Table */}
+                                                        <div className="hidden md:block overflow-x-auto">
+                                                            <table className="w-full text-left">
+                                                                <thead>
+                                                                    <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                                                        <th className="pb-4 pl-4">Date</th>
+                                                                        <th className="pb-4">Items Summary</th>
+                                                                        <th className="pb-4">Total Cost</th>
+                                                                        <th className="pb-4 text-right pr-4">Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-50">
+                                                                    {filteredExpenses.map((expense, idx) => (
+                                                                        <motion.tr
+                                                                            key={expense._id}
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 1, x: 0 }}
+                                                                            transition={{ delay: idx * 0.02 }}
+                                                                            className="group hover:bg-gray-50/50 transition-colors"
+                                                                        >
+                                                                            <td className="py-6 pl-4 align-top">
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="font-black text-slate-800 text-lg">
+                                                                                        {new Date(expense.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                                                    </span>
+                                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase">
+                                                                                        {new Date(expense.date).getFullYear()}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="py-6 align-top">
+                                                                                <div className="space-y-1">
+                                                                                    {expense.items.map((item, i) => (
+                                                                                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                                                                                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B4513]/40"></span>
+                                                                                            <span className="font-bold">{item.name}</span>
+                                                                                            <span className="text-xs text-gray-400">({item.quantity} {item.unit})</span>
+                                                                                            <span className="text-xs font-mono text-gray-400">- {item.amount.toLocaleString()} Br</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                    {expense.description && (
+                                                                                        <p className="text-xs text-gray-400 italic mt-2">"{expense.description}"</p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="py-6 align-top">
+                                                                                <div className="bg-red-50 text-red-600 px-4 py-2 rounded-xl w-fit">
+                                                                                    <p className="font-black text-lg">{expense.otherExpenses.toLocaleString()} <span className="text-xs">Br</span></p>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="py-6 text-right pr-4 align-top">
+                                                                                <div className="flex justify-end gap-2">
+                                                                                    <button onClick={() => handleEditExpense(expense)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
+                                                                                        <Edit2 size={16} />
+                                                                                    </button>
+                                                                                    <button onClick={() => deleteExpense(expense._id)} className="p-2 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
+                                                                                        <Trash2 size={16} />
+                                                                                    </button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </motion.tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        {/* Mobile Card View */}
+                                                        <div className="md:hidden space-y-4">
+                                                            {filteredExpenses.map((expense, idx) => (
+                                                                <motion.div
+                                                                    key={expense._id}
+                                                                    initial={{ opacity: 0, y: 10 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    transition={{ delay: idx * 0.02 }}
+                                                                    className="p-4 rounded-3xl bg-gray-50 border border-gray-100"
+                                                                >
+                                                                    <div className="flex justify-between items-start mb-4">
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-black text-slate-800 text-lg leading-none">
+                                                                                {new Date(expense.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                                            </span>
+                                                                            <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">
+                                                                                {new Date(expense.date).getFullYear()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <button onClick={() => handleEditExpense(expense)} className="p-2 bg-white text-[#8B4513] rounded-xl border border-gray-100 shadow-sm">
+                                                                                <Edit2 size={14} />
+                                                                            </button>
+                                                                            <button onClick={() => deleteExpense(expense._id)} className="p-2 bg-white text-red-400 rounded-xl border border-gray-100 shadow-sm">
+                                                                                <Trash2 size={14} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2 mb-4">
+                                                                        {expense.items.map((item, i) => (
+                                                                            <div key={i} className="flex justify-between items-center text-sm font-bold text-gray-600">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#8B4513]/40"></span>
+                                                                                    {item.name} <span className="text-gray-400 text-[10px]">({item.quantity}{item.unit})</span>
+                                                                                </div>
+                                                                                <span className="font-mono">{item.amount.toLocaleString()} Br</span>
                                                                             </div>
-                                                                        </td>
-                                                                        <td className="py-6 align-top">
-                                                                            <div className="space-y-1">
-                                                                                {expense.items.map((item, i) => (
-                                                                                    <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                                                                                        <span className="w-1.5 h-1.5 rounded-full bg-[#8B4513]/40"></span>
-                                                                                        <span className="font-bold">{item.name}</span>
-                                                                                        <span className="text-xs text-gray-400">({item.quantity} {item.unit})</span>
-                                                                                        <span className="text-xs font-mono text-gray-400">- {item.amount.toLocaleString()} Br</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                                {expense.description && (
-                                                                                    <p className="text-xs text-gray-400 italic mt-2">"{expense.description}"</p>
-                                                                                )}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="py-6 align-top">
-                                                                            <div className="bg-red-50 text-red-600 px-4 py-2 rounded-xl w-fit">
-                                                                                <p className="font-black text-lg">{expense.otherExpenses.toLocaleString()} <span className="text-xs">Br</span></p>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="py-6 text-right pr-4 align-top">
-                                                                            <div className="flex justify-end gap-2">
-                                                                                <button onClick={() => handleEditExpense(expense)} className="p-2 hover:bg-[#8B4513]/10 text-[#8B4513] rounded-xl transition-colors">
-                                                                                    <Edit2 size={16} />
-                                                                                </button>
-                                                                                <button onClick={() => deleteExpense(expense._id)} className="p-2 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
-                                                                                    <Trash2 size={16} />
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </motion.tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                                        ))}
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Spent</span>
+                                                                        <span className="font-black text-red-600 text-lg">{expense.otherExpenses.toLocaleString()} Br</span>
+                                                                    </div>
+                                                                </motion.div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -882,11 +929,11 @@ export default function StockAndExpensesPage() {
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative bg-white rounded-[3.5rem] shadow-2xl p-10 md:p-14 max-w-xl w-full border border-white"
+                                className="relative bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl p-6 md:p-14 max-w-xl w-full border border-white max-h-[95vh] overflow-y-auto"
                             >
-                                <div className="flex justify-between items-start mb-10">
+                                <div className="flex justify-between items-start mb-6 md:mb-10">
                                     <div>
-                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">Physical <span className="text-[#2d5a41]">Expenses</span></h2>
+                                        <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight bubbly-text">Physical <span className="text-[#2d5a41]">Expenses</span></h2>
                                         <p className="text-gray-500 mt-2 font-medium">Log operational costs like Charcoal/Gas.</p>
                                     </div>
                                     <button onClick={resetExpenseForm} className="p-3 hover:bg-gray-100 rounded-2xl transition-colors">
@@ -984,11 +1031,11 @@ export default function StockAndExpensesPage() {
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative bg-white rounded-[3.5rem] shadow-2xl max-w-2xl w-full border border-white flex flex-col max-h-[90vh]"
+                                className="relative bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl max-w-2xl w-full border border-white flex flex-col max-h-[95vh]"
                             >
-                                <div className="flex justify-between items-start p-10 md:p-14 pb-6">
+                                <div className="flex justify-between items-start p-6 md:p-14 pb-4 md:pb-6">
                                     <div>
-                                        <h2 className="text-4xl font-black text-slate-900 tracking-tight bubbly-text">Stock <span className="text-[#2d5a41]">Detail</span></h2>
+                                        <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight bubbly-text">Stock <span className="text-[#2d5a41]">Detail</span></h2>
                                         <p className="text-gray-500 mt-2 font-medium">Manage physical inventory items.</p>
                                     </div>
                                     <button onClick={resetStockForm} className="p-3 hover:bg-gray-100 rounded-2xl transition-colors">
@@ -1148,7 +1195,7 @@ export default function StockAndExpensesPage() {
                                     </div>
 
                                     {/* Fixed Footer with Buttons */}
-                                    <div className="flex gap-4 px-10 md:px-14 py-6 border-t border-gray-100 bg-white rounded-b-[3.5rem]">
+                                    <div className="flex gap-4 px-6 md:px-14 py-4 md:py-6 border-t border-gray-100 bg-white rounded-b-[2.5rem] md:rounded-b-[3.5rem]">
                                         <button type="button" onClick={resetStockForm} className="flex-1 py-5 rounded-3xl font-black uppercase text-[10px] tracking-widest text-gray-400 hover:bg-gray-100 transition-colors">Discard</button>
                                         <button type="submit" disabled={saveLoading} className="flex-[1.5] py-5 bg-[#8B4513] text-white rounded-3xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8B4513]/20 hover:scale-[1.02] active:scale-95 transition-all">
                                             {saveLoading ? "Saving..." : (editingStock ? "Update Stock" : "Add to Inventory")}
